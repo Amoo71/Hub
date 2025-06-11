@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Access</title>
+    <style>
+        /* === FUNDAMENTALS & DARK MODE === */
+        :root {
+            --background-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --subtle-text-color: #a0a0a0;
+            --glass-background: rgba(45, 45, 45, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glow-green: #00ff7f;
+            --glow-red: #ff4d4d;
+            --scroll-bar-thumb: #555;
+            --scroll-bar-track: #2a2a2a;
+            --green-gradient: linear-gradient(135deg, #00ff7f, #00cc66);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        @keyframes fade-glow {
+            to { 
+                border-color: var(--glass-border); 
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
+            }
+        }
+
+        @keyframes owner-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes glow-green {
+            0% { 
+                border-color: var(--glass-border); 
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
+            }
+            100% { 
+                border-color: var(--glow-green); 
+                box-shadow: 0 0 25px 10px rgba(0, 255, 127, 0.5), 
+                           0 0 50px 15px rgba(0, 255, 127, 0.3),
+                           0 4px 20px rgba(0, 0, 0, 0.2); 
+            }
+        }
+
+        @keyframes glow-red {
+            0% { 
+                border-color: var(--glass-border); 
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
+            }
+            100% { 
+                border-color: var(--glow-red); 
+                box-shadow: 0 0 25px 10px rgba(255, 77, 77, 0.5), 
+                           0 0 50px 15px rgba(255, 77, 77, 0.3),
+                           0 4px 20px rgba(0, 0, 0, 0.2); 
+            }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.95);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideFromRight {
+            from { 
+                opacity: 0; 
+                transform: translateX(30px) scale(0.9); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0) scale(1); 
+            }
+        }
+
+        @keyframes scaleInSmooth {
+            from { 
+                opacity: 0; 
+                transform: scale(0.85); 
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1); 
+            }
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* === CONTAINER & TRANSITIONS === */
+        .screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* === LOGIN SCREEN === */
+        #login-screen {
+            text-align: center;
+        }
+
+        #login-screen h1 {
+            font-family: "SF Mono", "Menlo", "Consolas", "Courier New", monospace;
+            font-weight: 400;
+            font-size: 1.5rem;
+            color: var(--subtle-text-color);
+            margin-bottom: 25px;
+            animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #security-id-input {
+            width: 280px;
+            animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+            animation-fill-mode: backwards;
+        }
+        
+        /* === GLASSMORPHISM STYLE FOR INPUT FIELDS === */
+        .glassy-input {
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+        }
+
+        .glassy-input::placeholder {
+            color: var(--subtle-text-color);
+            opacity: 0.8;
+        }
+
+        .glassy-input:focus {
+            outline: none;
+        }
+
+        .glassy-input:focus:not(.correct):not(.wrong) {
+            border-color: var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .glassy-input.correct {
+            animation: glow-green 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards, fade-glow 2s ease-out 1.5s forwards !important;
+        }
+
+        .glassy-input.wrong {
+            animation: glow-red 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards, fade-glow 2s ease-out 1.5s forwards !important;
+        }
+
+        /* === MAIN SCREEN (AFTER LOGIN) === */
+        #main-screen {
+            justify-content: flex-start;
+            padding-top: 5vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #main-screen .search-bar {
+            width: min(450px, 80vw);
+            margin-bottom: 8vh;
+        }
+        
+        #main-screen .main-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .gallery-container {
+            display: flex;
+            gap: 25px;
+            width: 100vw;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth;
+            margin-bottom: 40px;
+            padding: 10px 0;
+        }
+
+        .gallery-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .gallery-content {
+            display: flex;
+            gap: 25px;
+            padding-left: calc(50vw - 212.5px);
+            padding-right: calc(50vw - 212.5px);
+        }
+
+        .placeholder-image {
+            min-width: 200px;
+            width: 200px;
+            height: 280px;
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--subtle-text-color);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+            will-change: transform, opacity;
+        }
+        
+        .placeholder-image:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* === REQUEST SECTION === */
+        .request-section {
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: min(800px, 80vw);
+            min-height: 400px;
+            margin-bottom: 40px;
+            animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes rocket-launch {
+            0% {
+                transform: scale(1) translateX(0) translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            20% {
+                transform: scale(1.1) translateX(0) translateY(-5px) rotate(5deg);
+            }
+            100% {
+                transform: scale(0.3) translateX(200px) translateY(-300px) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes button-bounce-in {
+            0% {
+                opacity: 0;
+                transform: scale(0) translateY(30px) rotate(-180deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) translateY(-10px) rotate(-90deg);
+            }
+            70% {
+                transform: scale(0.9) translateY(5px) rotate(-20deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0) rotate(0deg);
+            }
+        }
+
+        /* === INPUT FORM === */
+        .input-form {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 60px;
+            justify-content: center;
+        }
+
+        .input-form.shifted {
+            justify-content: flex-start;
+        }
+
+        .input-wrapper {
+            position: relative;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+        }
+
+        .input-wrapper.primary {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .input-wrapper.secondary {
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform: translateX(-20px);
+        }
+
+        .input-wrapper.secondary.visible {
+            width: 180px;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        .input-wrapper.primary input {
+            text-align: center;
+        }
+
+        .input-wrapper.primary.shifted input {
+            text-align: left;
+        }
+
+        .send-button {
+            background: var(--green-gradient);
+            border: none;
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0;
+            transform: scale(0) translateY(30px) rotate(-180deg);
+            pointer-events: none;
+            width: 0;
+            min-width: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .send-button.visible {
+            animation: button-bounce-in 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+            pointer-events: all;
+            width: 80px;
+            min-width: 80px;
+            opacity: 1;
+            transform: scale(1) translateY(0) rotate(0deg);
+        }
+
+        .send-button:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 127, 0.4);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .send-button.launching {
+            animation: rocket-launch 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            pointer-events: none;
+        }
+
+        /* === REQUESTS LIST === */
+        .requests-list {
+            flex-grow: 1;
+        }
+
+        .requests-list h4 {
+            color: var(--text-color);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
+
+        .request-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .request-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .request-username {
+            font-weight: 600;
+            color: var(--glow-green);
+            min-width: 60px;
+            margin-right: 8px;
+        }
+
+        .request-username.owner {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #533483);
+            background-size: 400% 400%;
+            animation: owner-gradient 3s ease-in-out infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .request-separator {
+            margin: 0 15px;
+            color: var(--subtle-text-color);
+        }
+
+        .request-text {
+            flex-grow: 1;
+            color: var(--text-color);
+        }
+
+        .request-time {
+            color: var(--subtle-text-color);
+            font-size: 0.9rem;
+            margin-left: 15px;
+        }
+
+        /* === MOBILE RESPONSIVE === */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .screen {
+                height: auto;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            #main-screen {
+                padding-top: 20px;
+            }
+
+            #main-screen .search-bar {
+                margin-bottom: 6vh;
+                width: 90vw;
+            }
+
+            #main-screen .main-title {
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+
+            .gallery-container {
+                gap: 15px;
+                width: 100vw;
+            }
+
+            .gallery-content {
+                padding-left: calc(50vw - 157.5px);
+                padding-right: calc(50vw - 157.5px);
+            }
+
+            .placeholder-image {
+                min-width: 150px;
+                width: 150px;
+                height: 210px;
+                font-size: 1rem;
+            }
+
+            .request-section {
+                padding: 20px;
+                width: 90vw;
+                min-height: 350px;
+            }
+
+            .input-form {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .input-wrapper {
+                width: 100% !important;
+            }
+
+            .input-wrapper.primary,
+            .input-wrapper.secondary {
+                width: 100% !important;
+            }
+
+            .input-wrapper input {
+                text-align: center !important;
+            }
+
+            .send-button {
+                width: 100% !important;
+                min-width: unset !important;
+            }
+
+            .send-button.visible {
+                width: 100% !important;
+            }
+
+            #security-id-input {
+                width: min(280px, 80vw);
+            }
+
+            .request-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .request-separator {
+                display: none;
+            }
+
+            .request-time {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #login-screen h1 {
+                font-size: 1.3rem;
+            }
+
+            #main-screen .main-title {
+                font-size: 1.8rem;
+            }
+
+            .placeholder-image {
+                min-width: 120px;
+                width: 120px;
+                height: 168px;
+                font-size: 0.9rem;
+            }
+
+            .gallery-content {
+                padding-left: calc(50vw - 122.5px);
+                padding-right: calc(50vw - 122.5px);
+            }
+
+            .glassy-input {
+                font-size: 1rem;
+                padding: 12px 16px;
+            }
+
+            .request-section {
+                padding: 15px;
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="screen">
+        <h1>Hello Boss… (⌐■_■)</h1>
+        <input type="password" id="security-id-input" class="glassy-input" placeholder="Security ID">
+    </div>
+
+    <div id="main-screen" class="screen hidden">
+        <input type="search" class="glassy-input search-bar" placeholder="Search...">
+        
+        <h2 class="main-title">Recently Added</h2>
+
+        <div class="gallery-container">
+            <div class="gallery-content">
+                <div class="placeholder-image">Album 1</div>
+                <div class="placeholder-image">Album 2</div>
+                <div class="placeholder-image">Album 3</div>
+                <div class="placeholder-image">Album 4</div>
+                <div class="placeholder-image">Album 5</div>
+                <div class="placeholder-image">Album 6</div>
+                <div class="placeholder-image">Album 7</div>
+            </div>
+        </div>
+
+        <div class="request-section">
+            <div class="input-form" id="input-form">
+                <div class="input-wrapper primary" id="primary-wrapper">
+                    <input type="text" id="request-input" class="glassy-input" placeholder="Make a request">
+                </div>
+                <div class="input-wrapper secondary" id="secondary-wrapper">
+                    <input type="text" id="username-input" class="glassy-input" placeholder="Username">
+                </div>
+                <button id="send-button" class="send-button">Send</button>
+            </div>
+
+            <div class="requests-list">
+                <h4>Requests:</h4>
+                <div class="request-item">
+                    <div class="request-username owner">Amo</div>
+                    <div class="request-separator">|</div>
+                    <div class="request-text">No Requests yet!</div>
+                    <div class="request-time">∞</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const securityIdInput = document.getElementById('security-id-input');
+            const loginScreen = document.getElementById('login-screen');
+            const mainScreen = document.getElementById('main-screen');
+            const requestInput = document.getElementById('request-input');
+            const usernameInput = document.getElementById('username-input');
+            const sendButton = document.getElementById('send-button');
+            const inputForm = document.getElementById('input-form');
+            const primaryWrapper = document.getElementById('primary-wrapper');
+            const secondaryWrapper = document.getElementById('secondary-wrapper');
+
+            const CORRECT_ID = '1357';
+            let debounceTimer;
+            let requestDebounceTimer;
+            let usernameDebounceTimer;
+            let currentStage = 1;
+
+            // Enhanced scroll behavior for gallery with better performance
+            const galleryContainer = document.querySelector('.gallery-container');
+            let animationFrameId;
+
+            const updateGalleryScroll = () => {
+                const scrollLeft = galleryContainer.scrollLeft;
+                const containerWidth = galleryContainer.clientWidth;
+                const items = galleryContainer.querySelectorAll('.placeholder-image');
+                
+                items.forEach((item) => {
+                    const itemRect = item.getBoundingClientRect();
+                    const containerRect = galleryContainer.getBoundingClientRect();
+                    const itemCenter = itemRect.left + itemRect.width / 2;
+                    const containerCenter = containerRect.left + containerRect.width / 2;
+                    const distance = Math.abs(containerCenter - itemCenter);
+                    const maxDistance = containerRect.width / 2;
+                    const normalizedDistance = Math.min(distance / maxDistance, 1);
+                    
+                    const scale = 1 - (normalizedDistance * 0.1);
+                    const opacity = 1 - (normalizedDistance * 0.3);
+                    
+                    item.style.transform = `scale(${Math.max(0.9, scale)})`;
+                    item.style.opacity = Math.max(0.7, opacity);
+                });
+            };
+
+            galleryContainer.addEventListener('scroll', () => {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                animationFrameId = requestAnimationFrame(updateGalleryScroll);
+            });
+
+            // Set initial scroll position to center Album 2 and Album 3
+            setTimeout(() => {
+                const albumWidth = 200;
+                const gap = 25;
+                const initialScrollPosition = albumWidth + gap;
+                galleryContainer.scrollLeft = initialScrollPosition;
+                updateGalleryScroll();
+            }, 100);
+
+            // Security ID input handling with proper glow and fade
+            securityIdInput.addEventListener('input', () => {
+                securityIdInput.classList.remove('correct', 'wrong');
+                clearTimeout(debounceTimer);
+
+                debounceTimer = setTimeout(() => {
+                    const enteredId = securityIdInput.value;
+
+                    if (enteredId.length === 0) {
+                        return;
+                    }
+
+                    if (enteredId === CORRECT_ID) {
+                        securityIdInput.classList.add('correct');
+
+                        setTimeout(() => {
+                            loginScreen.style.opacity = '0';
+                            
+                            loginScreen.addEventListener('transitionend', () => {
+                                loginScreen.classList.add('hidden');
+                                mainScreen.classList.remove('hidden');
+                                document.querySelectorAll('#main-screen > *').forEach((el, index) => {
+                                    el.style.animation = `fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.15}s forwards`;
+                                    el.style.opacity = '0';
+                                });
+                                
+                                // Reset gallery scroll position after transition
+                                setTimeout(() => {
+                                    const albumWidth = 200;
+                                    const gap = 25;
+                                    const initialScrollPosition = albumWidth + gap;
+                                    galleryContainer.scrollLeft = initialScrollPosition;
+                                    updateGalleryScroll();
+                                }, 500);
+                            }, { once: true });
+
+                        }, 1000);
+
+                    } else {
+                        securityIdInput.classList.add('wrong');
+                    }
+                }, 1500);
+            });
+
+            // Smooth progressive form logic with improved timing
+            function handleRequestInput() {
+                const requestValue = requestInput.value.trim();
+                
+                clearTimeout(requestDebounceTimer);
+                
+                if (requestValue && currentStage === 1) {
+                    // User started typing - wait 1 second before showing username field
+                    requestDebounceTimer = setTimeout(() => {
+                        currentStage = 2;
+                        
+                        // Shift form to left and show username field
+                        inputForm.classList.add('shifted');
+                        primaryWrapper.classList.add('shifted');
+                        
+                        // Small delay for smoother transition
+                        setTimeout(() => {
+                            secondaryWrapper.classList.add('visible');
+                        }, 200);
+                    }, 1000);
+                    
+                } else if (!requestValue && currentStage > 1) {
+                    // User cleared request - reset everything immediately
+                    currentStage = 1;
+                    inputForm.classList.remove('shifted');
+                    primaryWrapper.classList.remove('shifted');
+                    secondaryWrapper.classList.remove('visible');
+                    sendButton.classList.remove('visible');
+                    usernameInput.value = '';
+                    clearTimeout(usernameDebounceTimer);
+                }
+            }
+
+            function handleUsernameInput() {
+                const requestValue = requestInput.value.trim();
+                const usernameValue = usernameInput.value.trim();
+                
+                clearTimeout(usernameDebounceTimer);
+                
+                if (requestValue && usernameValue && currentStage === 2) {
+                    // User started typing username - wait 1 second before showing send button
+                    usernameDebounceTimer = setTimeout(() => {
+                        currentStage = 3;
+                        sendButton.classList.add('visible');
+                    }, 1000);
+                    
+                } else if ((!requestValue || !usernameValue) && currentStage === 3) {
+                    // User cleared username - hide send button
+                    currentStage = 2;
+                    sendButton.classList.remove('visible');
+                }
+            }
+
+            requestInput.addEventListener('input', handleRequestInput);
+            usernameInput.addEventListener('input', handleUsernameInput);
+
+            sendButton.addEventListener('click', () => {
+                console.log('Request:', requestInput.value);
+                console.log('Username:', usernameInput.value);
+                
+                // Launch rocket animation
+                sendButton.classList.add('launching');
+                
+                // Reset form after rocket animation
+                setTimeout(() => {
+                    requestInput.value = '';
+                    usernameInput.value = '';
+                    currentStage = 1;
+                    inputForm.classList.remove('shifted');
+                    primaryWrapper.classList.remove('shifted');
+                    secondaryWrapper.classList.remove('visible');
+                    sendButton.classList.remove('visible', 'launching');
+                }, 1200);
+            });
+            
+            // Focus and input settings
+            securityIdInput.focus();
+            securityIdInput.setAttribute('inputmode', 'numeric');
+            securityIdInput.setAttribute('pattern', '[0-9]*');
+
+            // Initialize gallery scroll effect
+            updateGalleryScroll();
+        });
+    </script>
+
+</body>
+</html>

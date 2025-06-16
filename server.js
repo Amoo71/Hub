@@ -92,16 +92,19 @@ function broadcastAlbumUpdate() {
 // Middleware
 app.use(bodyParser.json());
 
-// Serve static files first
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Also serve static files from root for backward compatibility
 app.use(express.static(path.join(__dirname)));
 
 // Specific routes for HTML pages
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.get('/login.html', (req, res) => {
@@ -300,17 +303,23 @@ io.on('connection', (socket) => {
 app.get('*', (req, res) => {
     // Check if the request is for a file with an extension
     if (req.path.match(/\.\w+$/)) {
-        // Try to serve the file
-        const filePath = path.join(__dirname, req.path);
-        res.sendFile(filePath, (err) => {
+        // Try to serve the file from public directory first
+        const publicFilePath = path.join(__dirname, 'public', req.path);
+        res.sendFile(publicFilePath, (err) => {
             if (err) {
-                console.error(`Error serving file ${req.path}:`, err);
-                res.status(404).send('File not found');
+                // If not found in public, try from root directory
+                const rootFilePath = path.join(__dirname, req.path);
+                res.sendFile(rootFilePath, (err) => {
+                    if (err) {
+                        console.error(`Error serving file ${req.path}:`, err);
+                        res.status(404).send('File not found');
+                    }
+                });
             }
         });
     } else {
         // For all other routes, serve the login page
-        res.sendFile(path.join(__dirname, 'login.html'));
+        res.sendFile(path.join(__dirname, 'public', 'login.html'));
     }
 });
 

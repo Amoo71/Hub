@@ -1,28 +1,9 @@
-import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
+/* Client-seitige Datenbank-Schnittstelle (ohne direkte Socket.io-Abhängigkeit) */
 
 let loggedInUser = null;
 
 // =====================================================================
-// BENUTZER-KONFIGURATION - EINFACH ZU BEARBEITEN
-// =====================================================================
-// 
-// ANLEITUNG ZUM HINZUFÜGEN NEUER BENUTZER:
-// 1. Füge einen neuen Eintrag mit einer eindeutigen Security-ID als Schlüssel hinzu
-// 2. Definiere die Eigenschaften: idName, designType
-// 3. Speichere die Datei und starte den Server neu
-//
-// VERFÜGBARE DESIGN-TYPEN:
-// - 'owner': Besondere Rechte und Styling (lila Farbverlauf, Glühen, Admin-Zugriff)
-// - 'green-member': Grünes Styling ohne Glühen
-// - Eigene Typen können definiert werden - füge sie einfach in der CSS-Definition hinzu
-//
-// BEISPIEL FÜR EINEN NEUEN BENUTZER:
-// 'neue-id-123': { idName: 'Neuer-Benutzer', designType: 'custom-style' }
-// 
-// CSS-STYLING BEFINDET SICH IN index.html:
-// - Für owner: .request-username.owner { ... }
-// - Für green-member: .request-username.green-member { ... }
-// - Für request-item: .request-item.owner, .request-item.green-member { ... }
+// BENUTZER-KONFIGURATION
 // =====================================================================
 
 export const userAccounts = {
@@ -45,7 +26,7 @@ export const userAccounts = {
     }
 };
 
-// Function to get the current session token (security ID) for authentication
+// Session-Token abrufen
 function getSessionToken() {
     const user = getLoggedInUser();
     return user ? user.securityId : null;
@@ -91,29 +72,99 @@ export function logoutUser() {
     sessionStorage.removeItem('loggedInSession');
 }
 
-// Socket.IO client setup - verbessert für Vercel-Kompatibilität
-console.log("Verbinde mit Socket.IO auf", window.location.origin);
-const socketOptions = {
-    path: '/socket.io',
-    transports: ['websocket', 'polling'],
-    autoConnect: true,
-    reconnection: true,
-    reconnectionAttempts: 5
-};
-const socket = io(window.location.origin, socketOptions);
+// Simulierte Socket.io-Kommunikation für Serverless-Umgebung
+console.log("Socket.io-Simulation wird initialisiert für Serverless-Umgebung");
 
-// Log Socket.IO Verbindungsstatus
-socket.on('connect', () => {
-    console.log('Socket.IO verbunden:', socket.id);
-});
+// Wir verwenden eine einfache Polling-Strategie, um Updates zu erhalten
+class ServerlessSocketSimulation {
+    constructor() {
+        this.eventHandlers = {};
+        this.connected = false;
+        this.id = 'sim-' + Date.now();
+        this.pollInterval = 5000; // 5 Sekunden
+        this.pollTimeoutId = null;
+        
+        // Bei Start direkt verbinden
+        this.connect();
+    }
+    
+    connect() {
+        this.connected = true;
+        console.log("Socket.io-Simulation verbunden mit ID:", this.id);
+        
+        // Polling starten für Event-Prüfung (bei Bedarf)
+        this.startPolling();
+        
+        // Emit connect event
+        this._triggerEvent('connect');
+    }
+    
+    startPolling() {
+        // In einer vollständigen Implementierung würden wir hier 
+        // regelmäßig den Server nach neuen Events fragen
+        if (this.pollTimeoutId) clearTimeout(this.pollTimeoutId);
+        
+        const poll = async () => {
+            if (!this.connected) return;
+            
+            try {
+                // Hier könnte ein API-Endpoint abgefragt werden, der Events zurückgibt
+                // In diesem Fall simulieren wir das Verhalten
+                console.log("Socket.io-Simulation: Polling für Events");
+                
+                // Nächstes Polling planen
+                this.pollTimeoutId = setTimeout(poll, this.pollInterval);
+                
+            } catch (error) {
+                console.error("Socket.io-Simulation: Polling-Fehler", error);
+                // Bei Fehler trotzdem weiter pollen
+                this.pollTimeoutId = setTimeout(poll, this.pollInterval);
+            }
+        };
+        
+        // Ersten Poll starten
+        this.pollTimeoutId = setTimeout(poll, this.pollInterval);
+    }
+    
+    on(eventName, callback) {
+        if (!this.eventHandlers[eventName]) {
+            this.eventHandlers[eventName] = [];
+        }
+        this.eventHandlers[eventName].push(callback);
+        console.log(`Socket.io-Simulation: Event-Handler für '${eventName}' registriert`);
+    }
+    
+    emit(eventName, data) {
+        if (eventName === 'register_session') {
+            console.log("Sende Sitzung an Server", data);
+            // Simulierter Server-Empfang
+            this._triggerEvent('session_registered', { success: true });
+            
+            // Bei einer vollständigen Implementierung würden wir hier einen API-Call machen
+            fetch('/socket-io-emulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ event: eventName, data })
+            }).catch(err => console.error("Socket.io-Emulation API-Fehler:", err));
+        }
+        
+        return true;
+    }
+    
+    _triggerEvent(eventName, data) {
+        const handlers = this.eventHandlers[eventName] || [];
+        handlers.forEach(handler => {
+            try {
+                handler(data);
+            } catch (error) {
+                console.error(`Socket.io-Simulation: Fehler beim Auslösen des Events '${eventName}'`, error);
+            }
+        });
+    }
+}
 
-socket.on('connect_error', (error) => {
-    console.error('Socket.IO Verbindungsfehler:', error);
-});
-
-socket.on('disconnect', (reason) => {
-    console.log('Socket.IO getrennt:', reason);
-});
+// Socket.io-Simulation erstellen
+const socket = new ServerlessSocketSimulation();
 
 export function setRequestUpdateCallback(callback) {
     requestUpdateCallback = callback;
@@ -123,20 +174,19 @@ export function setAntiTamperNotificationCallback(callback) {
     antiTamperNotificationCallback = callback;
 }
 
-// Listen for real-time events from server
+// Listen for real-time events (simuliert) 
 socket.on('requestAdded', (newRequest) => {
-    console.log('New request');
+    console.log('New request event');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('requestDeleted', (deletedRequestId) => {
-    console.log('Request deleted');
+    console.log('Request deleted event');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('sessionInvalidated', () => {
-    console.log('Session invalid');
-    // Force logout by clearing the user data
+    console.log('Session invalid event');
     localStorage.removeItem('loggedInUser');
     if (window.location.pathname !== '/login.html') {
         window.location.href = 'login.html';
@@ -144,27 +194,39 @@ socket.on('sessionInvalidated', () => {
 });
 
 socket.on('antiTamperNotification', (message) => {
-    console.log('Security alert');
+    console.log('Security alert event');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback(message);
 });
 
 socket.on('antiTamperLogsCleared', () => {
-    console.log('Logs cleared');
+    console.log('Logs cleared event');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback();
 });
 
 socket.on('albumItemsChanged', () => {
-    console.log('Albums updated');
+    console.log('Albums updated event');
     if (albumItemUpdateCallback) albumItemUpdateCallback();
 });
 
+// Manuelle Event-Auslösung bei API-Calls
+function triggerEvent(eventName, data) {
+    if (socket && socket._triggerEvent) {
+        socket._triggerEvent(eventName, data);
+        return true;
+    }
+    return false;
+}
+
+// API-Funktionen
 export async function getRequests() {
     try {
+        console.log("API-Aufruf: Anfragen abrufen");
         const response = await fetch('/api/requests');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log(`${data.length} Anfragen erhalten`);
         return data;
     } catch (error) {
         console.error('Error fetching requests:', error);
@@ -174,6 +236,7 @@ export async function getRequests() {
 
 export async function addRequest(request) {
     try {
+        console.log("API-Aufruf: Anfrage hinzufügen", request);
         const response = await fetch('/api/requests', {
             method: 'POST',
             headers: {
@@ -183,17 +246,26 @@ export async function addRequest(request) {
             body: JSON.stringify(request)
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        console.log('Request added');
+        console.log('Request added:', data);
+        
+        // Lokale Event-Auslösung
+        triggerEvent('requestAdded', data);
+        
         return data;
     } catch (error) {
-        console.error('Add error');
+        console.error('Add request error:', error);
         throw error;
     }
 }
 
 export async function deleteRequest(id) {
     try {
+        console.log("API-Aufruf: Anfrage löschen", id);
         const response = await fetch(`/api/requests/${id}`, {
             method: 'DELETE',
             headers: {
@@ -202,25 +274,33 @@ export async function deleteRequest(id) {
             }
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        console.log('Request deleted');
+        console.log('Request deleted:', data);
+        
+        // Lokale Event-Auslösung
+        triggerEvent('requestDeleted', id);
+        
         return data;
     } catch (error) {
-        console.error('Delete error');
+        console.error('Delete request error:', error);
         throw error;
     }
 }
 
 export async function registerSessionWithServer(user) {
     try {
-        console.log('Registering');
+        console.log('Registering session with server', user);
         
-        // Emit the register session event to the server - use correct event name
+        // Simulierte Socket-Registrierung
         socket.emit('register_session', user);
         
         return true;
     } catch (error) {
-        console.error('Register error');
+        console.error('Register session error:', error);
         return false;
     }
 }

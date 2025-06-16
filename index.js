@@ -2,144 +2,123 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const bodyParser = require('body-parser');
-const socketIo = require('socket.io');
-const { connectToDatabase } = require('./db-config');
 const apiRoutes = require('./api/index');
 
+// Express-App erstellen
 const app = express();
-const server = http.createServer(app);
 
-// Socket.io mit verbesserter Konfiguration für Vercel
-const io = socketIo(server, {
-  path: '/socket.io',
-  serveClient: false,
-  pingInterval: 10000,
-  pingTimeout: 5000,
-  cookie: false,
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
-
-// Store active sessions: { securityId: { socketId: string, username: string, idName: string, designType: string } }
-const activeSessions = new Map();
-// Store mapping from socketId to securityId for easier cleanup on disconnect
-const socketIdToSecurityId = {};
-
-const PORT = process.env.PORT || 3000;
+// In einer Serverless-Umgebung wie Vercel funktioniert Socket.io nicht wie gewohnt
+// Stattdessen verwenden wir eine einfachere Konfiguration
+// Die Socket.io-Funktionalität wird auf der Client-Seite simuliert
 
 // Middleware
 app.use(express.static(path.join(__dirname)));
+app.use(express.json());
 app.use(bodyParser.json());
 
-// Verwende die API-Routen unter /api
-app.use('/api', apiRoutes);
-
-// Socket.io connection handling
-io.on('connection', (socket) => {
-    console.log('Neue Socket-Verbindung:', socket.id);
-    
-    // Client registriert seine Session
-    socket.on('register_session', (userInfo) => {
-        if (userInfo && userInfo.securityId) {
-            console.log(`Session registriert für ${userInfo.idName} (${userInfo.securityId})`);
-            
-            // Speichere die Session
-            activeSessions.set(userInfo.securityId, {
-                socketId: socket.id,
-                username: userInfo.username || userInfo.securityId,
-                idName: userInfo.idName || 'Unbekannt',
-                designType: userInfo.designType || 'standard'
-            });
-            
-            // Speichere Mapping für einfacheres Aufräumen
-            socketIdToSecurityId[socket.id] = userInfo.securityId;
-            
-            // Sende eine Bestätigungsnachricht zurück
-            socket.emit('session_registered', { success: true });
-        }
-    });
-
-    // Verbindung getrennt
-    socket.on('disconnect', () => {
-        console.log(`Socket getrennt: ${socket.id}`);
-        const securityId = socketIdToSecurityId[socket.id];
-        
-        if (securityId) {
-            console.log(`Entferne Session für securityId: ${securityId}`);
-            activeSessions.delete(securityId);
-            delete socketIdToSecurityId[socket.id];
-        }
-    });
-    
-    // Event-Handler für Benachrichtigungen
-    socket.on('requestAdded', (data) => {
-        // Broadcast an alle verbundenen Clients (außer Sender)
-        socket.broadcast.emit('requestAdded', data);
-    });
-    
-    socket.on('requestDeleted', (id) => {
-        // Broadcast an alle verbundenen Clients (außer Sender)
-        socket.broadcast.emit('requestDeleted', id);
-    });
-    
-    socket.on('albumItemsChanged', () => {
-        // Broadcast an alle verbundenen Clients (außer Sender)
-        socket.broadcast.emit('albumItemsChanged');
-    });
-});
-
-// Weitergabe der Socket.io-Instanz an den Rest der Anwendung
-app.set('io', io);
-
-// CORS aktivieren für API-Anfragen
+// Debug-Logging für Anfragen
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Session-Token');
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-// Hauptrouten für HTML-Seiten
+// CORS-Header für alle Anfragen setzen
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Session-Token');
+  
+  // Preflight-Anfragen direkt beantworten
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
+// Error-Handler für Express
+app.use((err, req, res, next) => {
+  console.error('Express Error:', err);
+  res.status(500).json({
+    error: 'Interner Serverfehler',
+    message: err.message,
+    path: req.path
+  });
+});
+
+// API-Routen
+app.use('/api', apiRoutes);
+
+// Socket.io Endpunkt für Server-Sent Events Simulation
+app.post('/socket-io-emulate', (req, res) => {
+  // Hier empfangen wir eine Anfrage, die ein Socket.io Ereignis auslöst
+  // Da wir in einer Serverless-Umgebung sind, verwenden wir diesen Endpunkt,
+  // um die Ereignisse zu verarbeiten und zu loggen
+  const { event, data } = req.body;
+  console.log(`Socket.IO Event emuliert: ${event}`, data);
+  
+  // Erfolg zurückgeben
+  res.json({ success: true, event, received: true });
+});
+
+// Root-Route für Statusinformationen
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Login-Route
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
 
-// Spezielle Route für db.js, um sicherzustellen, dass sie korrekt bedient wird
+// db.js-Route für Frontend
 app.get('/db.js', (req, res) => {
-    res.sendFile(path.join(__dirname, 'db.js'));
+  res.sendFile(path.join(__dirname, 'db.js'));
 });
 
-// Catch-all-Route für statische Dateien
+// Catch-all für statische Dateien
 app.get('*', (req, res, next) => {
-    const filePath = path.join(__dirname, req.url);
-    // Prüfen, ob die Datei existiert, sonst zur nächsten Route weitergehen
-    try {
-        if (require('fs').existsSync(filePath)) {
-            return res.sendFile(filePath);
-        }
-    } catch (err) {
-        console.error('Dateizugriffsfehler:', err);
+  try {
+    const filePath = path.join(__dirname, req.path);
+    // Prüfen, ob die Datei existiert
+    if (require('fs').existsSync(filePath)) {
+      return res.sendFile(filePath);
     }
     next();
+  } catch (err) {
+    next(err);
+  }
 });
 
-// Datenbankinitalisierung
-connectToDatabase()
-    .then(() => console.log('MongoDB verbunden - Server bereit'))
-    .catch(err => console.error('DB-Verbindungsfehler:', err));
+// 404-Handler für nicht gefundene Routen
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Route nicht gefunden',
+    path: req.path,
+    method: req.method
+  });
+});
 
-// Starte den Server, wenn wir nicht in Vercel's Serverless-Umgebung sind
+// Server starten, wenn wir nicht in Vercel's Serverless-Umgebung sind
 if (process.env.NODE_ENV !== 'production') {
-    server.listen(PORT, () => {
-        console.log(`Server läuft auf Port ${PORT}`);
-    });
+  const PORT = process.env.PORT || 3000;
+  const server = http.createServer(app);
+  
+  // Hier können wir in einer nicht-serverless Umgebung Socket.io verwenden
+  const socketIo = require('socket.io');
+  const io = socketIo(server);
+  
+  io.on('connection', (socket) => {
+    console.log('Socket.io Verbindung hergestellt:', socket.id);
+    
+    // Hier können die Socket-Events wie gewohnt implementiert werden
+  });
+  
+  server.listen(PORT, () => {
+    console.log(`Server läuft auf Port ${PORT}`);
+  });
+} else {
+  console.log('Server läuft im Serverless-Modus auf Vercel');
 }
 
-// Exportiere für Vercel
+// Für Vercel Serverless-Funktionen exportieren wir die Express-App
 module.exports = app; 

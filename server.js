@@ -92,6 +92,9 @@ function broadcastAlbumUpdate() {
 // Middleware
 app.use(bodyParser.json());
 
+// Serve static files first
+app.use(express.static(path.join(__dirname)));
+
 // Specific routes for HTML pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
@@ -108,9 +111,6 @@ app.get('/login.html', (req, res) => {
 app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
-
-// Serve static files - this must come after specific routes
-app.use(express.static(path.join(__dirname)));
 
 // API Routes
 app.get('/api/requests', async (req, res) => {
@@ -294,6 +294,24 @@ io.on('connection', (socket) => {
             console.log(`Active sessions: ${activeSessions.size}`);
         }
     });
+});
+
+// Catch-all route for SPA - must be after API routes
+app.get('*', (req, res) => {
+    // Check if the request is for a file with an extension
+    if (req.path.match(/\.\w+$/)) {
+        // Try to serve the file
+        const filePath = path.join(__dirname, req.path);
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error(`Error serving file ${req.path}:`, err);
+                res.status(404).send('File not found');
+            }
+        });
+    } else {
+        // For all other routes, serve the login page
+        res.sendFile(path.join(__dirname, 'login.html'));
+    }
 });
 
 // Start the application

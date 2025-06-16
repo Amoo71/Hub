@@ -4,24 +4,16 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/login.html",
-      "dest": "/login.html"
+      "src": "/api/(.*)",
+      "dest": "/server.js"
     },
     {
-      "src": "/index.html",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/",
-      "dest": "/login.html"
+      "src": "/(.*\\.(js|html|css|json|png|jpg|svg|ico))",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",

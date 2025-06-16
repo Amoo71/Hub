@@ -2,14 +2,38 @@
   "version": 2,
   "builds": [
     {
-      "src": "server-mongo.js",
+      "src": "api/index.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/server-mongo.js"
+      "dest": "/$1"
     }
   ]
 } 

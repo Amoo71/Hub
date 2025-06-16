@@ -101,21 +101,84 @@ export function setAntiTamperNotificationCallback(callback) {
 
 // Polling function to replace Socket.IO
 let pollingInterval = null;
+let pollingErrors = 0;
+const MAX_ERRORS = 5;
 
 export function startPolling() {
     if (pollingInterval) return;
     
+    console.log('Starting polling for updates...');
+    
+    // Sofort erste Abfrage durchführen
+    if (requestUpdateCallback) {
+        getRequests()
+            .then(data => {
+                if (data && data.length >= 0) {
+                    console.log(`Initial poll: Loaded ${data.length} requests`);
+                    requestUpdateCallback(data);
+                    pollingErrors = 0;
+                }
+            })
+            .catch(err => {
+                console.error('Error in initial polling:', err);
+                pollingErrors++;
+            });
+    }
+    
+    if (albumItemUpdateCallback) {
+        getAlbumItems()
+            .then(data => {
+                if (data && data.length >= 0) {
+                    console.log(`Initial poll: Loaded ${data.length} album items`);
+                    albumItemUpdateCallback(data);
+                    pollingErrors = 0;
+                }
+            })
+            .catch(err => {
+                console.error('Error in initial album polling:', err);
+                pollingErrors++;
+            });
+    }
+    
     pollingInterval = setInterval(() => {
-        if (requestUpdateCallback) {
-            getRequests().then(() => requestUpdateCallback());
+        if (pollingErrors > MAX_ERRORS) {
+            console.error(`Too many polling errors (${pollingErrors}). Stopping polling.`);
+            stopPolling();
+            return;
         }
+        
+        if (requestUpdateCallback) {
+            getRequests()
+                .then(data => {
+                    if (data && data.length >= 0) {
+                        requestUpdateCallback(data);
+                        pollingErrors = 0;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error in polling:', err);
+                    pollingErrors++;
+                });
+        }
+        
         if (albumItemUpdateCallback) {
-            getAlbumItems().then(() => albumItemUpdateCallback());
+            getAlbumItems()
+                .then(data => {
+                    if (data && data.length >= 0) {
+                        albumItemUpdateCallback(data);
+                        pollingErrors = 0;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error in album polling:', err);
+                    pollingErrors++;
+                });
         }
     }, 5000); // Poll every 5 seconds
 }
 
 export function stopPolling() {
+    console.log('Stopping polling');
     if (pollingInterval) {
         clearInterval(pollingInterval);
         pollingInterval = null;
@@ -124,11 +187,14 @@ export function stopPolling() {
 
 export async function getRequests() {
     try {
+        console.log('Fetching requests...');
         const response = await fetch('/api/requests');
         if (!response.ok) {
+            console.error(`Error response: ${response.status} ${response.statusText}`);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log(`Fetched ${data.length} requests`);
         return data;
     } catch (error) {
         console.error('Error fetching requests:', error);

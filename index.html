@@ -1745,7 +1745,7 @@
     </div>
 
     <script type="module">
-        import { userAccounts, getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
+        import { getLoggedInUser, getRequests, addRequest, deleteRequest, setRequestUpdateCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, setAntiTamperNotificationCallback, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback, startPolling, userAccounts, logoutUser, setLoggedInUser, registerSessionWithServer } from './db-vercel.js';
 
         // Rain animation with wind effect
         document.addEventListener('DOMContentLoaded', () => {
@@ -3650,6 +3650,30 @@
                 // Show the modal
                 albumDetailModalOverlay.classList.add('visible');
             }
+
+            // Start polling for updates when the page loads
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Page loaded, checking connection...');
+                
+                // Check API connection
+                fetch('/api/health')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`API health check failed: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('API connection successful:', data);
+                        startPolling();
+                    })
+                    .catch(error => {
+                        console.error('API connection error:', error);
+                        showNotification('Verbindungsfehler: Server nicht erreichbar', 'error');
+                    });
+                
+                // Rest of your code
+            });
         });
     </script>
 </body>

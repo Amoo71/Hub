@@ -302,6 +302,25 @@ app.get('/api/requests', async (req, res) => {
     }
 });
 
+// Add DELETE endpoint for requests
+app.delete('/api/requests/:id', checkAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await Request.deleteOne({ id });
+        
+        if (result.deletedCount > 0) {
+            // Broadcast update to all clients
+            broadcastRequestUpdate();
+            res.status(200).json({ message: 'Request deleted successfully' });
+        } else {
+            res.status(404).json({ message: 'Request not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting request:', error);
+        res.status(500).json({ error: 'Failed to delete request' });
+    }
+});
+
 app.get('/api/albums', async (req, res) => {
     try {
         const albums = await AlbumItem.find().sort({ timestamp: -1 });
@@ -309,6 +328,38 @@ app.get('/api/albums', async (req, res) => {
     } catch (error) {
         console.error('Error fetching albums:', error);
         res.status(500).json({ error: 'Failed to fetch albums' });
+    }
+});
+
+// Add PUT endpoint for updating album items
+app.put('/api/albums/:id', checkAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, imageUrl, acc, pw } = req.body;
+        
+        // Check if album exists
+        const album = await AlbumItem.findOne({ id });
+        if (!album) {
+            return res.status(404).json({ error: 'Album not found' });
+        }
+        
+        // Update the album with new values or keep existing ones
+        album.name = name || album.name;
+        album.imageUrl = imageUrl !== undefined ? imageUrl : album.imageUrl;
+        album.acc = acc !== undefined ? acc : album.acc;
+        album.pw = pw !== undefined ? pw : album.pw;
+        album.timestamp = Date.now(); // Update timestamp to make it the newest
+        
+        // Save the updated album
+        await album.save();
+        
+        // Broadcast update to all clients
+        broadcastAlbumUpdate();
+        
+        res.json(album);
+    } catch (error) {
+        console.error('Error updating album:', error);
+        res.status(500).json({ error: 'Failed to update album' });
     }
 });
 

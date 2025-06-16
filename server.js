@@ -544,3 +544,103 @@ function broadcastAlbumUpdate() {
 }
 
 // Special maintenance endpoints
+app.get('/api/maintenance/fix-album-ids', checkAuth, async (req, res) => {
+    try {
+        console.log('Running album ID fix from maintenance endpoint...');
+        const albums = await AlbumItem.find();
+        let updatedCount = 0;
+        
+        // Update albums with new IDs
+        for (const album of albums) {
+            const newId = Date.now() + '-' + album._id.toString();
+            await AlbumItem.updateOne({ _id: album._id }, { id: newId });
+            console.log(`Set ID for album "${album.name}" to ${newId}`);
+            updatedCount++;
+        }
+        
+        // Broadcast update to all clients
+        broadcastAlbumUpdate();
+        
+        const updatedAlbums = await AlbumItem.find().sort({ timestamp: -1 });
+        res.json({ 
+            success: true, 
+            message: `Album IDs fixed: ${updatedCount} albums updated.`,
+            albums: updatedAlbums
+        });
+    } catch (error) {
+        console.error('Error fixing album IDs:', error);
+        res.status(500).json({ error: 'Error fixing album IDs: ' + error.message });
+    }
+});
+
+// API Endpoint for reporting albums
+app.post('/api/report-album', async (req, res) => {
+    try {
+        const { albumId, albumName, reportedBy, message } = req.body;
+        
+        if (!albumId || !albumName || !reportedBy) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Create a unique ID for the report
+        const logId = Date.now().toString();
+        const reportMessage = message || `Album reported: "${albumName}" by ${reportedBy}`;
+        
+        // Create anti-tamper log entry for the report
+        const log = new AntiTamperLog({
+            id: logId,
+            timestamp: Date.now(),
+            message: reportMessage
+        });
+        await log.save();
+        
+        console.log('Report created');
+        
+        // Notify all admin users about the report
+        activeSessions.forEach((session, key) => {
+            if (session.designType === 'owner' || session.idName === 'Amo') {
+                try {
+                    io.to(session.socketId).emit('anti_tamper_notification', { 
+                        id: logId,
+                        timestamp: Date.now(),
+                        message: reportMessage
+                    });
+                    console.log('Admin notified');
+                } catch (err) {
+                    // Ignore errors sending to potentially disconnected sockets
+                }
+            }
+        });
+        
+        return res.status(201).json({ success: true, message: 'Album reported successfully' });
+    } catch (error) {
+        console.error('Report error:', error);
+        return res.status(500).json({ error: 'Failed to report album' });
+    }
+});
+
+// Route for the login page - MUST BE BEFORE express.static to take precedence for '/' 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Serve static files from the current directory for all other paths
+app.use(express.static(path.join(__dirname)));
+
+// Start the server - Update to explicitly listen on all interfaces (0.0.0.0)
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
+    console.log(`PORT environment variable is set to: ${process.env.PORT}`);
+});
+
+// Ensure database connection is closed on application exit
+process.on('SIGINT', () => {
+    console.log('Server is shutting down. Closing database connection...');
+    mongoose.connection.close();
+    process.exit(0);
+});
+
+process.on('exit', (code) => {
+    console.log(`About to exit with code: ${code}. Ensuring database is closed.`);
+    mongoose.connection.close();
+});

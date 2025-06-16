@@ -1,101 +1,120 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-// MongoDB-Verbindungsstring (wird aus Umgebungsvariablen geladen oder kann direkt hier eingetragen werden)
+// Lese die Verbindungsinformationen aus der Umgebung
 const MONGODB_URI = process.env.MONGODB_URI;
 
-// Überprüfe, ob die MongoDB-URI gesetzt ist
+// Debug-Ausgabe für fehlersuche
+console.log('MongoDB URI vorhanden:', !!MONGODB_URI);
 if (!MONGODB_URI) {
-  console.error('ACHTUNG: MONGODB_URI nicht gesetzt. Bitte als Umgebungsvariable konfigurieren.');
+  console.error('MONGODB_URI fehlt in den Umgebungsvariablen!');
 }
 
-// globale mongoose Promise verwenden
-mongoose.Promise = global.Promise;
+// Verbindungsoptionen für MongoDB/Mongoose
+const DB_OPTIONS = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 10000,
+  autoIndex: true,
+};
 
 // Verbindungsstatus
 let isConnected = false;
-let cachedConnection = null;
+let dbInstance = null;
+
+// Schemaerstellung
+const createRequestSchema = () => {
+  return new mongoose.Schema({
+    id: String,
+    username: String,
+    text: String,
+    designType: String,
+    idName: String,
+    time: String,
+    timestamp: Number
+  }, { 
+    timestamps: true, 
+    collection: 'requests',
+    strict: false
+  });
+};
+
+const createAntiTamperLogSchema = () => {
+  return new mongoose.Schema({
+    id: String,
+    timestamp: Number,
+    message: String
+  }, { 
+    timestamps: true, 
+    collection: 'anti_tamper_logs',
+    strict: false
+  });
+};
+
+const createAlbumItemSchema = () => {
+  return new mongoose.Schema({
+    id: String,
+    name: String,
+    imageUrl: String,
+    acc: String,
+    pw: String,
+    timestamp: Number
+  }, { 
+    timestamps: true, 
+    collection: 'album_items',
+    strict: false
+  });
+};
+
+// Models initialisieren
+const getModels = () => {
+  // Models nur einmal erstellen
+  const Request = mongoose.models.Request || mongoose.model('Request', createRequestSchema());
+  const AntiTamperLog = mongoose.models.AntiTamperLog || mongoose.model('AntiTamperLog', createAntiTamperLogSchema());
+  const AlbumItem = mongoose.models.AlbumItem || mongoose.model('AlbumItem', createAlbumItemSchema());
+
+  return {
+    Request,
+    AntiTamperLog,
+    AlbumItem
+  };
+};
 
 // Verbindung zur MongoDB herstellen
 async function connectToDatabase() {
   try {
-    if (isConnected) {
-      console.log('=> Verwende existierende Datenbankverbindung');
-      return cachedConnection;
+    // Wenn wir bereits verbunden sind, vorhandene Verbindung zurückgeben
+    if (isConnected && dbInstance) {
+      console.log('=> Nutze bestehende DB-Verbindung');
+      return { instance: dbInstance, models: getModels() };
     }
 
-    console.log('=> Neue Datenbankverbindung herstellen mit URI:', 
-      MONGODB_URI ? `${MONGODB_URI.substring(0, 20)}...` : 'Keine URI angegeben');
-    
+    console.log('=> Stelle neue Datenbankverbindung her');
+
+    // Prüfe, ob die Verbindungs-URL vorhanden ist
     if (!MONGODB_URI) {
-      throw new Error('MongoDB-Verbindungsstring fehlt. Bitte MONGODB_URI als Umgebungsvariable setzen.');
+      throw new Error('MONGODB_URI Umgebungsvariable fehlt');
     }
 
-    const opts = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000 // Timeout nach 5 Sekunden
-    };
+    // Verbindung nur herstellen, wenn noch keine besteht
+    if (!dbInstance) {
+      dbInstance = await mongoose.connect(MONGODB_URI, DB_OPTIONS);
+      isConnected = true;
+      console.log('=> MongoDB-Verbindung erfolgreich hergestellt');
+    }
 
-    const connection = await mongoose.connect(MONGODB_URI, opts);
-    cachedConnection = connection;
-    isConnected = true;
-    console.log('=> Datenbankverbindung erfolgreich hergestellt');
-    return connection;
+    // Erfolgreiche Verbindung zurückgeben
+    return { instance: dbInstance, models: getModels() };
   } catch (error) {
-    console.error('=> Fehler bei der MongoDB-Verbindung:', error.message);
-    return null; // Statt Exception werfen, null zurückgeben für graceful error handling
+    console.error('=> MongoDB-Verbindungsfehler:', error.message);
+    isConnected = false;
+    dbInstance = null;
+    return { error: error.message, models: null };
   }
 }
 
-// Modell für Requests
-const RequestSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  username: { type: String, required: true },
-  text: { type: String, required: true },
-  designType: { type: String, required: true },
-  idName: { type: String, required: true },
-  time: { type: String, required: true },
-  timestamp: { type: Number, required: true }
-}, { 
-  timestamps: true, 
-  collection: 'requests' 
-});
-
-// Modell für Anti-Tamper-Logs
-const AntiTamperLogSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  timestamp: { type: Number, required: true },
-  message: { type: String, required: true }
-}, { 
-  timestamps: true, 
-  collection: 'anti_tamper_logs' 
-});
-
-// Modell für Album-Items
-const AlbumItemSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  imageUrl: { type: String, required: true },
-  acc: { type: String, required: true },
-  pw: { type: String, required: true },
-  timestamp: { type: Number, required: true }
-}, { 
-  timestamps: true, 
-  collection: 'album_items' 
-});
-
-// Modelle erstellen - Mit Prüfung, ob sie bereits existieren
-const Request = mongoose.models.Request || mongoose.model('Request', RequestSchema);
-const AntiTamperLog = mongoose.models.AntiTamperLog || mongoose.model('AntiTamperLog', AntiTamperLogSchema);
-const AlbumItem = mongoose.models.AlbumItem || mongoose.model('AlbumItem', AlbumItemSchema);
-
 module.exports = {
   connectToDatabase,
-  models: {
-    Request,
-    AntiTamperLog,
-    AlbumItem
-  },
+  models: getModels(),
   isConnected: () => isConnected
 }; 

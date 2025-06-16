@@ -2,12 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>System Access</title>
     <style>
-        /* =====================================================================
-         * FARBSCHEMA UND DESIGN-VARIABLEN - EINFACH ZU BEARBEITEN
-         * =====================================================================
+        
          */
         :root {
             /* Grundfarben */
@@ -34,50 +32,12 @@
             --owner-glow-colors: 0 0 4px 1px #388aa8, 0 0 6px 1px #610728, 0 0 3px 1px #610873;
             --request-glow-colors: 0 0 6px 1px #850000, 0 0 10px 2px #850000, 0 0 8px 1px #ffffff, 0 0 6px 1px #850000;
             
-            /* Hintergrund-Farben für den Farbverlauf */
-            --gradient-color-1: #0a0a0a;
-            --gradient-color-2: #121212;
-            --gradient-color-3: #1a1a1a;
-            --gradient-color-4: #151515;
+            /* Liquid Background Colors */
+            --liquid-color1: #0a0a0a;
+            --liquid-color2: #121212;
+            --liquid-color3: #1a1a1a;
+            --liquid-color4: #222222;
         }
-
-        /* Gradient-Hintergrund Styles */
-        #gradient-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            background: linear-gradient(135deg, 
-                var(--gradient-color-1), 
-                var(--gradient-color-2), 
-                var(--gradient-color-3), 
-                var(--gradient-color-4), 
-                var(--gradient-color-1));
-            background-size: 400% 400%;
-            animation: gradient-shift 30s ease infinite;
-        }
-        
-        @keyframes gradient-shift {
-            0% { background-position: 0% 0%; }
-            25% { background-position: 50% 50%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 50% 50%; }
-            100% { background-position: 0% 0%; }
-        }
-        
-        #rain-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.5;
-            filter: blur(0.6px);
-        }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -151,6 +111,35 @@
                 transform: scale(1); 
             }
         }
+        
+        /* Liquid Background Animation */
+        @keyframes liquid-move {
+            0% {
+                border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            }
+            50% {
+                border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+            }
+            100% {
+                border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            }
+        }
+        
+        @keyframes liquid-color {
+            0% {
+                background-color: var(--liquid-color1);
+            }
+            33% {
+                background-color: var(--liquid-color2);
+            }
+            66% {
+                background-color: var(--liquid-color3);
+            }
+            100% {
+                background-color: var(--liquid-color1);
+            }
+        }
+        
         body {
             background-color: var(--background-color);
             color: var(--text-color);
@@ -166,6 +155,71 @@
             position: relative;
         }
         
+        /* Liquid Background */
+        .liquid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+            background-color: var(--background-color);
+        }
+        
+        .liquid-blob {
+            position: absolute;
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            animation: liquid-move 15s ease-in-out infinite alternate, 
+                       liquid-color 20s ease-in-out infinite;
+            filter: blur(40px);
+        }
+        
+        .liquid-blob:nth-child(1) {
+            top: -15%;
+            left: -10%;
+            width: 50%;
+            height: 50%;
+            background-color: var(--liquid-color2);
+            animation-delay: 0s;
+        }
+        
+        .liquid-blob:nth-child(2) {
+            top: 40%;
+            right: -15%;
+            width: 60%;
+            height: 60%;
+            background-color: var(--liquid-color3);
+            animation-delay: 5s;
+        }
+        
+        .liquid-blob:nth-child(3) {
+            bottom: -15%;
+            left: 20%;
+            width: 45%;
+            height: 45%;
+            background-color: var(--liquid-color4);
+            animation-delay: 10s;
+        }
+        
+        .liquid-blob:nth-child(4) {
+            top: 10%;
+            right: 10%;
+            width: 40%;
+            height: 40%;
+            background-color: var(--liquid-color2);
+            animation-delay: 15s;
+        }
+        #rain-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(0.6px);
+        }
         .screen {
             display: flex;
             flex-direction: column;
@@ -1019,32 +1073,32 @@
             .screen {
                 height: 100vh;
                 padding: 0;
+                transform: scale(0.95);
             }
             #main-screen {
-                padding-top: 5vh;
+                padding-top: 2vh;
                 overflow-y: auto;
                 overflow-x: hidden;
-                padding-bottom: 150px; /* Mehr Platz für Scrollen */
             }
             #main-screen .search-bar {
                 width: min(450px, 80vw);
-                margin-bottom: 8vh;
+                margin-bottom: 4vh;
             }
             #main-screen .main-title {
-                font-size: 2.2rem;
+                font-size: 2rem;
                 margin-top: 5px;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
             }
             .gallery-container {
-                gap: 25px;
+                gap: 20px;
                 width: 100vw;
-                padding: 25px 0;
-                margin-bottom: 20px; /* Reduzierter Abstand */
+                padding: 20px 0;
+                margin-bottom: 30px;
             }
             
             .album-item-wrapper {
-                padding: 12px 5px;
-                margin: 8px 0;
+                padding: 10px 5px;
+                margin: 6px 0;
             }
             
             .view-all-button {
@@ -1053,43 +1107,43 @@
             }
             
             .main-title-container {
-                margin-top: 40px; /* Reduzierter Abstand */
+                margin-top: 40px;
             }
 
             .placeholder-image {
-                min-width: 200px;
-                width: 200px;
-                height: 280px;
-                font-size: 1.1rem;
+                min-width: 180px;
+                width: 180px;
+                height: 250px;
+                font-size: 1rem;
             }
             .request-section {
-                padding: 25px 20px; /* Reduzierter Innenabstand */
-                width: min(800px, 90vw);
+                padding: 20px;
+                width: min(800px, 85vw);
                 min-height: 350px;
-                margin-top: 50px; /* Mehr Abstand nach oben */
-                margin-bottom: 80px;
             }
             .input-form {
                 display: flex;
                 align-items: center;
-                gap: 15px;
-                margin-bottom: 30px; /* Reduzierter Abstand */
-                min-height: 60px;
+                gap: 10px;
+                margin-bottom: 30px;
+                transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+                min-height: 50px;
                 justify-content: center;
             }
             .input-wrapper.primary {
-                width: 350px;
+                width: 300px;
                 flex-shrink: 0;
             }
             .input-wrapper.primary input {
                 text-align: center;
+                font-size: 0.95rem;
             }
             .input-wrapper.primary.shifted input {
                 text-align: left;
             }
             .send-button.visible {
-                width: 80px;
-                min-width: 80px;
+                width: 70px;
+                min-width: 70px;
             }
             .request-item {
                 display: flex;
@@ -1099,82 +1153,114 @@
             }
             .request-separator {
                 display: inline;
-                margin: 0 15px;
+                margin: 0 10px;
             }
             .request-time {
-                margin-left: 15px;
-            }
-            
-            /* Optimierte Höhe für die Requests-Liste */
-            .requests-list.scrollable {
-                max-height: 250px;
+                margin-left: 10px;
+                font-size: 0.8rem;
             }
         }
         @media (max-width: 480px) {
-            #main-screen {
-                padding-bottom: 200px; /* Noch mehr Platz für Scrollen auf kleinen Geräten */
+            body {
+                font-size: 14px;
+            }
+            
+            .screen {
+                transform: scale(0.9);
+            }
+            
+            #main-screen .main-title {
+                font-size: 1.6rem;
+                margin-top: 0;
             }
             
             .main-title-container {
-                margin-top: 30px; /* Noch weniger Abstand oben */
+                margin-top: 30px;
             }
             
             .view-all-button {
-                font-size: 0.8rem;
-                padding: 5px 14px;
+                font-size: 0.75rem;
+                padding: 5px 12px;
             }
             
             .gallery-container {
                 padding: 15px 0;
-                margin-bottom: 10px; /* Reduzierter Abstand */
+                margin-bottom: 30px;
             }
             
             .album-item-wrapper {
-                padding: 8px 5px;
-                margin: 5px 0;
+                padding: 8px 4px;
+                margin: 4px 0;
             }
             
             .placeholder-image {
-                min-width: 150px;
-                width: 150px;
-                height: 210px;
-                font-size: 1rem;
+                min-width: 140px;
+                width: 140px;
+                height: 200px;
+                font-size: 0.9rem;
             }
             .gallery-content {
-                padding-left: calc(50vw - 162.5px);
-                padding-right: calc(50vw - 162.5px);
+                padding-left: calc(50vw - 150px);
+                padding-right: calc(50vw - 150px);
             }
             .glassy-input {
-                font-size: 1rem;
-                padding: 12px 16px;
+                font-size: 0.9rem;
+                padding: 10px 14px;
             }
             .request-section {
-                padding: 20px;
+                padding: 15px;
                 min-height: 300px;
-                margin-top: 80px; /* Noch mehr Abstand nach oben auf kleinen Geräten */
-                margin-bottom: 100px;
-                width: min(800px, 92vw); /* Etwas breiter für kleine Bildschirme */
+                width: min(800px, 90vw);
             }
             .input-wrapper.primary {
-                width: 280px; /* Schmaler für kleine Bildschirme */
+                width: 250px;
             }
             
-            /* Optimierte Höhe für die Requests-Liste */
-            .requests-list.scrollable {
-                max-height: 200px;
+            .input-wrapper.secondary.visible {
+                width: 140px;
+                min-width: 140px;
             }
             
-            /* Kleinere Schrift für Request-Items */
+            .album-name {
+                font-size: 0.8em;
+                margin-top: 10px;
+            }
+            
+            .request-username {
+                min-width: 50px;
+                margin-right: 5px;
+                font-size: 0.9rem;
+            }
+            
             .request-text {
                 font-size: 0.9rem;
             }
             
             .request-time {
-                font-size: 0.8rem;
+                font-size: 0.75rem;
+                margin-left: 8px;
             }
             
-            #main-screen {
-                padding-bottom: 100px; /* Noch mehr Platz unten */
+            .request-separator {
+                margin: 0 8px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .modal-album-name {
+                font-size: 1.5rem;
+            }
+            
+            .modal-image-placeholder {
+                width: 200px;
+                height: 280px;
+            }
+            
+            .glassy-button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
             }
         }
         /* Style for the ID Name Tooltip */
@@ -1644,28 +1730,15 @@
             transition: opacity 0.3s ease;
             animation: fadeIn 0.2s ease-in-out;
         }
-
-        /* Session-Timeout-Warnung */
-        #session-timeout-warning {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 25px;
-            background: rgba(255, 77, 77, 0.9);
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            z-index: 9999;
-            font-weight: bold;
-            text-align: center;
-            animation: fadeIn 0.5s ease-in-out;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
-    <div id="gradient-background"></div>
+    <div class="liquid-background">
+        <div class="liquid-blob"></div>
+        <div class="liquid-blob"></div>
+        <div class="liquid-blob"></div>
+        <div class="liquid-blob"></div>
+    </div>
     <canvas id="rain-canvas"></canvas>
     <div id="main-screen" class="screen">
         <div class="search-wrapper" style="position: relative; width: min(450px, 80vw); margin: 0 auto;">
@@ -1828,8 +1901,8 @@
     <script type="module">
         import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
 
+        // Rain animation with wind effect
         document.addEventListener('DOMContentLoaded', () => {
-            // Rain animation with wind effect
             const canvas = document.getElementById('rain-canvas');
             const ctx = canvas.getContext('2d');
             
@@ -1937,85 +2010,6 @@
             // Start animation
             animate();
             
-            // Inaktivitäts-Timer-Variablen
-            let inactivityTimeout;
-            let warningTimeout;
-            
-            // Verbesserte Session-Timeout-Funktion
-            function resetInactivityTimer() {
-                // Clear any existing timers
-                if (inactivityTimeout) {
-                    clearTimeout(inactivityTimeout);
-                }
-                if (warningTimeout) {
-                    clearTimeout(warningTimeout);
-                }
-                
-                // Hide any existing warning
-                const warningEl = document.getElementById('session-timeout-warning');
-                if (warningEl) {
-                    document.body.removeChild(warningEl);
-                }
-                
-                // Set warning timer for 2 minutes (1 minute before logout)
-                warningTimeout = setTimeout(() => {
-                    showSessionWarning();
-                }, 2 * 60 * 1000);
-                
-                // Set new timer for 3 minutes
-                inactivityTimeout = setTimeout(() => {
-                    const loggedInUser = getLoggedInUser();
-                    if (loggedInUser) {
-                        console.log('Logging out due to inactivity');
-                        logoutUser();
-                        window.location.href = 'login.html?reason=inactivity_timeout';
-                    }
-                }, 3 * 60 * 1000); // 3 minutes
-            }
-            
-            function showSessionWarning() {
-                // Create warning element if it doesn't exist
-                if (!document.getElementById('session-timeout-warning')) {
-                    const warningEl = document.createElement('div');
-                    warningEl.id = 'session-timeout-warning';
-                    warningEl.innerHTML = 'Your session will expire in 60 seconds!<br>Please interact with the page to stay logged in.';
-                    
-                    document.body.appendChild(warningEl);
-                    
-                    // Add click event to reset timer when user clicks on warning
-                    warningEl.addEventListener('click', () => {
-                        trackUserActivity();
-                    });
-                }
-            }
-            
-            // User activity tracking to reset session timeout
-            function trackUserActivity() {
-                const loggedInUser = getLoggedInUser();
-                if (loggedInUser) {
-                    // Just calling getLoggedInUser will refresh the timestamp if user is logged in
-                    setLoggedInUser(loggedInUser); // Explicitly reset the timestamp
-                    
-                    // Reset inactivity timer
-                    resetInactivityTimer();
-                }
-            }
-            
-            // Initialize inactivity timer on page load if user is logged in
-            const loggedInUser = getLoggedInUser();
-            if (loggedInUser) {
-                resetInactivityTimer();
-            }
-            
-            // Track various user interactions to keep session alive
-            document.addEventListener('mousemove', trackUserActivity);
-            document.addEventListener('keypress', trackUserActivity);
-            document.addEventListener('click', trackUserActivity);
-            document.addEventListener('scroll', trackUserActivity);
-            document.addEventListener('touchstart', trackUserActivity);
-            
-            // Rest des Codes bleibt unverändert...
-
             const mainScreen = document.getElementById('main-screen');
             const requestInput = document.getElementById('request-input');
             const usernameInput = document.getElementById('username-input');
@@ -2142,6 +2136,95 @@
             // Set up a periodic session check (e.g., every minute)
             sessionCheckInterval = setInterval(checkSessionAndRedirect, 60 * 1000); // Check every 1 minute
             
+            // User activity tracking to reset session timeout
+            function trackUserActivity() {
+                const loggedInUser = getLoggedInUser();
+                if (loggedInUser) {
+                    // Just calling getLoggedInUser will refresh the timestamp if user is logged in
+                    setLoggedInUser(loggedInUser); // Explicitly reset the timestamp
+                    
+                    // Reset inactivity timer
+                    resetInactivityTimer();
+                }
+            }
+            
+            // Inactivity timer for auto logout
+            let inactivityTimeout;
+            let warningTimeout;
+            
+            function resetInactivityTimer() {
+                // Clear any existing timers
+                if (inactivityTimeout) {
+                    clearTimeout(inactivityTimeout);
+                }
+                if (warningTimeout) {
+                    clearTimeout(warningTimeout);
+                }
+                
+                // Hide any existing warning
+                const warningEl = document.getElementById('session-timeout-warning');
+                if (warningEl) {
+                    document.body.removeChild(warningEl);
+                }
+                
+                // Set warning timer for 2 minutes (1 minute before logout)
+                warningTimeout = setTimeout(() => {
+                    showSessionWarning();
+                }, 2 * 60 * 1000);
+                
+                // Set new timer for 3 minutes
+                inactivityTimeout = setTimeout(() => {
+                    const loggedInUser = getLoggedInUser();
+                    if (loggedInUser) {
+                        console.log('Logout');
+                        logoutUser();
+                        window.location.href = 'login.html';
+                    }
+                }, 3 * 60 * 1000); // 3 minutes
+            }
+            
+            function showSessionWarning() {
+                // Create warning element if it doesn't exist
+                if (!document.getElementById('session-timeout-warning')) {
+                    const warningEl = document.createElement('div');
+                    warningEl.id = 'session-timeout-warning';
+                    warningEl.style.position = 'fixed';
+                    warningEl.style.top = '20px';
+                    warningEl.style.left = '50%';
+                    warningEl.style.transform = 'translateX(-50%)';
+                    warningEl.style.padding = '15px 25px';
+                    warningEl.style.background = 'rgba(255, 77, 77, 0.9)';
+                    warningEl.style.color = 'white';
+                    warningEl.style.borderRadius = '8px';
+                    warningEl.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+                    warningEl.style.zIndex = '9999';
+                    warningEl.style.fontWeight = 'bold';
+                    warningEl.style.textAlign = 'center';
+                    warningEl.style.animation = 'fadeIn 0.5s ease-in-out';
+                    warningEl.innerHTML = 'Your session will expire in 60s!\nPlease interact with the page to stay logged in.';
+                    
+                    document.body.appendChild(warningEl);
+                    
+                    // Add click event to reset timer when user clicks on warning
+                    warningEl.addEventListener('click', () => {
+                        trackUserActivity();
+                    });
+                }
+            }
+            
+            // Initialize inactivity timer on page load if user is logged in
+            const loggedInUser = getLoggedInUser();
+            if (loggedInUser) {
+                resetInactivityTimer();
+            }
+            
+            // Track various user interactions to keep session alive
+            document.addEventListener('mousemove', trackUserActivity);
+            document.addEventListener('keypress', trackUserActivity);
+            document.addEventListener('click', trackUserActivity);
+            document.addEventListener('scroll', trackUserActivity);
+            document.addEventListener('touchstart', trackUserActivity);
+
             // Admin button click to toggle anti-tamper panel
             adminToggleButton.addEventListener('click', () => {
                 antiTamperPanelVisible = !antiTamperPanelVisible;

@@ -454,21 +454,21 @@ app.delete('/api/albums/:id', checkAuth, async (req, res) => {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-    console.log('Connected');
+    console.log('Connect');
 
     // Handle session registration
     socket.on('register_session', (data) => {
         const { securityId, username, idName, designType } = data;
-        console.log('Registration attempt for:', idName);
+        console.log('Register');
         
         // Check if this securityId is already registered with a different socket
         if (activeSessions.has(securityId)) {
             const oldSessionInfo = activeSessions.get(securityId);
             const oldSocketId = oldSessionInfo.socketId;
-            console.log('Session already exists for securityId:', securityId);
+            console.log('Exists');
             
             // This is a multiple login attempt as the securityId is already in use
-            console.log('Invalidating old session, multiple login detected');
+            console.log('Invalidate');
             
             // Notify the existing session that it's being invalidated
             io.to(oldSocketId).emit('sessionInvalidated', { 
@@ -487,7 +487,7 @@ io.on('connection', (socket) => {
             });
             log.save().catch(err => console.error('Error saving anti-tamper log:', err));
 
-            console.log('Anti-tamper log created for multiple login');
+            console.log('Log');
             
             // Notify all admin users about the suspicious activity
             activeSessions.forEach((session, key) => {
@@ -498,9 +498,9 @@ io.on('connection', (socket) => {
                             timestamp: Date.now(),
                             message: notificationMessage
                         });
-                        console.log('Admin notified of multiple login attempt');
+                        console.log('Notify');
                     } catch (err) {
-                        console.error('Error notifying admin:', err);
+                        console.error('Error');
                     }
                 }
             });
@@ -519,12 +519,12 @@ io.on('connection', (socket) => {
         });
         socketIdToSecurityId[socket.id] = securityId;
         
-        console.log('Session registered for:', idName);
+        console.log('Active');
     });
 
     // Handle disconnection
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        console.log('Disconnect');
         
         // Clean up session data
         const securityId = socketIdToSecurityId[socket.id];
@@ -532,7 +532,7 @@ io.on('connection', (socket) => {
             // Immediately remove the session when socket disconnects
             activeSessions.delete(securityId);
             delete socketIdToSecurityId[socket.id];
-            console.log('Session removed for securityId:', securityId);
+            console.log('Remove');
         }
     });
 });

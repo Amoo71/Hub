@@ -37,6 +37,7 @@ export function getLoggedInUser() {
             loggedInUser = user;
             return loggedInUser;
         } else {
+            console.log('Session timeout after 3 minutes of inactivity');
             logoutUser();
             return null;
         }
@@ -70,17 +71,17 @@ export function setAntiTamperNotificationCallback(callback) {
 
 // Listen for real-time events from server
 socket.on('requestAdded', (newRequest) => {
-    console.log('New request received');
+    console.log('Request');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('requestDeleted', (deletedRequestId) => {
-    console.log('Request deletion notification received');
+    console.log('Delete');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('sessionInvalidated', (data) => {
-    console.log('Session invalidated by server:', data?.message || 'Your session was invalidated');
+    console.log('Invalid');
     // Force logout by clearing the user data
     logoutUser();
     // Redirect to login page if not already there
@@ -90,17 +91,17 @@ socket.on('sessionInvalidated', (data) => {
 });
 
 socket.on('anti_tamper_notification', (notification) => {
-    console.log('Anti-tamper notification received:', notification);
+    console.log('Alert');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback(notification);
 });
 
 socket.on('anti_tamper_logs_cleared', () => {
-    console.log('Anti-tamper logs cleared notification received');
+    console.log('Clear');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback();
 });
 
 socket.on('albumItemsChanged', () => {
-    console.log('Album items update notification received');
+    console.log('Update');
     if (albumItemUpdateCallback) albumItemUpdateCallback();
 });
 

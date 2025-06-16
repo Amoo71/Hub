@@ -312,6 +312,50 @@ app.get('/api/albums', async (req, res) => {
     }
 });
 
+// Add missing API endpoints for anti-tamper logs
+app.get('/api/anti-tamper-logs', async (req, res) => {
+    try {
+        const logs = await AntiTamperLog.find().sort({ timestamp: -1 });
+        res.json(logs);
+    } catch (error) {
+        console.error('Error fetching anti-tamper logs:', error);
+        res.status(500).json({ error: 'Failed to fetch anti-tamper logs' });
+    }
+});
+
+app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+    try {
+        const result = await AntiTamperLog.deleteMany({});
+        console.log(`Cleared ${result.deletedCount} anti-tamper logs.`);
+        io.emit('antiTamperLogsCleared'); // Notify clients that logs have been cleared
+        res.status(200).json({ message: `Cleared ${result.deletedCount} anti-tamper logs.` });
+    } catch (error) {
+        console.error('Error clearing anti-tamper logs:', error);
+        res.status(500).json({ error: 'Failed to clear anti-tamper logs' });
+    }
+});
+
+app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
+    try {
+        const idToDelete = String(req.params.id);
+        console.log(`Server: Received DELETE request for anti-tamper log with ID: ${idToDelete}`);
+        
+        const result = await AntiTamperLog.deleteOne({ id: idToDelete });
+        
+        if (result.deletedCount > 0) {
+            console.log(`Server: Successfully deleted anti-tamper log with ID: ${idToDelete}`);
+            io.emit('antiTamperNotification'); // Trigger re-render for all clients
+            res.status(200).json({ message: `Anti-tamper log ${idToDelete} deleted successfully` });
+        } else {
+            console.log(`Server: Failed to delete anti-tamper log with ID: ${idToDelete}. Log not found.`);
+            res.status(404).json({ message: `Anti-tamper log with ID ${idToDelete} not found` });
+        }
+    } catch (error) {
+        console.error(`Server: Error during deletion of anti-tamper log ${req.params.id}:`, error);
+        res.status(500).json({ message: `Internal server error during deletion: ${error.message}` });
+    }
+});
+
 // Start server
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

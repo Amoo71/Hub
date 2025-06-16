@@ -1,89 +1,14 @@
 import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
 
 let loggedInUser = null;
-// Removed local 'requests' array as it's now server-managed
-// Removed sessionStorage.getItem('requests') initialization
 
 // =====================================================================
-// BENUTZER-KONFIGURATION - EINFACH ZU BEARBEITEN
+// SICHERHEITSHINWEIS
 // =====================================================================
-// 
-// ANLEITUNG ZUM HINZUFÜGEN NEUER BENUTZER:
-// 1. Füge einen neuen Eintrag mit einer eindeutigen Security-ID als Schlüssel hinzu
-// 2. Definiere die Eigenschaften: idName, designType
-// 3. Speichere die Datei und starte den Server neu
-//
-// VERFÜGBARE DESIGN-TYPEN:
-// - 'owner': Besondere Rechte und Styling (lila Farbverlauf, Glühen, Admin-Zugriff)
-// - 'green-member': Grünes Styling ohne Glühen
-// - Eigene Typen können definiert werden - füge sie einfach in der CSS-Definition hinzu
-//
-// BEISPIEL FÜR EINEN NEUEN BENUTZER:
-// 'neue-id-123': { idName: 'Neuer-Benutzer', designType: 'custom-style' }
-// 
-// CSS-STYLING BEFINDET SICH IN index.html:
-// - Für owner: .request-username.owner { ... }
-// - Für green-member: .request-username.green-member { ... }
-// - Für request-item: .request-item.owner, .request-item.green-member { ... }
+// Die Benutzerkonten werden jetzt sicher auf dem Server gespeichert
+// und nicht mehr im Frontend-Code, um die Sicherheit zu erhöhen.
+// Neue Benutzer müssen über den Server konfiguriert werden.
 // =====================================================================
-
-export const userAccounts = {
-    // Admin-Benutzer
-    '1357': { 
-        idName: 'Amo',         // Angezeigter Name
-        designType: 'owner'     // Design-Typ (bestimmt Styling und Rechte)
-    },
-    
-    // Standard-Benutzer
-    'test01': { 
-        idName: 'Test-Member 1', 
-        designType: 'green-member' 
-    },
-    
-    // Weitere Benutzer hier hinzufügen...
-    'testPremium': { 
-        idName: 'Test-Premium 1', 
-        designType: 'prem-gold-pulse' 
-    }
-    
-    
-    // Kopiere diesen Block, um einen neuen Benutzer hinzuzufügen:
-    /*
-    'security-id': { 
-        idName: 'Anzeigename', 
-        designType: 'design-typ' 
-    },
-    */
-};
-
-// CSS-STYLING-REFERENZ (aus index.html)
-/*
-.request-username.owner {
-    font-weight: 600;
-    background: linear-gradient(135deg, #1a1a2e, #0f3460, #533483, #2d0036, #000, #8e24aa);
-    background-size: 400% 400%;
-    animation: owner-gradient 3s ease-in-out infinite, request-glow 3s linear infinite;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    border-radius: 6px;
-    padding: 2px 10px;
-    box-shadow: 0 0 4px 1px #1a1a2e, 0 0 6px 1px #533483, 0 0 3px 1px #2d0036;
-}
-
-.request-username.green-member {
-    font-weight: 600;
-    color: var(--glow-green);
-    border-radius: 6px;
-    padding: 2px 10px;
-}
-
-.request-item.green-member {
-    box-shadow: none;
-    animation: none;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-*/
 
 // Function to get the current session token (security ID) for authentication
 function getSessionToken() {

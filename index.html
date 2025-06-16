@@ -798,7 +798,8 @@
          * Um einen neuen Benutzertyp hinzuzufügen:
          * 1. Füge eine neue CSS-Klasse für .request-username.[designType] hinzu
          * 2. Optional: Füge eine CSS-Klasse für .request-item.[designType] hinzu
-         * 3. Füge den neuen designType in db.js zu den userAccounts hinzu
+         * 3. Füge den neuen designType auf dem Server in der userAccounts-Liste hinzu
+         *    (in der server.js-Datei, nicht mehr in db.js)
          * 
          * Beispiel für einen neuen Benutzertyp:
          * .request-username.vip-user {
@@ -1745,7 +1746,7 @@
     </div>
 
     <script type="module">
-        import { userAccounts, getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
+        import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
 
         // Rain animation with wind effect
         document.addEventListener('DOMContentLoaded', () => {

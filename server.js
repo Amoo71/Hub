@@ -104,7 +104,7 @@ async function initializeDb() {
         // Check if there are any requests
         const requestCount = await Request.countDocuments();
         console.log(`Current request count: ${requestCount}`);
-        
+    
         // Add initial Amo request if collection is empty
         if (requestCount === 0) {
             const now = new Date();
@@ -124,8 +124,8 @@ async function initializeDb() {
             
             await initialAmoRequest.save();
             console.log('Added initial Amo request');
-        }
-        
+}
+
         // Check if there are any album items
         const albumCount = await AlbumItem.countDocuments();
         console.log(`Current album count: ${albumCount}`);
@@ -164,7 +164,7 @@ app.get('/api/requests', async (req, res) => {
     try {
         const requests = await Request.find().sort({ timestamp: -1 });
         res.json(requests);
-    } catch (error) {
+} catch (error) {
         console.error('Error fetching requests:', error);
         res.status(500).json({ error: 'Server error' });
     }
@@ -175,7 +175,7 @@ app.post('/api/requests', async (req, res) => {
         const { username, text, designType, idName, time } = req.body;
         
         const newRequest = new Request({
-            id: Date.now().toString(),
+        id: Date.now().toString(),
             username,
             text,
             designType,
@@ -185,7 +185,7 @@ app.post('/api/requests', async (req, res) => {
         });
         
         await newRequest.save();
-        
+
         // Broadcast to all clients
         io.emit('requestAdded', newRequest);
         
@@ -208,7 +208,7 @@ app.delete('/api/requests/:id', async (req, res) => {
         
         // Broadcast to all clients
         io.emit('requestDeleted', id);
-        
+            
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting request:', error);
@@ -230,7 +230,7 @@ app.get('/api/anti-tamper-logs', checkAuth, async (req, res) => {
 app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
     try {
         await AntiTamperLog.deleteMany({});
-        
+            
         // Broadcast to all clients
         io.emit('antiTamperLogsCleared');
         
@@ -334,7 +334,7 @@ app.delete('/api/album-items/:id', async (req, res) => {
         
         if (!result) {
             return res.status(404).json({ error: 'Album item not found' });
-        }
+            }
         
         // Broadcast to all clients
         io.emit('albumItemsChanged');
@@ -364,7 +364,7 @@ io.on('connection', (socket) => {
             
             // Store reverse mapping for easy cleanup
             socketIdToSecurityId[socket.id] = user.securityId;
-            
+        
             console.log('Session registered successfully');
         } else {
             console.log('Invalid user data for session registration');

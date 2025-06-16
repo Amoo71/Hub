@@ -1744,9 +1744,12 @@
         </div>
     </div>
 
-    <script type="module">
-        import { userAccounts, getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
+    <!-- Socket.IO client script -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Database script -->
+    <script src="db.js"></script>
 
+    <script>
         // Rain animation with wind effect
         document.addEventListener('DOMContentLoaded', () => {
             const canvas = document.getElementById('rain-canvas');

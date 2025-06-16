@@ -3,20 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Access - Login</title>
+    <title>System Login</title>
     <style>
+        /* =====================================================================
+         * FARBSCHEMA UND DESIGN-VARIABLEN - EINFACH ZU BEARBEITEN
+         * =====================================================================
+         */
         :root {
-            --background-color: #1a1a1a;
+            /* Grundfarben */
+            --background-color: #111111;
             --text-color: #f0f0f0;
             --subtle-text-color: #a0a0a0;
+            
+            /* UI-Elemente */
             --glass-background: rgba(45, 45, 45, 0.5);
             --glass-border: rgba(255, 255, 255, 0.1);
+            
+            /* Akzentfarben */
             --glow-green: #00ff7f;
             --glow-red: #ff4d4d;
-            --scroll-bar-thumb: #555;
-            --scroll-bar-track: #2a2a2a;
-            --green-gradient: linear-gradient(135deg, #00ff7f, #00cc66);
-            --subtle-red-color: #cc6666; /* A subtle red color */
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -31,11 +36,6 @@
                 border-color: var(--glass-border);
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
             }
-        }
-        @keyframes owner-gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
         @keyframes glow-green {
             0% { 
@@ -59,36 +59,6 @@
                 box-shadow: 0 0 25px 10px rgba(255, 77, 77, 0.5), 
                            0 0 50px 15px rgba(255, 77, 77, 0.3),
                            0 4px 20px rgba(0, 0, 0, 0.2);
-            }
-        }
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(30px) scale(0.95);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        @keyframes slideFromRight {
-            from { 
-                opacity: 0;
-                transform: translateX(30px) scale(0.9); 
-            }
-            to { 
-                opacity: 1;
-                transform: translateX(0) scale(1); 
-            }
-        }
-        @keyframes scaleInSmooth {
-            from { 
-                opacity: 0;
-                transform: scale(0.85); 
-            }
-            to { 
-                opacity: 1;
-                transform: scale(1); 
             }
         }
         body {
@@ -213,6 +183,10 @@
             }
         }
     </style>
+    <!-- Socket.IO client script -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Database script -->
+    <script src="db.js"></script>
 </head>
 <body>
     <div id="login-screen" class="screen">
@@ -223,9 +197,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import { userAccounts, setLoggedInUser, registerSessionWithServer, getLoggedInUser } from './db.js';
-
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const securityIdInput = document.getElementById('security-id-input');
             const togglePasswordButton = document.getElementById('toggle-password-visibility'); // Get the new button

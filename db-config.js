@@ -5,17 +5,28 @@ require('dotenv').config();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://<username>:<password>@<cluster-url>/<database-name>?retryWrites=true&w=majority';
 
 // Verbindung zur MongoDB herstellen
+let cachedConnection = null;
+
 async function connectToDatabase() {
+  if (cachedConnection) {
+    return cachedConnection;
+  }
+
   try {
-    await mongoose.connect(MONGODB_URI, {
+    const opts = {
       useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+      useUnifiedTopology: true,
+      bufferCommands: false
+    };
+
+    const connection = await mongoose.connect(MONGODB_URI, opts);
+    cachedConnection = connection;
     console.log('Verbindung zur MongoDB erfolgreich hergestellt');
-    return mongoose.connection;
+    return connection;
   } catch (error) {
     console.error('Fehler bei der MongoDB-Verbindung:', error);
-    process.exit(1);
+    // Fehler zurückgeben, aber Anwendung nicht beenden
+    throw new Error(`MongoDB Verbindungsproblem: ${error.message}`);
   }
 }
 

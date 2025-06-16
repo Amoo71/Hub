@@ -17,6 +17,7 @@ const activeSessions = new Map();
 const socketIdToSecurityId = {};
 
 const PORT = process.env.PORT || 3000;
+let isDbInitialized = false;
 
 // Middleware to check authentication for admin routes
 const checkAuth = (req, res, next) => {
@@ -64,13 +65,15 @@ const checkAuth = (req, res, next) => {
 // Initialisierung der Datenbankverbindung und Anlegen von Beispieldaten, wenn nötig
 async function initializeDb() {
     try {
+        if (isDbInitialized) return;
+        
         await connectToDatabase();
         console.log('MongoDB-Verbindung initialisiert');
         
         // Prüfen, ob Beispiel-Album existiert
         const albumCount = await models.AlbumItem.countDocuments();
         console.log(`Aktuell vorhandene Albums: ${albumCount}`);
-        
+    
         if (albumCount === 0) {
             console.log('Füge Beispiel-Album hinzu');
             const now = Date.now();
@@ -104,14 +107,13 @@ async function initializeDb() {
             await initialAmoRequest.save();
         }
         
+        isDbInitialized = true;
         console.log('Datenbank erfolgreich initialisiert');
     } catch (error) {
         console.error('Fehler bei der Datenbankinitialisierung:', error);
+        // Fehler für Debugging-Zwecke loggen, aber nicht abstürzen
     }
 }
-
-// Initialisierung ausführen
-initializeDb();
 
 // Middleware
 app.use(express.static(path.join(__dirname)));
@@ -152,10 +154,21 @@ io.on('connection', (socket) => {
     });
 });
 
+// Hilfsfunktion zur Datenbankinitialisierung für alle API-Routen
+const withDatabase = (handler) => async (req, res) => {
+    try {
+        await initializeDb();
+        return handler(req, res);
+    } catch (error) {
+        console.error('Fehler bei der Datenbankoperation:', error);
+        return res.status(500).json({ error: 'Datenbankfehler', details: error.message });
+    }
+};
+
 // API-Routen
 
 // GET all requests
-app.get('/api/requests', async (req, res) => {
+app.get('/api/requests', withDatabase(async (req, res) => {
     try {
         const requests = await models.Request.find().sort({ timestamp: -1 });
         res.json(requests);
@@ -163,10 +176,10 @@ app.get('/api/requests', async (req, res) => {
         console.error('Fehler beim Abrufen der Anfragen:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Add a new request
-app.post('/api/requests', async (req, res) => {
+app.post('/api/requests', withDatabase(async (req, res) => {
     try {
         const request = req.body;
         const currentDate = new Date();
@@ -183,10 +196,10 @@ app.post('/api/requests', async (req, res) => {
         console.error('Fehler beim Hinzufügen der Anfrage:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Delete a request
-app.delete('/api/requests/:id', async (req, res) => {
+app.delete('/api/requests/:id', withDatabase(async (req, res) => {
     try {
         const { id } = req.params;
         await models.Request.deleteOne({ id });
@@ -198,10 +211,10 @@ app.delete('/api/requests/:id', async (req, res) => {
         console.error('Fehler beim Löschen der Anfrage:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // GET all anti-tamper logs
-app.get('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+app.get('/api/anti-tamper-logs', checkAuth, withDatabase(async (req, res) => {
     try {
         const logs = await models.AntiTamperLog.find().sort({ timestamp: -1 });
         res.json(logs);
@@ -209,10 +222,10 @@ app.get('/api/anti-tamper-logs', checkAuth, async (req, res) => {
         console.error('Fehler beim Abrufen der Anti-Tamper-Logs:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Clear all anti-tamper logs
-app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+app.delete('/api/anti-tamper-logs', checkAuth, withDatabase(async (req, res) => {
     try {
         await models.AntiTamperLog.deleteMany({});
         
@@ -223,10 +236,10 @@ app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
         console.error('Fehler beim Löschen der Anti-Tamper-Logs:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Delete a specific anti-tamper log
-app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
+app.delete('/api/anti-tamper-logs/:id', checkAuth, withDatabase(async (req, res) => {
     try {
         const { id } = req.params;
         await models.AntiTamperLog.deleteOne({ id });
@@ -235,10 +248,10 @@ app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
         console.error('Fehler beim Löschen des Anti-Tamper-Logs:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // GET all album items
-app.get('/api/album-items', async (req, res) => {
+app.get('/api/album-items', withDatabase(async (req, res) => {
     try {
         const albumItems = await models.AlbumItem.find().sort({ timestamp: -1 });
         res.json(albumItems);
@@ -246,10 +259,10 @@ app.get('/api/album-items', async (req, res) => {
         console.error('Fehler beim Abrufen der Album-Items:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Add a new album item
-app.post('/api/album-items', checkAuth, async (req, res) => {
+app.post('/api/album-items', checkAuth, withDatabase(async (req, res) => {
     try {
         const albumItem = req.body;
         albumItem.timestamp = Date.now();
@@ -265,10 +278,10 @@ app.post('/api/album-items', checkAuth, async (req, res) => {
         console.error('Fehler beim Hinzufügen des Album-Items:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Update an album item
-app.put('/api/album-items/:id', checkAuth, async (req, res) => {
+app.put('/api/album-items/:id', checkAuth, withDatabase(async (req, res) => {
     try {
         const { id } = req.params;
         const albumItem = req.body;
@@ -284,10 +297,10 @@ app.put('/api/album-items/:id', checkAuth, async (req, res) => {
         console.error('Fehler beim Aktualisieren des Album-Items:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Delete an album item
-app.delete('/api/album-items/:id', checkAuth, async (req, res) => {
+app.delete('/api/album-items/:id', checkAuth, withDatabase(async (req, res) => {
     try {
         const { id } = req.params;
         await models.AlbumItem.deleteOne({ id });
@@ -299,14 +312,39 @@ app.delete('/api/album-items/:id', checkAuth, async (req, res) => {
         console.error('Fehler beim Löschen des Album-Items:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
-});
+}));
 
 // Function to broadcast album updates to all connected clients
 function broadcastAlbumUpdate() {
     io.emit('albumItemsChanged');
 }
 
+// Gesundheitscheck-Route für Vercel
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: Date.now() });
+});
+
+// Route zu statischen HTML-Dateien
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
 // Start the server
-server.listen(PORT, () => {
-    console.log(`Server läuft auf Port ${PORT}`);
-}); 
+// Initialisiere die Datenbank, wenn der Server startet
+initializeDb().catch(err => console.error('Initialisierungsfehler:', err));
+
+// Starte den Server nur, wenn wir nicht in einer Serverless-Umgebung sind
+if (process.env.NODE_ENV !== 'production') {
+    server.listen(PORT, () => {
+        console.log(`Server läuft auf Port ${PORT}`);
+    });
+} else {
+    console.log('Server läuft im Serverless-Modus');
+}
+
+// Exportiere die Express-App für Vercel
+module.exports = app; 

@@ -70,36 +70,37 @@ export function setAntiTamperNotificationCallback(callback) {
 
 // Listen for real-time events from server
 socket.on('requestAdded', (newRequest) => {
-    console.log('New request');
+    console.log('New request received');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('requestDeleted', (deletedRequestId) => {
-    console.log('Request deleted');
+    console.log('Request deletion notification received');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('sessionInvalidated', (data) => {
-    console.log('Session invalid:', data?.message || 'Your session was invalidated');
+    console.log('Session invalidated by server:', data?.message || 'Your session was invalidated');
     // Force logout by clearing the user data
     logoutUser();
+    // Redirect to login page if not already there
     if (window.location.pathname !== '/login.html') {
-        window.location.href = 'login.html';
+        window.location.href = 'login.html?reason=session_invalidated';
     }
 });
 
-socket.on('antiTamperNotification', (message) => {
-    console.log('Security alert');
-    if (antiTamperNotificationCallback) antiTamperNotificationCallback(message);
+socket.on('anti_tamper_notification', (notification) => {
+    console.log('Anti-tamper notification received:', notification);
+    if (antiTamperNotificationCallback) antiTamperNotificationCallback(notification);
 });
 
-socket.on('antiTamperLogsCleared', () => {
-    console.log('Logs cleared');
+socket.on('anti_tamper_logs_cleared', () => {
+    console.log('Anti-tamper logs cleared notification received');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback();
 });
 
 socket.on('albumItemsChanged', () => {
-    console.log('Albums updated');
+    console.log('Album items update notification received');
     if (albumItemUpdateCallback) albumItemUpdateCallback();
 });
 
@@ -179,19 +180,16 @@ export async function deleteRequest(id) {
 
 export async function registerSessionWithServer(user) {
     try {
-        console.log('Registering');
+        console.log('Registering session with server');
         
         // Only register if we have a valid session
         if (user && user.securityId) {
-            // Add a small random delay (0-500ms) to prevent potential race conditions
-            // when rapidly navigating between pages or refreshing
-            const randomDelay = Math.floor(Math.random() * 500);
-            await new Promise(resolve => setTimeout(resolve, randomDelay));
-            
-            // Emit the register session event to the server - use correct event name
+            // Emit the register session event to the server
             socket.emit('register_session', user);
             
             // Set up automatic re-registration if the socket reconnects
+            // Remove previous listener first to avoid duplicates
+            socket.off('reconnect');
             socket.on('reconnect', () => {
                 console.log('Socket reconnected, re-registering session');
                 const currentUser = getLoggedInUser();
@@ -206,7 +204,7 @@ export async function registerSessionWithServer(user) {
             return false;
         }
     } catch (error) {
-        console.error('Register error', error);
+        console.error('Session registration error:', error);
         return false;
     }
 }

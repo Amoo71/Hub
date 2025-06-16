@@ -226,7 +226,7 @@ app.delete('/api/anti-tamper-logs', async (req, res) => {
     try {
         const result = await AntiTamperLog.deleteMany({});
         console.log(`Cleared ${result.deletedCount} anti-tamper logs.`);
-        io.emit('antiTamperLogsCleared'); // Notify clients that logs have been cleared
+        io.emit('anti_tamper_logs_cleared'); // Notify clients that logs have been cleared
         res.status(200).json({ message: `Cleared ${result.deletedCount} anti-tamper logs.` });
     } catch (error) {
         console.error('Error clearing anti-tamper logs:', error);
@@ -244,7 +244,7 @@ app.delete('/api/anti-tamper-logs/:id', async (req, res) => {
         
         if (result.deletedCount > 0) {
             console.log(`Server: Successfully deleted anti-tamper log with ID: ${idToDelete}`);
-            io.emit('antiTamperNotification'); // Trigger re-render for all clients
+            io.emit('anti_tamper_notification'); // Trigger re-render for all clients
             res.status(200).json({ message: `Anti-tamper log ${idToDelete} deleted successfully` });
         } else {
             console.log(`Server: Failed to delete anti-tamper log with ID: ${idToDelete}. Log not found.`);
@@ -459,114 +459,80 @@ io.on('connection', (socket) => {
     // Handle session registration
     socket.on('register_session', (data) => {
         const { securityId, username, idName, designType } = data;
-        console.log('Registration');
+        console.log('Registration attempt for:', idName);
         
         // Check if this securityId is already registered with a different socket
         if (activeSessions.has(securityId)) {
             const oldSessionInfo = activeSessions.get(securityId);
             const oldSocketId = oldSessionInfo.socketId;
-            const oldIdName = oldSessionInfo.idName;
-            console.log('Session exists');
+            console.log('Session already exists for securityId:', securityId);
             
-            // Check if it's a reconnection from the same user and IP
-            const oldSocket = io.sockets.sockets.get(oldSocketId);
+            // This is a multiple login attempt as the securityId is already in use
+            console.log('Invalidating old session, multiple login detected');
             
-            // Add a grace period to prevent false alarms on page refreshes or navigation
-            // This checks if the old socket was just disconnected recently (within 10 seconds)
-            const now = Date.now();
-            const disconnectTime = oldSocket ? Infinity : (oldSessionInfo.disconnectedAt || 0);
-            const isRecentDisconnect = (now - disconnectTime) < 10000; // 10 seconds grace period
+            // Notify the existing session that it's being invalidated
+            io.to(oldSocketId).emit('sessionInvalidated', { 
+                message: 'Your session has been logged in elsewhere'
+            });
             
-            // Skip alert if the old socket is already disconnected or inactive or it's a recent disconnect
-            if (!oldSocket || (oldSocket && !oldSocket.connected) || isRecentDisconnect) {
-                console.log('Old socket already disconnected or recent reconnect, treating as normal reconnection');
-                // Clean up the old socket mapping without triggering alerts
-                delete socketIdToSecurityId[oldSocketId];
-            } else {
-                // This is a genuine multiple login attempt as the old session is still active
-                console.log('Invalidating old');
-                io.to(oldSocketId).emit('sessionInvalidated', { message: 'Your session has been logged in elsewhere' });
-                
-                // Clean up the old socket mapping
-                delete socketIdToSecurityId[oldSocketId];
-                
-                // Create anti-tamper log for suspicious activity (multiple logins)
-                const notificationMessage = `Multiple login attempt: ${idName}`;
-                const logId = Date.now().toString();
-                
-                // Create log in MongoDB
-                const log = new AntiTamperLog({
-                    id: logId,
-                    timestamp: Date.now(),
-                    message: notificationMessage
-                });
-                log.save().catch(err => console.error('Error saving anti-tamper log:', err));
+            // Create anti-tamper log for suspicious activity (multiple logins)
+            const notificationMessage = `Multiple login attempt: ${idName} (Security ID: ${securityId.substring(0, 2)}***)`;
+            const logId = Date.now().toString();
+            
+            // Create log in MongoDB
+            const log = new AntiTamperLog({
+                id: logId,
+                timestamp: Date.now(),
+                message: notificationMessage
+            });
+            log.save().catch(err => console.error('Error saving anti-tamper log:', err));
 
-                console.log('Log created');
-                
-                // Notify all admin users about the suspicious activity
-                activeSessions.forEach((session, key) => {
-                    if (session.designType === 'owner' || session.idName === 'Amo') {
-                        try {
-                            io.to(session.socketId).emit('anti_tamper_notification', { 
-                                id: logId,
-                                timestamp: Date.now(),
-                                message: notificationMessage
-                            });
-                            console.log('Admin notified');
-                        } catch (err) {
-                            // Ignore errors sending to potentially disconnected sockets
-                        }
+            console.log('Anti-tamper log created for multiple login');
+            
+            // Notify all admin users about the suspicious activity
+            activeSessions.forEach((session, key) => {
+                if (session.designType === 'owner' || session.idName === 'Amo') {
+                    try {
+                        io.to(session.socketId).emit('anti_tamper_notification', { 
+                            id: logId,
+                            timestamp: Date.now(),
+                            message: notificationMessage
+                        });
+                        console.log('Admin notified of multiple login attempt');
+                    } catch (err) {
+                        console.error('Error notifying admin:', err);
                     }
-                });
-            }
+                }
+            });
+            
+            // Clean up the old socket mapping
+            delete socketIdToSecurityId[oldSocketId];
         }
 
-        // Register the new session
+        // Register the new session (replacing any existing one)
         activeSessions.set(securityId, { 
             socketId: socket.id, 
             username, 
             idName, 
             designType,
-            lastActive: Date.now(),
-            disconnectedAt: null
+            lastActive: Date.now()
         });
         socketIdToSecurityId[socket.id] = securityId;
         
-        console.log('Session registered');
+        console.log('Session registered for:', idName);
     });
 
     // Handle disconnection
     socket.on('disconnect', () => {
-        console.log('Disconnected');
+        console.log('Client disconnected');
         
-        // Clean up session data but record disconnection time
+        // Clean up session data
         const securityId = socketIdToSecurityId[socket.id];
         if (securityId) {
-            const sessionInfo = activeSessions.get(securityId);
-            if (sessionInfo) {
-                // Instead of deleting the session right away, mark its disconnect time
-                // and keep it for a grace period to handle page navigation/refresh
-                activeSessions.set(securityId, {
-                    ...sessionInfo,
-                    disconnectedAt: Date.now()
-                });
-                
-                // Set up a delayed cleanup for the session after the grace period
-                setTimeout(() => {
-                    // Check if this session has been reconnected
-                    const currentSession = activeSessions.get(securityId);
-                    if (currentSession && currentSession.disconnectedAt === sessionInfo.disconnectedAt) {
-                        // Session wasn't reconnected, clean it up
-                        activeSessions.delete(securityId);
-                        console.log('Session removed after grace period');
-                    }
-                }, 30000); // 30-second grace period
-            }
-            
-            // Always clean up the socket ID mapping immediately
+            // Immediately remove the session when socket disconnects
+            activeSessions.delete(securityId);
             delete socketIdToSecurityId[socket.id];
-            console.log('Socket mapping removed');
+            console.log('Session removed for securityId:', securityId);
         }
     });
 });

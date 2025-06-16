@@ -34,54 +34,37 @@
             --owner-glow-colors: 0 0 4px 1px #388aa8, 0 0 6px 1px #610728, 0 0 3px 1px #610873;
             --request-glow-colors: 0 0 6px 1px #850000, 0 0 10px 2px #850000, 0 0 8px 1px #ffffff, 0 0 6px 1px #850000;
             
-            /* Lava-Hintergrund-Farben */
-            --lava-color-1: #0a0a0a;
-            --lava-color-2: #131313;
-            --lava-color-3: #1c1c1c;
-            --lava-color-4: #252525;
-            --lava-color-5: #1a1a1a;
-            --lava-color-glow: rgba(40, 40, 40, 0.4);
+            /* Hintergrund-Farben für den Farbverlauf */
+            --gradient-color-1: #0a0a0a;
+            --gradient-color-2: #121212;
+            --gradient-color-3: #1a1a1a;
+            --gradient-color-4: #151515;
         }
 
-        /* Lava-Hintergrund Styles */
-        #lava-background {
+        /* Gradient-Hintergrund Styles */
+        #gradient-background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -2;
-            background: var(--background-color);
-            overflow: hidden;
+            background: linear-gradient(135deg, 
+                var(--gradient-color-1), 
+                var(--gradient-color-2), 
+                var(--gradient-color-3), 
+                var(--gradient-color-4), 
+                var(--gradient-color-1));
+            background-size: 400% 400%;
+            animation: gradient-shift 30s ease infinite;
         }
         
-        .lava-blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(40px);
-            opacity: 0.4;
-            background: var(--lava-color-2);
-            animation: float-around 30s infinite ease-in-out;
-        }
-        
-        .lava-blob.color-shift {
-            animation: float-around 30s infinite ease-in-out, color-shift 20s infinite alternate;
-        }
-        
-        @keyframes float-around {
-            0% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(5%, 10%) scale(1.1); }
-            50% { transform: translate(10%, -5%) scale(0.9); }
-            75% { transform: translate(-8%, 8%) scale(1.2); }
-            100% { transform: translate(0, 0) scale(1); }
-        }
-        
-        @keyframes color-shift {
-            0% { background: var(--lava-color-2); }
-            25% { background: var(--lava-color-3); }
-            50% { background: var(--lava-color-4); }
-            75% { background: var(--lava-color-5); }
-            100% { background: var(--lava-color-2); }
+        @keyframes gradient-shift {
+            0% { background-position: 0% 0%; }
+            25% { background-position: 50% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 50% 50%; }
+            100% { background-position: 0% 0%; }
         }
         
         #rain-canvas {
@@ -1041,7 +1024,7 @@
                 padding-top: 5vh;
                 overflow-y: auto;
                 overflow-x: hidden;
-                padding-bottom: 80px; /* Mehr Platz unten */
+                padding-bottom: 150px; /* Mehr Platz für Scrollen */
             }
             #main-screen .search-bar {
                 width: min(450px, 80vw);
@@ -1056,7 +1039,7 @@
                 gap: 25px;
                 width: 100vw;
                 padding: 25px 0;
-                margin-bottom: 30px; /* Reduzierter Abstand */
+                margin-bottom: 20px; /* Reduzierter Abstand */
             }
             
             .album-item-wrapper {
@@ -1083,7 +1066,8 @@
                 padding: 25px 20px; /* Reduzierter Innenabstand */
                 width: min(800px, 90vw);
                 min-height: 350px;
-                margin-bottom: 60px; /* Mehr Platz unten */
+                margin-top: 50px; /* Mehr Abstand nach oben */
+                margin-bottom: 80px;
             }
             .input-form {
                 display: flex;
@@ -1127,9 +1111,8 @@
             }
         }
         @media (max-width: 480px) {
-            #main-screen .main-title {
-                font-size: 1.8rem;
-                margin-top: 5px;
+            #main-screen {
+                padding-bottom: 200px; /* Noch mehr Platz für Scrollen auf kleinen Geräten */
             }
             
             .main-title-container {
@@ -1143,7 +1126,7 @@
             
             .gallery-container {
                 padding: 15px 0;
-                margin-bottom: 20px; /* Reduzierter Abstand */
+                margin-bottom: 10px; /* Reduzierter Abstand */
             }
             
             .album-item-wrapper {
@@ -1168,7 +1151,8 @@
             .request-section {
                 padding: 20px;
                 min-height: 300px;
-                margin-bottom: 80px; /* Mehr Platz unten */
+                margin-top: 80px; /* Noch mehr Abstand nach oben auf kleinen Geräten */
+                margin-bottom: 100px;
                 width: min(800px, 92vw); /* Etwas breiter für kleine Bildschirme */
             }
             .input-wrapper.primary {
@@ -1660,10 +1644,28 @@
             transition: opacity 0.3s ease;
             animation: fadeIn 0.2s ease-in-out;
         }
+
+        /* Session-Timeout-Warnung */
+        #session-timeout-warning {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            background: rgba(255, 77, 77, 0.9);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            font-weight: bold;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <div id="lava-background"></div>
+    <div id="gradient-background"></div>
     <canvas id="rain-canvas"></canvas>
     <div id="main-screen" class="screen">
         <div class="search-wrapper" style="position: relative; width: min(450px, 80vw); margin: 0 auto;">
@@ -1826,83 +1828,8 @@
     <script type="module">
         import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
 
-        // Lava-Hintergrund-Animation
-        function createLavaBackground() {
-            const lavaContainer = document.getElementById('lava-background');
-            const colors = [
-                'var(--lava-color-1)',
-                'var(--lava-color-2)',
-                'var(--lava-color-3)',
-                'var(--lava-color-4)'
-            ];
-            
-            // Erstelle 8-12 Blobs für den Lava-Effekt
-            const blobCount = Math.floor(Math.random() * 5) + 8;
-            
-            for (let i = 0; i < blobCount; i++) {
-                const blob = document.createElement('div');
-                blob.classList.add('lava-blob');
-                
-                // Zufällige Größe zwischen 20% und 50% der Bildschirmbreite
-                const size = Math.floor(Math.random() * 30) + 20;
-                blob.style.width = `${size}vw`;
-                blob.style.height = `${size}vw`;
-                
-                // Zufällige Position
-                blob.style.left = `${Math.random() * 100}%`;
-                blob.style.top = `${Math.random() * 100}%`;
-                
-                // Zufällige Farbe aus der Palette
-                blob.style.background = colors[Math.floor(Math.random() * colors.length)];
-                
-                // Zufällige Animationsverzögerung
-                blob.style.animationDelay = `${Math.random() * 10}s`;
-                
-                // Zufällige Animationsdauer zwischen 20 und 40 Sekunden
-                const duration = Math.random() * 20 + 20;
-                blob.style.animationDuration = `${duration}s`;
-                
-                // Etwa 60% der Blobs bekommen den Farbwechsel
-                if (Math.random() > 0.4) {
-                    blob.classList.add('color-shift');
-                    // Unterschiedliche Farbwechsel-Geschwindigkeiten
-                    const colorShiftDuration = Math.random() * 15 + 15;
-                    blob.style.animationDuration = `${duration}s, ${colorShiftDuration}s`;
-                }
-                
-                lavaContainer.appendChild(blob);
-            }
-            
-            // Füge einige größere, dunklere Blobs für mehr Tiefe hinzu
-            for (let i = 0; i < 3; i++) {
-                const bigBlob = document.createElement('div');
-                bigBlob.classList.add('lava-blob');
-                
-                // Größere Blobs
-                const size = Math.floor(Math.random() * 20) + 40; // 40-60% der Bildschirmbreite
-                bigBlob.style.width = `${size}vw`;
-                bigBlob.style.height = `${size}vw`;
-                
-                // Zufällige Position
-                bigBlob.style.left = `${Math.random() * 100}%`;
-                bigBlob.style.top = `${Math.random() * 100}%`;
-                
-                // Dunklere Farbe und niedrigere Deckkraft
-                bigBlob.style.background = 'var(--lava-color-1)';
-                bigBlob.style.opacity = '0.3';
-                
-                // Langsamere Animation
-                bigBlob.style.animationDuration = `${Math.random() * 10 + 40}s`;
-                bigBlob.style.animationDelay = `${Math.random() * 5}s`;
-                
-                lavaContainer.appendChild(bigBlob);
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            createLavaBackground();
-            
-            // Rest des bestehenden DOMContentLoaded-Codes...
+            // Rain animation with wind effect
             const canvas = document.getElementById('rain-canvas');
             const ctx = canvas.getContext('2d');
             
@@ -2010,6 +1937,85 @@
             // Start animation
             animate();
             
+            // Inaktivitäts-Timer-Variablen
+            let inactivityTimeout;
+            let warningTimeout;
+            
+            // Verbesserte Session-Timeout-Funktion
+            function resetInactivityTimer() {
+                // Clear any existing timers
+                if (inactivityTimeout) {
+                    clearTimeout(inactivityTimeout);
+                }
+                if (warningTimeout) {
+                    clearTimeout(warningTimeout);
+                }
+                
+                // Hide any existing warning
+                const warningEl = document.getElementById('session-timeout-warning');
+                if (warningEl) {
+                    document.body.removeChild(warningEl);
+                }
+                
+                // Set warning timer for 2 minutes (1 minute before logout)
+                warningTimeout = setTimeout(() => {
+                    showSessionWarning();
+                }, 2 * 60 * 1000);
+                
+                // Set new timer for 3 minutes
+                inactivityTimeout = setTimeout(() => {
+                    const loggedInUser = getLoggedInUser();
+                    if (loggedInUser) {
+                        console.log('Logging out due to inactivity');
+                        logoutUser();
+                        window.location.href = 'login.html?reason=inactivity_timeout';
+                    }
+                }, 3 * 60 * 1000); // 3 minutes
+            }
+            
+            function showSessionWarning() {
+                // Create warning element if it doesn't exist
+                if (!document.getElementById('session-timeout-warning')) {
+                    const warningEl = document.createElement('div');
+                    warningEl.id = 'session-timeout-warning';
+                    warningEl.innerHTML = 'Your session will expire in 60 seconds!<br>Please interact with the page to stay logged in.';
+                    
+                    document.body.appendChild(warningEl);
+                    
+                    // Add click event to reset timer when user clicks on warning
+                    warningEl.addEventListener('click', () => {
+                        trackUserActivity();
+                    });
+                }
+            }
+            
+            // User activity tracking to reset session timeout
+            function trackUserActivity() {
+                const loggedInUser = getLoggedInUser();
+                if (loggedInUser) {
+                    // Just calling getLoggedInUser will refresh the timestamp if user is logged in
+                    setLoggedInUser(loggedInUser); // Explicitly reset the timestamp
+                    
+                    // Reset inactivity timer
+                    resetInactivityTimer();
+                }
+            }
+            
+            // Initialize inactivity timer on page load if user is logged in
+            const loggedInUser = getLoggedInUser();
+            if (loggedInUser) {
+                resetInactivityTimer();
+            }
+            
+            // Track various user interactions to keep session alive
+            document.addEventListener('mousemove', trackUserActivity);
+            document.addEventListener('keypress', trackUserActivity);
+            document.addEventListener('click', trackUserActivity);
+            document.addEventListener('scroll', trackUserActivity);
+            document.addEventListener('touchstart', trackUserActivity);
+            
+            // Rest des Codes bleibt unverändert...
+
             const mainScreen = document.getElementById('main-screen');
             const requestInput = document.getElementById('request-input');
             const usernameInput = document.getElementById('username-input');
@@ -2136,95 +2142,6 @@
             // Set up a periodic session check (e.g., every minute)
             sessionCheckInterval = setInterval(checkSessionAndRedirect, 60 * 1000); // Check every 1 minute
             
-            // User activity tracking to reset session timeout
-            function trackUserActivity() {
-                const loggedInUser = getLoggedInUser();
-                if (loggedInUser) {
-                    // Just calling getLoggedInUser will refresh the timestamp if user is logged in
-                    setLoggedInUser(loggedInUser); // Explicitly reset the timestamp
-                    
-                    // Reset inactivity timer
-                    resetInactivityTimer();
-                }
-            }
-            
-            // Inactivity timer for auto logout
-            let inactivityTimeout;
-            let warningTimeout;
-            
-            function resetInactivityTimer() {
-                // Clear any existing timers
-                if (inactivityTimeout) {
-                    clearTimeout(inactivityTimeout);
-                }
-                if (warningTimeout) {
-                    clearTimeout(warningTimeout);
-                }
-                
-                // Hide any existing warning
-                const warningEl = document.getElementById('session-timeout-warning');
-                if (warningEl) {
-                    document.body.removeChild(warningEl);
-                }
-                
-                // Set warning timer for 2 minutes (1 minute before logout)
-                warningTimeout = setTimeout(() => {
-                    showSessionWarning();
-                }, 2 * 60 * 1000);
-                
-                // Set new timer for 3 minutes
-                inactivityTimeout = setTimeout(() => {
-                    const loggedInUser = getLoggedInUser();
-                    if (loggedInUser) {
-                        console.log('Logout');
-                        logoutUser();
-                        window.location.href = 'login.html';
-                    }
-                }, 3 * 60 * 1000); // 3 minutes
-            }
-            
-            function showSessionWarning() {
-                // Create warning element if it doesn't exist
-                if (!document.getElementById('session-timeout-warning')) {
-                    const warningEl = document.createElement('div');
-                    warningEl.id = 'session-timeout-warning';
-                    warningEl.style.position = 'fixed';
-                    warningEl.style.top = '20px';
-                    warningEl.style.left = '50%';
-                    warningEl.style.transform = 'translateX(-50%)';
-                    warningEl.style.padding = '15px 25px';
-                    warningEl.style.background = 'rgba(255, 77, 77, 0.9)';
-                    warningEl.style.color = 'white';
-                    warningEl.style.borderRadius = '8px';
-                    warningEl.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-                    warningEl.style.zIndex = '9999';
-                    warningEl.style.fontWeight = 'bold';
-                    warningEl.style.textAlign = 'center';
-                    warningEl.style.animation = 'fadeIn 0.5s ease-in-out';
-                    warningEl.innerHTML = 'Your session will expire in 60s!\nPlease interact with the page to stay logged in.';
-                    
-                    document.body.appendChild(warningEl);
-                    
-                    // Add click event to reset timer when user clicks on warning
-                    warningEl.addEventListener('click', () => {
-                        trackUserActivity();
-                    });
-                }
-            }
-            
-            // Initialize inactivity timer on page load if user is logged in
-            const loggedInUser = getLoggedInUser();
-            if (loggedInUser) {
-                resetInactivityTimer();
-            }
-            
-            // Track various user interactions to keep session alive
-            document.addEventListener('mousemove', trackUserActivity);
-            document.addEventListener('keypress', trackUserActivity);
-            document.addEventListener('click', trackUserActivity);
-            document.addEventListener('scroll', trackUserActivity);
-            document.addEventListener('touchstart', trackUserActivity);
-
             // Admin button click to toggle anti-tamper panel
             adminToggleButton.addEventListener('click', () => {
                 antiTamperPanelVisible = !antiTamperPanelVisible;

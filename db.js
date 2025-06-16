@@ -2,13 +2,7 @@ import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
 
 let loggedInUser = null;
 
-// =====================================================================
-// SICHERHEITSHINWEIS
-// =====================================================================
-// Die Benutzerkonten werden jetzt sicher auf dem Server gespeichert
-// und nicht mehr im Frontend-Code, um die Sicherheit zu erhöhen.
-// Neue Benutzer müssen über den Server konfiguriert werden.
-// =====================================================================
+===================================================================
 
 // Function to get the current session token (security ID) for authentication
 function getSessionToken() {
@@ -16,7 +10,7 @@ function getSessionToken() {
     return user ? user.securityId : null;
 }
 
-// Callbacks für Echtzeit-Updates
+// Callbacks 
 let albumItemUpdateCallback = () => {};
 let requestUpdateCallback = () => {};
 let antiTamperNotificationCallback = () => {};

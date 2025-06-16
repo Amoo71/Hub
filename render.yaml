@@ -9,5 +9,5 @@ services:
         value: 3000
       - key: MONGODB_URI
         value: mongodb+srv://amo:$amkamkamk@amslabs.kmunx80.mongodb.net/?retryWrites=true&w=majority&appName=amslabs
-      - key: DB_PASSWORD
+      - key: amkamkamk
         sync: false 

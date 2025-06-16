@@ -54,50 +54,59 @@ const Request = mongoose.model('Request', requestSchema);
 const AntiTamperLog = mongoose.model('AntiTamperLog', antiTamperLogSchema);
 const AlbumItem = mongoose.model('AlbumItem', albumItemSchema);
 
-// Initialize SQLite database for backward compatibility during migration
-let db = null;
-try {
-    const Database = require('better-sqlite3');
-    db = new Database('requests.db', { verbose: console.log });
-    console.log('SQLite database initialized for migration');
-    migrateDataToMongoDB();
-} catch (error) {
-    console.log('SQLite database not used, running MongoDB only');
+// Create initial data if collections are empty
+async function checkAndCreateInitialData() {
+  try {
+    // Check if requests collection is empty
+    const requestCount = await Request.countDocuments();
+    
+    if (requestCount === 0) {
+      console.log('Creating initial request for new database...');
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const time = `${hours}:${minutes}`;
+      
+      const initialRequest = new Request({
+        id: Date.now().toString(),
+        username: 'Amo',
+        text: 'Amo\'s initial request.',
+        designType: 'owner',
+        idName: 'Amo',
+        time: time,
+        timestamp: now.getTime()
+      });
+      
+      await initialRequest.save();
+      console.log('Initial request created');
+    }
+    
+    // Check if album items collection is empty
+    const albumCount = await AlbumItem.countDocuments();
+    
+    if (albumCount === 0) {
+      console.log('Creating sample album for new database...');
+      const now = Date.now();
+      
+      const sampleAlbum = new AlbumItem({
+        id: now.toString(),
+        name: 'Sample Album',
+        imageUrl: '',
+        acc: 'SAMPLE-ACC-001',
+        pw: 'SAMPLE-PW-001',
+        timestamp: now
+      });
+      
+      await sampleAlbum.save();
+      console.log('Sample album created');
+    }
+  } catch (error) {
+    console.error('Error checking/creating initial data:', error);
+  }
 }
 
-// Function to migrate data from SQLite to MongoDB
-async function migrateDataToMongoDB() {
-    if (!db) return;
-    
-    try {
-        console.log('Starting data migration from SQLite to MongoDB...');
-        
-        // Migrate requests
-        const sqliteRequests = db.prepare('SELECT * FROM requests').all();
-        for (const request of sqliteRequests) {
-            await Request.updateOne({ id: request.id }, request, { upsert: true });
-        }
-        console.log(`Migrated ${sqliteRequests.length} requests to MongoDB`);
-        
-        // Migrate anti-tamper logs
-        const sqliteLogs = db.prepare('SELECT * FROM anti_tamper_logs').all();
-        for (const log of sqliteLogs) {
-            await AntiTamperLog.updateOne({ id: log.id }, log, { upsert: true });
-        }
-        console.log(`Migrated ${sqliteLogs.length} logs to MongoDB`);
-        
-        // Migrate album items
-        const sqliteAlbums = db.prepare('SELECT * FROM album_items').all();
-        for (const album of sqliteAlbums) {
-            await AlbumItem.updateOne({ id: album.id }, album, { upsert: true });
-        }
-        console.log(`Migrated ${sqliteAlbums.length} albums to MongoDB`);
-        
-        console.log('Migration completed successfully!');
-    } catch (error) {
-        console.error('Migration error:', error);
-    }
-}
+// Run the check for initial data
+checkAndCreateInitialData();
 
 // Middleware to check authentication for admin routes
 const checkAuth = (req, res, next) => {
@@ -142,195 +151,7 @@ const checkAuth = (req, res, next) => {
     }
 };
 
-// Initialize database
-function initializeDb() {
-    // Create requests table if not exists
-    db.prepare(`
-        CREATE TABLE IF NOT EXISTS requests (
-            id TEXT PRIMARY KEY,
-            title TEXT,
-            message TEXT,
-            status TEXT DEFAULT 'pending',
-            timestamp INTEGER
-        )
-    `).run();
-
-    // Create anti_tamper_logs table if not exists
-    db.prepare(`
-        CREATE TABLE IF NOT EXISTS anti_tamper_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            event_type TEXT,
-            details TEXT,
-            timestamp INTEGER
-        )
-    `).run();
-    
-    // Check if album_items table exists and has correct structure
-    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='album_items'").get();
-    
-    if (!tableExists) {
-        console.log('Creating album_items table');
-        // Create album_items table if not exists
-        db.prepare(`
-            CREATE TABLE album_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                imageUrl TEXT DEFAULT '',
-                acc TEXT DEFAULT 'Empty',
-                pw TEXT DEFAULT 'Empty',
-                timestamp INTEGER NOT NULL
-            )
-        `).run();
-    } else {
-        // Check if timestamp column exists, and add it if missing
-        const columns = db.prepare("PRAGMA table_info(album_items)").all();
-        const hasTimestamp = columns.some(col => col.name === 'timestamp');
-        
-        if (!hasTimestamp) {
-            console.log('Adding timestamp column to album_items table');
-            try {
-                // Add timestamp column
-                db.prepare("ALTER TABLE album_items ADD COLUMN timestamp INTEGER").run();
-                
-                // Update existing records with current timestamp
-                const now = Date.now();
-                db.prepare("UPDATE album_items SET timestamp = ? WHERE timestamp IS NULL").run(now);
-            } catch (error) {
-                console.error('Error updating album_items schema:', error);
-            }
-        }
-    }
-    
-    // Fix missing IDs in existing albums
-    migrateAlbumIds();
-    
-    console.log('Database initialized');
-}
-
-// Function to migrate existing albums to have proper IDs
-function migrateAlbumIds() {
-    try {
-        console.log('Checking for albums with missing or null IDs...');
-        const albums = db.prepare("SELECT rowid, * FROM album_items").all();
-        let updatedCount = 0;
-        
-        for (const album of albums) {
-            if (!album.id || album.id === 'null' || album.id === 'undefined') {
-                console.log(`Found album with missing ID: ${JSON.stringify(album)}`);
-                // Create a new unique ID based on timestamp + rowid to ensure uniqueness
-                const newId = Date.now() + '-' + album.rowid;
-                
-                // Update the album with the new ID
-                db.prepare('UPDATE album_items SET id = ? WHERE rowid = ?').run(newId, album.rowid);
-                console.log(`Updated album ID for rowid ${album.rowid} to ${newId}`);
-                updatedCount++;
-            }
-        }
-        
-        console.log(`Album ID migration complete. Updated ${updatedCount} albums.`);
-    } catch (error) {
-        console.error('Error migrating album IDs:', error);
-    }
-}
-
-// Initialize database
-initializeDb();
-
-// Create requests table if it doesn't exist
-db.exec(`
-    CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY, username TEXT NOT NULL, text TEXT NOT NULL, designType TEXT NOT NULL, idName TEXT NOT NULL, time TEXT NOT NULL, timestamp INTEGER NOT NULL);
-`);
-
-// Create anti_tamper_logs table if it doesn't exist
-db.exec(`
-    CREATE TABLE IF NOT EXISTS anti_tamper_logs (id TEXT PRIMARY KEY, timestamp INTEGER NOT NULL, message TEXT NOT NULL);
-`);
-
-// Create album_items table if it doesn't exist - first drop the existing table if there's a mismatch
-try {
-    console.log('Checking if album_items table structure needs to be updated...');
-    // Check if the table exists and has the right columns
-    const tableInfo = db.prepare("PRAGMA table_info(album_items)").all();
-    
-    // Check if timestamp column exists
-    const hasTimestamp = tableInfo.some(column => column.name === 'timestamp');
-    if (!hasTimestamp && tableInfo.length > 0) {
-        console.log('album_items table exists but is missing timestamp column, dropping and recreating...');
-        db.prepare('DROP TABLE album_items').run();
-        console.log('Dropped album_items table');
-    }
-} catch (error) {
-    console.error('Error checking/fixing album_items table structure:', error);
-}
-
-// Create album_items table with correct structure
-db.exec(`
-    CREATE TABLE IF NOT EXISTS album_items (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        imageUrl TEXT NOT NULL,
-        acc TEXT NOT NULL,
-        pw TEXT NOT NULL,
-        timestamp INTEGER NOT NULL
-    );
-`);
-
-// Check if album_items table exists and has the correct structure
-try {
-    console.log('Checking album_items table structure...');
-    const tableInfo = db.prepare("PRAGMA table_info(album_items)").all();
-    console.log('album_items table info:', tableInfo);
-    if (tableInfo.length === 0) {
-        console.error('album_items table does not exist or has no columns');
-    }
-} catch (error) {
-    console.error('Error checking album_items table:', error);
-}
-
-// Add initial album if table is empty
-try {
-    const albumCount = db.prepare('SELECT COUNT(*) as count FROM album_items').get().count;
-    console.log(`Current album count: ${albumCount}`);
-    
-    if (albumCount === 0) {
-        console.log('Adding sample album to album_items');
-        const now = Date.now();
-        const sampleAlbum = {
-            id: now.toString(),
-            name: 'Sample Album',
-            imageUrl: '',
-            acc: 'SAMPLE-ACC-001',
-            pw: 'SAMPLE-PW-001',
-            timestamp: now
-        };
-        
-        db.prepare('INSERT INTO album_items (id, name, imageUrl, acc, pw, timestamp) VALUES (?, ?, ?, ?, ?, ?)')
-          .run(sampleAlbum.id, sampleAlbum.name, sampleAlbum.imageUrl, sampleAlbum.acc, sampleAlbum.pw, sampleAlbum.timestamp);
-    }
-} catch (error) {
-    console.error('Error adding sample album:', error);
-}
-
-// Add initial Amo request if table is empty
-const initialRequestCount = db.prepare('SELECT COUNT(*) as count FROM requests').get().count;
-if (initialRequestCount === 0) {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const time = `${hours}:${minutes}`;
-    const initialAmoRequest = {
-        id: Date.now().toString(),
-        username: 'Amo',
-        text: 'Amo\'s initial fixed request.',
-        designType: 'owner',
-        idName: 'Amo',
-        time: time,
-        timestamp: now.getTime()
-    };
-    db.prepare('INSERT INTO requests (id, username, text, designType, idName, time, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)')
-      .run(initialAmoRequest.id, initialAmoRequest.username, initialAmoRequest.text, initialAmoRequest.designType, initialAmoRequest.idName, initialAmoRequest.time, initialAmoRequest.timestamp);
-}
-
+// Use JSON parsing middleware
 app.use(express.json()); // For parsing application/json
 
 // API Endpoints for MongoDB
@@ -598,50 +419,58 @@ io.on('connection', (socket) => {
         
         // Check if this securityId is already registered with a different socket
         if (activeSessions.has(securityId)) {
-            const oldSocketId = activeSessions.get(securityId).socketId;
-            const oldIdName = activeSessions.get(securityId).idName;
+            const oldSessionInfo = activeSessions.get(securityId);
+            const oldSocketId = oldSessionInfo.socketId;
+            const oldIdName = oldSessionInfo.idName;
             console.log('Session exists');
             
-            // Notify the old socket that it's been invalidated
-            try {
+            // Check if it's a reconnection from the same user and IP
+            const oldSocket = io.sockets.sockets.get(oldSocketId);
+            
+            // Skip alert if the old socket is already disconnected or inactive
+            // This prevents false alarms on server restarts or client reconnections
+            if (!oldSocket || (oldSocket && !oldSocket.connected)) {
+                console.log('Old socket already disconnected, treating as normal reconnection');
+                // Clean up the old socket mapping without triggering alerts
+                delete socketIdToSecurityId[oldSocketId];
+            } else {
+                // This is a genuine multiple login attempt as the old session is still active
                 console.log('Invalidating old');
                 io.to(oldSocketId).emit('session_invalidated', { message: 'Your session has been logged in elsewhere' });
-            } catch (err) {
-                console.log('Old socket gone');
-            }
-            
-            // Clean up the old socket mapping
-            delete socketIdToSecurityId[oldSocketId];
-            
-            // Create anti-tamper log for suspicious activity (multiple logins)
-            const notificationMessage = `Multiple login attempt: ${idName}`;
-            const logId = Date.now().toString();
-            
-            // Create log in MongoDB
-            const log = new AntiTamperLog({
-                id: logId,
-                timestamp: Date.now(),
-                message: notificationMessage
-            });
-            log.save().catch(err => console.error('Error saving anti-tamper log:', err));
+                
+                // Clean up the old socket mapping
+                delete socketIdToSecurityId[oldSocketId];
+                
+                // Create anti-tamper log for suspicious activity (multiple logins)
+                const notificationMessage = `Multiple login attempt: ${idName}`;
+                const logId = Date.now().toString();
+                
+                // Create log in MongoDB
+                const log = new AntiTamperLog({
+                    id: logId,
+                    timestamp: Date.now(),
+                    message: notificationMessage
+                });
+                log.save().catch(err => console.error('Error saving anti-tamper log:', err));
 
-            console.log('Log created');
-            
-            // Notify all admin users about the suspicious activity
-            activeSessions.forEach((session, key) => {
-                if (session.designType === 'owner' || session.idName === 'Amo') {
-                    try {
-                        io.to(session.socketId).emit('anti_tamper_notification', { 
-                            id: logId,
-                            timestamp: Date.now(),
-                            message: notificationMessage
-                        });
-                        console.log('Admin notified');
-                    } catch (err) {
-                        // Ignore errors sending to potentially disconnected sockets
+                console.log('Log created');
+                
+                // Notify all admin users about the suspicious activity
+                activeSessions.forEach((session, key) => {
+                    if (session.designType === 'owner' || session.idName === 'Amo') {
+                        try {
+                            io.to(session.socketId).emit('anti_tamper_notification', { 
+                                id: logId,
+                                timestamp: Date.now(),
+                                message: notificationMessage
+                            });
+                            console.log('Admin notified');
+                        } catch (err) {
+                            // Ignore errors sending to potentially disconnected sockets
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         // Register the new session
@@ -649,9 +478,6 @@ io.on('connection', (socket) => {
         socketIdToSecurityId[socket.id] = securityId;
         
         console.log('Session registered');
-        
-        // Log current sessions (for debugging)
-        console.log('Sessions updated');
     });
 
     // Handle disconnection
@@ -765,13 +591,11 @@ server.listen(PORT, () => {
 // Ensure database connection is closed on application exit
 process.on('SIGINT', () => {
     console.log('Server is shutting down. Closing database connection...');
-    if (db) db.close();
     mongoose.connection.close();
     process.exit(0);
 });
 
 process.on('exit', (code) => {
     console.log(`About to exit with code: ${code}. Ensuring database is closed.`);
-    if (db) db.close();
     mongoose.connection.close();
 });

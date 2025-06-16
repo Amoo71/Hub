@@ -33,11 +33,14 @@ export function getLoggedInUser() {
         const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
 
         if (now - timestamp < threeMinutes) {
-            setLoggedInUser(user); // This will update the timestamp
+            // Update timestamp only if user is active (not just checking session)
+            const isActiveCheck = new Error().stack.includes('trackUserActivity');
+            if (isActiveCheck) {
+                setLoggedInUser(user); // This will update the timestamp only on actual activity
+            }
             loggedInUser = user;
             return loggedInUser;
         } else {
-            console.log('Session timeout after 3 minutes of inactivity');
             logoutUser();
             return null;
         }
@@ -71,17 +74,17 @@ export function setAntiTamperNotificationCallback(callback) {
 
 // Listen for real-time events from server
 socket.on('requestAdded', (newRequest) => {
-    console.log('Request');
+    console.log('New request received');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('requestDeleted', (deletedRequestId) => {
-    console.log('Delete');
+    console.log('Request deletion notification received');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('sessionInvalidated', (data) => {
-    console.log('Invalid');
+    console.log('Session invalidated by server:', data?.message || 'Your session was invalidated');
     // Force logout by clearing the user data
     logoutUser();
     // Redirect to login page if not already there
@@ -91,17 +94,17 @@ socket.on('sessionInvalidated', (data) => {
 });
 
 socket.on('anti_tamper_notification', (notification) => {
-    console.log('Alert');
+    console.log('Anti-tamper notification received:', notification);
     if (antiTamperNotificationCallback) antiTamperNotificationCallback(notification);
 });
 
 socket.on('anti_tamper_logs_cleared', () => {
-    console.log('Clear');
+    console.log('Anti-tamper logs cleared notification received');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback();
 });
 
 socket.on('albumItemsChanged', () => {
-    console.log('Update');
+    console.log('Album items update notification received');
     if (albumItemUpdateCallback) albumItemUpdateCallback();
 });
 

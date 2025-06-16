@@ -6,8 +6,11 @@ const socketIo = require('socket.io');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
-// Import MongoDB models
-const { connectDB, Request, AntiTamperLog, AlbumItem } = require('./models/db');
+// Import MongoDB connection
+const connectDB = require('./models/db');
+const Request = require('./models/Request');
+const AlbumItem = require('./models/AlbumItem');
+const AntiTamperLog = require('./models/AntiTamperLog');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,9 +22,6 @@ const activeSessions = new Map();
 const socketIdToSecurityId = {};
 
 const PORT = process.env.PORT || 3000;
-
-// Connect to MongoDB
-connectDB();
 
 // Middleware to check authentication for admin routes
 const checkAuth = (req, res, next) => {
@@ -66,38 +66,23 @@ const checkAuth = (req, res, next) => {
     }
 };
 
-// Initialize database with sample data if needed
+// Initialize database and add initial data if needed
 async function initializeDb() {
     try {
-        // Check if there are any album items
-        const albumCount = await AlbumItem.countDocuments();
+        // Connect to MongoDB
+        await connectDB();
         
-        if (albumCount === 0) {
-            console.log('Adding sample album to album_items');
-            const now = Date.now();
-            const sampleAlbum = new AlbumItem({
-                id: now.toString(),
-                name: 'Sample Album',
-                imageUrl: '',
-                acc: 'SAMPLE-ACC-001',
-                pw: 'SAMPLE-PW-001',
-                timestamp: now
-            });
-            
-            await sampleAlbum.save();
-            console.log('Sample album added');
-        }
-        
-        // Check if there are any requests
+        // Check if we have any requests
         const requestCount = await Request.countDocuments();
         
+        // Add initial Amo request if collection is empty
         if (requestCount === 0) {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const time = `${hours}:${minutes}`;
             
-            const initialAmoRequest = new Request({
+            await Request.create({
                 id: Date.now().toString(),
                 username: 'Amo',
                 text: 'Amo\'s initial fixed request.',
@@ -107,13 +92,32 @@ async function initializeDb() {
                 timestamp: now.getTime()
             });
             
-            await initialAmoRequest.save();
-            console.log('Initial request added');
+            console.log('Added initial request');
+        }
+        
+        // Check if we have any album items
+        const albumCount = await AlbumItem.countDocuments();
+        
+        // Add sample album if collection is empty
+        if (albumCount === 0) {
+            const now = Date.now();
+            
+            await AlbumItem.create({
+                id: now.toString(),
+                name: 'Sample Album',
+                imageUrl: '',
+                acc: 'SAMPLE-ACC-001',
+                pw: 'SAMPLE-PW-001',
+                timestamp: now
+            });
+            
+            console.log('Added sample album');
         }
         
         console.log('Database initialized');
     } catch (error) {
         console.error('Error initializing database:', error);
+        process.exit(1);
     }
 }
 
@@ -123,175 +127,14 @@ initializeDb();
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
-    
-    // Handle client authentication
-    socket.on('authenticate', async (data) => {
-        try {
-            const { username, securityId, designType, idName } = data;
-            console.log(`User ${username} authenticated with security ID ${securityId}`);
-            
-            // Store session information
-            activeSessions.set(securityId, { socketId: socket.id, username, idName, designType });
-            socketIdToSecurityId[socket.id] = securityId;
-            
-            // Send current requests and albums to the newly connected client
-            const requests = await Request.find().sort({ timestamp: -1 });
-            socket.emit('requestUpdate', requests);
-            
-            const albums = await AlbumItem.find().sort({ timestamp: -1 });
-            socket.emit('albumUpdate', albums);
-            
-            // Acknowledge successful authentication
-            socket.emit('authResult', { success: true });
-        } catch (error) {
-            console.error('Error during authentication:', error);
-            socket.emit('authResult', { success: false, error: 'Authentication failed' });
-        }
-    });
-    
-    // Handle new request submission
-    socket.on('newRequest', async (data) => {
-        try {
-            const { text, securityId } = data;
-            console.log(`New request from security ID ${securityId}: ${text}`);
-            
-            const session = activeSessions.get(securityId);
-            if (!session) {
-                socket.emit('requestResult', { success: false, error: 'Not authenticated' });
-                return;
-            }
-            
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const time = `${hours}:${minutes}`;
-            
-            // Create new request in MongoDB
-            const newRequest = new Request({
-                id: Date.now().toString(),
-                username: session.username,
-                text: text,
-                designType: session.designType,
-                idName: session.idName,
-                time: time,
-                timestamp: now.getTime()
-            });
-            
-            await newRequest.save();
-            
-            // Broadcast update to all clients
-            broadcastRequestUpdate();
-            
-            // Acknowledge successful request submission
-            socket.emit('requestResult', { success: true });
-        } catch (error) {
-            console.error('Error processing new request:', error);
-            socket.emit('requestResult', { success: false, error: 'Failed to process request' });
-        }
-    });
-    
-    // Handle album item submission
-    socket.on('newAlbumItem', async (data) => {
-        try {
-            const { name, imageUrl, acc, pw, securityId } = data;
-            console.log(`New album item from security ID ${securityId}: ${name}`);
-            
-            const session = activeSessions.get(securityId);
-            if (!session) {
-                socket.emit('albumItemResult', { success: false, error: 'Not authenticated' });
-                return;
-            }
-            
-            // Check admin privileges
-            const isAdmin = session.designType === 'owner' || session.idName === 'Amo';
-            if (!isAdmin) {
-                socket.emit('albumItemResult', { success: false, error: 'Admin privileges required' });
-                return;
-            }
-            
-            // Create new album item in MongoDB
-            const newAlbumItem = new AlbumItem({
-                id: Date.now().toString(),
-                name: name,
-                imageUrl: imageUrl || '',
-                acc: acc || 'Empty',
-                pw: pw || 'Empty',
-                timestamp: Date.now()
-            });
-            
-            await newAlbumItem.save();
-            
-            // Broadcast update to all clients
-            broadcastAlbumUpdate();
-            
-            // Acknowledge successful album item submission
-            socket.emit('albumItemResult', { success: true });
-        } catch (error) {
-            console.error('Error processing new album item:', error);
-            socket.emit('albumItemResult', { success: false, error: 'Failed to process album item' });
-        }
-    });
-    
-    // Handle album item deletion
-    socket.on('deleteAlbumItem', async (data) => {
-        try {
-            const { id, securityId } = data;
-            console.log(`Delete album item request from security ID ${securityId} for item ${id}`);
-            
-            const session = activeSessions.get(securityId);
-            if (!session) {
-                socket.emit('deleteAlbumItemResult', { success: false, error: 'Not authenticated' });
-                return;
-            }
-            
-            // Check admin privileges
-            const isAdmin = session.designType === 'owner' || session.idName === 'Amo';
-            if (!isAdmin) {
-                socket.emit('deleteAlbumItemResult', { success: false, error: 'Admin privileges required' });
-                return;
-            }
-            
-            // Delete album item from MongoDB
-            await AlbumItem.deleteOne({ id: id });
-            
-            // Log anti-tamper event
-            const antiTamperLog = new AntiTamperLog({
-                id: Date.now().toString(),
-                timestamp: Date.now(),
-                message: `Album item ${id} deleted by ${session.username}`
-            });
-            
-            await antiTamperLog.save();
-            
-            // Broadcast update to all clients
-            broadcastAlbumUpdate();
-            
-            // Acknowledge successful deletion
-            socket.emit('deleteAlbumItemResult', { success: true });
-        } catch (error) {
-            console.error('Error deleting album item:', error);
-            socket.emit('deleteAlbumItemResult', { success: false, error: 'Failed to delete album item' });
-        }
-    });
-    
-    // Handle client disconnection
-    socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
-        
-        // Clean up session data
-        const securityId = socketIdToSecurityId[socket.id];
-        if (securityId) {
-            activeSessions.delete(securityId);
-            delete socketIdToSecurityId[socket.id];
-        }
-    });
+// Routes
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API routes
+// API routes for requests
 app.get('/api/requests', async (req, res) => {
     try {
         const requests = await Request.find().sort({ timestamp: -1 });
@@ -302,25 +145,31 @@ app.get('/api/requests', async (req, res) => {
     }
 });
 
-// Add DELETE endpoint for requests
-app.delete('/api/requests/:id', checkAuth, async (req, res) => {
+app.post('/api/requests', async (req, res) => {
     try {
-        const { id } = req.params;
-        const result = await Request.deleteOne({ id });
+        const { id, username, text, designType, idName, time, timestamp } = req.body;
         
-        if (result.deletedCount > 0) {
-            // Broadcast update to all clients
-            broadcastRequestUpdate();
-            res.status(200).json({ message: 'Request deleted successfully' });
-        } else {
-            res.status(404).json({ message: 'Request not found' });
-        }
+        const newRequest = await Request.create({
+            id, 
+            username, 
+            text, 
+            designType, 
+            idName, 
+            time, 
+            timestamp
+        });
+        
+        // Broadcast to all clients
+        io.emit('newRequest', newRequest);
+        
+        res.status(201).json(newRequest);
     } catch (error) {
-        console.error('Error deleting request:', error);
-        res.status(500).json({ error: 'Failed to delete request' });
+        console.error('Error creating request:', error);
+        res.status(500).json({ error: 'Failed to create request' });
     }
 });
 
+// API routes for album items
 app.get('/api/albums', async (req, res) => {
     try {
         const albums = await AlbumItem.find().sort({ timestamp: -1 });
@@ -331,154 +180,159 @@ app.get('/api/albums', async (req, res) => {
     }
 });
 
-// Add PUT endpoint for updating album items
+app.post('/api/albums', checkAuth, async (req, res) => {
+    try {
+        const { id, name, imageUrl, acc, pw, timestamp } = req.body;
+        
+        const newAlbum = await AlbumItem.create({
+            id,
+            name,
+            imageUrl,
+            acc,
+            pw,
+            timestamp
+        });
+        
+        // Broadcast album update to all clients
+        broadcastAlbumUpdate();
+        
+        res.status(201).json(newAlbum);
+    } catch (error) {
+        console.error('Error creating album:', error);
+        res.status(500).json({ error: 'Failed to create album' });
+    }
+});
+
 app.put('/api/albums/:id', checkAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, imageUrl, acc, pw } = req.body;
         
-        // Check if album exists
-        const album = await AlbumItem.findOne({ id });
-        if (!album) {
+        const updatedAlbum = await AlbumItem.findOneAndUpdate(
+            { id },
+            { name, imageUrl, acc, pw },
+            { new: true }
+        );
+        
+        if (!updatedAlbum) {
             return res.status(404).json({ error: 'Album not found' });
         }
         
-        // Update the album with new values or keep existing ones
-        album.name = name || album.name;
-        album.imageUrl = imageUrl !== undefined ? imageUrl : album.imageUrl;
-        album.acc = acc !== undefined ? acc : album.acc;
-        album.pw = pw !== undefined ? pw : album.pw;
-        album.timestamp = Date.now(); // Update timestamp to make it the newest
-        
-        // Save the updated album
-        await album.save();
-        
-        // Broadcast update to all clients
+        // Broadcast album update to all clients
         broadcastAlbumUpdate();
         
-        res.json(album);
+        res.json(updatedAlbum);
     } catch (error) {
         console.error('Error updating album:', error);
         res.status(500).json({ error: 'Failed to update album' });
     }
 });
 
-// Add missing API endpoints for anti-tamper logs
-app.get('/api/anti-tamper-logs', async (req, res) => {
+app.delete('/api/albums/:id', checkAuth, async (req, res) => {
     try {
-        const logs = await AntiTamperLog.find().sort({ timestamp: -1 });
-        res.json(logs);
+        const { id } = req.params;
+        
+        const deletedAlbum = await AlbumItem.findOneAndDelete({ id });
+        
+        if (!deletedAlbum) {
+            return res.status(404).json({ error: 'Album not found' });
+        }
+        
+        // Broadcast album update to all clients
+        broadcastAlbumUpdate();
+        
+        res.json({ message: 'Album deleted successfully' });
     } catch (error) {
-        console.error('Error fetching anti-tamper logs:', error);
-        res.status(500).json({ error: 'Failed to fetch anti-tamper logs' });
+        console.error('Error deleting album:', error);
+        res.status(500).json({ error: 'Failed to delete album' });
     }
 });
 
-app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+// API routes for anti-tamper logs
+app.post('/api/logs', async (req, res) => {
     try {
-        const result = await AntiTamperLog.deleteMany({});
-        console.log(`Cleared ${result.deletedCount} anti-tamper logs.`);
-        io.emit('antiTamperLogsCleared'); // Notify clients that logs have been cleared
-        res.status(200).json({ message: `Cleared ${result.deletedCount} anti-tamper logs.` });
+        const { id, message, timestamp } = req.body;
+        
+        await AntiTamperLog.create({
+            id,
+            message,
+            timestamp
+        });
+        
+        res.status(201).json({ message: 'Log created successfully' });
     } catch (error) {
-        console.error('Error clearing anti-tamper logs:', error);
-        res.status(500).json({ error: 'Failed to clear anti-tamper logs' });
+        console.error('Error creating log:', error);
+        res.status(500).json({ error: 'Failed to create log' });
     }
 });
 
-app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
-    try {
-        const idToDelete = String(req.params.id);
-        console.log(`Server: Received DELETE request for anti-tamper log with ID: ${idToDelete}`);
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+    
+    // Handle client registration
+    socket.on('register', (data) => {
+        const { securityId, username, idName, designType } = data;
         
-        const result = await AntiTamperLog.deleteOne({ id: idToDelete });
+        // Store the session data
+        activeSessions.set(securityId, {
+            socketId: socket.id,
+            username,
+            idName,
+            designType
+        });
         
-        if (result.deletedCount > 0) {
-            console.log(`Server: Successfully deleted anti-tamper log with ID: ${idToDelete}`);
-            io.emit('antiTamperNotification'); // Trigger re-render for all clients
-            res.status(200).json({ message: `Anti-tamper log ${idToDelete} deleted successfully` });
+        // Map socket ID to security ID for easier cleanup
+        socketIdToSecurityId[socket.id] = securityId;
+        
+        console.log(`Client registered: ${username} (${idName}) with security ID ${securityId}`);
+        
+        // Send current active sessions to all clients
+        broadcastActiveSessions();
+    });
+    
+    // Handle client disconnection
+    socket.on('disconnect', () => {
+        const securityId = socketIdToSecurityId[socket.id];
+        
+        if (securityId) {
+            // Remove the session
+            activeSessions.delete(securityId);
+            delete socketIdToSecurityId[socket.id];
+            
+            console.log(`Client disconnected: ${securityId}`);
+            
+            // Update all clients about the active sessions
+            broadcastActiveSessions();
         } else {
-            console.log(`Server: Failed to delete anti-tamper log with ID: ${idToDelete}. Log not found.`);
-            res.status(404).json({ message: `Anti-tamper log with ID ${idToDelete} not found` });
+            console.log('Unregistered client disconnected');
         }
-    } catch (error) {
-        console.error(`Server: Error during deletion of anti-tamper log ${req.params.id}:`, error);
-        res.status(500).json({ message: `Internal server error during deletion: ${error.message}` });
-    }
+    });
 });
 
-// API endpoint for reporting albums
-app.post('/api/report-album', async (req, res) => {
-    try {
-        const { albumId, albumName, reportedBy, message } = req.body;
-        
-        if (!albumId || !albumName || !reportedBy) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-        
-        // Create a unique ID for the report
-        const logId = Date.now().toString();
-        
-        // Create anti-tamper log entry for the report
-        const antiTamperLog = new AntiTamperLog({
-            id: logId,
-            timestamp: Date.now(),
-            message: message || `Album reported: "${albumName}" by ${reportedBy}`
-        });
-        
-        await antiTamperLog.save();
-        console.log('Report created');
-        
-        // Notify all admin users about the report
-        activeSessions.forEach((session, key) => {
-            if (session.designType === 'owner' || session.idName === 'Amo') {
-                try {
-                    io.to(session.socketId).emit('antiTamperNotification', { 
-                        id: logId,
-                        timestamp: Date.now(),
-                        message: message || `Album reported: "${albumName}" by ${reportedBy}`
-                    });
-                    console.log('Admin notified');
-                } catch (err) {
-                    // Ignore errors sending to potentially disconnected sockets
-                }
-            }
-        });
-        
-        return res.status(201).json({ success: true, message: 'Album reported successfully' });
-    } catch (error) {
-        console.error('Report error:', error);
-        return res.status(500).json({ error: 'Failed to report album' });
-    }
-});
+// Function to broadcast active sessions to all clients
+function broadcastActiveSessions() {
+    const sessions = Array.from(activeSessions.entries()).map(([securityId, session]) => ({
+        securityId,
+        username: session.username,
+        idName: session.idName,
+        designType: session.designType
+    }));
+    
+    io.emit('activeSessions', sessions);
+}
 
-// Start server
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
-// Replace the broadcastAlbumUpdate function
+// Function to broadcast album updates to all clients
 async function broadcastAlbumUpdate() {
     try {
-        // Get all album items from MongoDB
         const albums = await AlbumItem.find().sort({ timestamp: -1 });
-        // Broadcast the updated album list to all connected clients
         io.emit('albumUpdate', albums);
-        console.log('Album update broadcast sent');
     } catch (error) {
         console.error('Error broadcasting album update:', error);
     }
 }
 
-// Replace the broadcastRequestUpdate function
-async function broadcastRequestUpdate() {
-    try {
-        // Get all requests from MongoDB
-        const requests = await Request.find().sort({ timestamp: -1 });
-        // Broadcast the updated request list to all connected clients
-        io.emit('requestUpdate', requests);
-        console.log('Request update broadcast sent');
-    } catch (error) {
-        console.error('Error broadcasting request update:', error);
-    }
-} 
+// Start the server
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+}); 

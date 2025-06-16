@@ -458,14 +458,53 @@ io.on('connection', (socket) => {
 
     // Handle session registration
     socket.on('register_session', (data) => {
-        const { securityId, username, idName, designType } = data;
+        const { securityId, username, idName, designType, isReconnect } = data;
+        
+        // Wenn es sich um eine Wiederverbindung handelt, keine Anti-Tamper-Prüfung durchführen
+        if (isReconnect === true) {
+            console.log('Reconnection from existing session, skipping anti-tamper checks');
+            
+            // Aktualisiere die Socket-ID für die bestehende Session
+            if (activeSessions.has(securityId)) {
+                const oldSessionInfo = activeSessions.get(securityId);
+                const oldSocketId = oldSessionInfo.socketId;
+                
+                // Alte Socket-ID-Zuordnung entfernen
+                delete socketIdToSecurityId[oldSocketId];
+                
+                // Neue Socket-ID registrieren
+                activeSessions.set(securityId, { 
+                    ...oldSessionInfo,
+                    socketId: socket.id,
+                    lastActive: Date.now()
+                });
+                socketIdToSecurityId[socket.id] = securityId;
+                
+                console.log('Session socket updated for reconnection');
+            } else {
+                // Session existiert nicht mehr, registriere sie neu
+                activeSessions.set(securityId, { 
+                    socketId: socket.id, 
+                    username, 
+                    idName, 
+                    designType,
+                    lastActive: Date.now()
+                });
+                socketIdToSecurityId[socket.id] = securityId;
+                
+                console.log('Session re-registered after expiration');
+            }
+            
+            return;
+        }
+        
         console.log('Registration attempt for:', idName);
         
         // Check if this securityId is already registered with a different socket
         if (activeSessions.has(securityId)) {
             const oldSessionInfo = activeSessions.get(securityId);
             const oldSocketId = oldSessionInfo.socketId;
-            console.log('Session already exists for securityId:', securityId);
+            console.log('Session already exists for securityId');
             
             // This is a multiple login attempt as the securityId is already in use
             console.log('Invalidating old session, multiple login detected');
@@ -476,7 +515,7 @@ io.on('connection', (socket) => {
             });
             
             // Create anti-tamper log for suspicious activity (multiple logins)
-            const notificationMessage = `Multiple login attempt: ${idName} (Security ID: ${securityId.substring(0, 2)}***)`;
+            const notificationMessage = `Multiple login attempt: ${idName}`;
             const logId = Date.now().toString();
             
             // Create log in MongoDB
@@ -522,6 +561,20 @@ io.on('connection', (socket) => {
         console.log('Session registered for:', idName);
     });
 
+    // Handle session heartbeat
+    socket.on('session_heartbeat', (data) => {
+        const { securityId } = data;
+        
+        // Aktualisiere den Aktivitätszeitstempel für die Session
+        if (securityId && activeSessions.has(securityId)) {
+            const sessionInfo = activeSessions.get(securityId);
+            activeSessions.set(securityId, {
+                ...sessionInfo,
+                lastActive: Date.now()
+            });
+        }
+    });
+
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log('Client disconnected');
@@ -529,10 +582,20 @@ io.on('connection', (socket) => {
         // Clean up session data
         const securityId = socketIdToSecurityId[socket.id];
         if (securityId) {
-            // Immediately remove the session when socket disconnects
-            activeSessions.delete(securityId);
+            // Immediately remove the socket ID mapping
             delete socketIdToSecurityId[socket.id];
-            console.log('Session removed for securityId:', securityId);
+            console.log('Socket mapping removed');
+            
+            // Aber behalte die Session-Daten für eine Weile, um Wiederverbindungen zu ermöglichen
+            setTimeout(() => {
+                // Überprüfe, ob die Session eine neue Socket-ID bekommen hat
+                const currentSession = activeSessions.get(securityId);
+                if (currentSession && currentSession.socketId === socket.id) {
+                    // Wenn nicht, entferne die Session
+                    activeSessions.delete(securityId);
+                    console.log('Session removed after timeout');
+                }
+            }, 30000); // 30 Sekunden Timeout
         }
     });
 });

@@ -203,8 +203,18 @@ export async function registerSessionWithServer(user) {
         
         // Only register if we have a valid session
         if (user && user.securityId) {
+            // Check if this is a reconnect (page refresh or navigation)
+            // We consider it a reconnect if we've already registered this securityId before
+            const isReconnect = sessionStorage.getItem('sessionRegistered') === user.securityId;
+            
             // Emit the register session event to the server
-            socket.emit('register_session', user);
+            socket.emit('register_session', {
+                ...user,
+                isReconnect: isReconnect
+            });
+            
+            // Mark this securityId as registered
+            sessionStorage.setItem('sessionRegistered', user.securityId);
             
             // Set up automatic re-registration if the socket reconnects
             // Remove previous listener first to avoid duplicates
@@ -213,9 +223,29 @@ export async function registerSessionWithServer(user) {
                 console.log('Socket reconnected, re-registering session');
                 const currentUser = getLoggedInUser();
                 if (currentUser && currentUser.securityId) {
-                    socket.emit('register_session', currentUser);
+                    socket.emit('register_session', {
+                        ...currentUser,
+                        isReconnect: true // Always treat socket.io reconnects as reconnects
+                    });
                 }
             });
+            
+            // Set up a heartbeat to keep the session alive
+            if (!window._sessionHeartbeat) {
+                window._sessionHeartbeat = setInterval(() => {
+                    const currentUser = getLoggedInUser();
+                    if (currentUser && currentUser.securityId) {
+                        // Send a heartbeat to keep the connection alive
+                        socket.emit('session_heartbeat', {
+                            securityId: currentUser.securityId
+                        });
+                    } else {
+                        // If no user is logged in, clear the heartbeat
+                        clearInterval(window._sessionHeartbeat);
+                        window._sessionHeartbeat = null;
+                    }
+                }, 45000); // Every 45 seconds
+            }
             
             return true;
         } else {

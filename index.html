@@ -1980,8 +1980,43 @@
             // Initial session check on page load
             checkSessionAndRedirect();
 
+            // Ersetze das bestehende Intervall durch eine verbesserte Version
+            if (sessionCheckInterval) {
+                clearInterval(sessionCheckInterval);
+            }
+            
             // Set up a periodic session check (e.g., every minute)
-            sessionCheckInterval = setInterval(checkSessionAndRedirect, 60 * 1000); // Check every 1 minute
+            // Aber nur, wenn die Seite aktiv ist (nicht minimiert oder im Hintergrund)
+            function startSessionCheck() {
+                if (sessionCheckInterval) {
+                    clearInterval(sessionCheckInterval);
+                }
+                sessionCheckInterval = setInterval(() => {
+                    // Nur prüfen, wenn die Seite aktiv ist
+                    if (!document.hidden) {
+                        checkSessionAndRedirect();
+                    }
+                }, 60 * 1000); // Check every 1 minute
+            }
+            
+            // Starte die Session-Überprüfung
+            startSessionCheck();
+            
+            // Überwache Sichtbarkeitsänderungen der Seite
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    // Wenn die Seite minimiert oder im Hintergrund ist, stoppe die Überprüfung
+                    if (sessionCheckInterval) {
+                        clearInterval(sessionCheckInterval);
+                        sessionCheckInterval = null;
+                    }
+                } else {
+                    // Wenn die Seite wieder aktiv ist, starte die Überprüfung neu
+                    startSessionCheck();
+                    // Und führe sofort eine Aktivitätsaktualisierung durch
+                    trackUserActivity();
+                }
+            });
             
             // User activity tracking to reset session timeout
             function trackUserActivity() {

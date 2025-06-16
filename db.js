@@ -1,8 +1,6 @@
 import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
 
 let loggedInUser = null;
-// Removed local 'requests' array as it's now server-managed
-// Removed sessionStorage.getItem('requests') initialization
 
 // =====================================================================
 // BENUTZER-KONFIGURATION - EINFACH ZU BEARBEITEN
@@ -45,45 +43,7 @@ export const userAccounts = {
         idName: 'Test-Premium 1', 
         designType: 'prem-gold-pulse' 
     }
-    
-    
-    // Kopiere diesen Block, um einen neuen Benutzer hinzuzufügen:
-    /*
-    'security-id': { 
-        idName: 'Anzeigename', 
-        designType: 'design-typ' 
-    },
-    */
 };
-
-// CSS-STYLING-REFERENZ (aus index.html)
-/*
-.request-username.owner {
-    font-weight: 600;
-    background: linear-gradient(135deg, #1a1a2e, #0f3460, #533483, #2d0036, #000, #8e24aa);
-    background-size: 400% 400%;
-    animation: owner-gradient 3s ease-in-out infinite, request-glow 3s linear infinite;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    border-radius: 6px;
-    padding: 2px 10px;
-    box-shadow: 0 0 4px 1px #1a1a2e, 0 0 6px 1px #533483, 0 0 3px 1px #2d0036;
-}
-
-.request-username.green-member {
-    font-weight: 600;
-    color: var(--glow-green);
-    border-radius: 6px;
-    padding: 2px 10px;
-}
-
-.request-item.green-member {
-    box-shadow: none;
-    animation: none;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-*/
 
 // Function to get the current session token (security ID) for authentication
 function getSessionToken() {
@@ -129,11 +89,10 @@ export function setLoggedInUser(user) {
 export function logoutUser() {
     loggedInUser = null;
     sessionStorage.removeItem('loggedInSession');
-    // Removed sessionStorage.removeItem('requests') as requests are server-managed
 }
 
-// Socket.IO client setup
-const socket = io();
+// Socket.IO client setup - automatisch die richtige Host-URL verwenden
+const socket = io(window.location.origin);
 
 export function setRequestUpdateCallback(callback) {
     requestUpdateCallback = callback;
@@ -247,10 +206,16 @@ export async function registerSessionWithServer(user) {
 
 export async function getAntiTamperLogs() {
     try {
-        const response = await fetch('/api/anti-tamper-logs');
+        const response = await fetch('/api/anti-tamper-logs', {
+            headers: {
+                'X-Session-Token': getLoggedInUser()?.securityId || ''
+            }
+        });
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
         return data;
     } catch (error) {
@@ -264,17 +229,18 @@ export async function clearAntiTamperLogs() {
         const response = await fetch('/api/anti-tamper-logs', {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
                 'X-Session-Token': getLoggedInUser()?.securityId || ''
             }
         });
         
-        const data = await response.json();
-        console.log('Logs cleared');
-        return data;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return true;
     } catch (error) {
-        console.error('Clear error');
-        throw error;
+        console.error('Error clearing anti-tamper logs:', error);
+        return false;
     }
 }
 
@@ -283,102 +249,88 @@ export async function deleteAntiTamperLog(id) {
         const response = await fetch(`/api/anti-tamper-logs/${id}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
                 'X-Session-Token': getLoggedInUser()?.securityId || ''
             }
         });
         
-        const data = await response.json();
-        console.log('Log deleted');
-        return data;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return true;
     } catch (error) {
-        console.error('Delete error');
-        throw error;
+        console.error('Error deleting anti-tamper log:', error);
+        return false;
     }
 }
 
-// Album Item Functions
 export async function getAlbumItems() {
     try {
-        const response = await fetch('/api/albums');
+        const response = await fetch('/api/album-items');
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Error fetching albums: ${errorData.error || response.statusText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return await response.json();
+        
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error('Error in getAlbumItems:', error);
+        console.error('Error fetching album items:', error);
         return [];
     }
 }
 
 export async function addAlbumItem(albumItem) {
-    const sessionToken = getSessionToken();
-    if (!sessionToken) {
-        console.error('No valid session token found when trying to add album item');
-        throw new Error('Authentication required');
-    }
-    
     try {
-        const response = await fetch('/api/albums', {
+        const response = await fetch('/api/album-items', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Session-Token': sessionToken
+                'X-Session-Token': getLoggedInUser()?.securityId || ''
             },
             body: JSON.stringify(albumItem)
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`Failed to add album: ${errorData.error || response.statusText}`);
+            throw new Error(errorData.error || 'Unknown error');
         }
         
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error('Error in addAlbumItem:', error);
+        console.error('Error adding album item:', error);
         throw error;
     }
 }
 
 export async function updateAlbumItem(id, albumItem) {
-    const sessionToken = getSessionToken();
-    if (!sessionToken) {
-        console.error('No valid session token found when trying to update album item');
-        throw new Error('Authentication required');
-    }
-    
     try {
-        const response = await fetch(`/api/albums/${id}`, {
+        const response = await fetch(`/api/album-items/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Session-Token': sessionToken
+                'X-Session-Token': getLoggedInUser()?.securityId || ''
             },
             body: JSON.stringify(albumItem)
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`Failed to update album: ${errorData.error || response.statusText}`);
+            throw new Error(errorData.error || 'Unknown error');
         }
         
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error('Error in updateAlbumItem:', error);
+        console.error('Error updating album item:', error);
         throw error;
     }
 }
 
 export async function deleteAlbumItem(id) {
     try {
-        console.log('Deleting album');
-        
-        // Ensure ID is properly formatted for the request
-        const idString = id.toString();
-        console.log('ID formatted');
-        
-        const response = await fetch(`/api/albums/${idString}`, {
+        const response = await fetch(`/api/album-items/${id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -388,13 +340,12 @@ export async function deleteAlbumItem(id) {
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete album');
+            throw new Error(errorData.error || 'Unknown error');
         }
         
-        const data = await response.json();
-        return data;
+        return true;
     } catch (error) {
-        console.error('Delete error');
+        console.error('Error deleting album item:', error);
         throw error;
     }
 } 

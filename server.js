@@ -486,4 +486,61 @@ io.on('connection', (socket) => {
                 delete socketIdToSecurityId[oldSocketId];
                 
                 // Create anti-tamper log for suspicious activity (multiple logins)
-                const notificationMessage = `Multiple login attempt: ${idName}`
+                const notificationMessage = `Multiple login attempt: ${idName}`;
+                const logId = Date.now().toString();
+                
+                // Create log in MongoDB
+                const log = new AntiTamperLog({
+                    id: logId,
+                    timestamp: Date.now(),
+                    message: notificationMessage
+                });
+                log.save().catch(err => console.error('Error saving anti-tamper log:', err));
+
+                console.log('Log created');
+                
+                // Notify all admin users about the suspicious activity
+                activeSessions.forEach((session, key) => {
+                    if (session.designType === 'owner' || session.idName === 'Amo') {
+                        try {
+                            io.to(session.socketId).emit('anti_tamper_notification', { 
+                                id: logId,
+                                timestamp: Date.now(),
+                                message: notificationMessage
+                            });
+                            console.log('Admin notified');
+                        } catch (err) {
+                            // Ignore errors sending to potentially disconnected sockets
+                        }
+                    }
+                });
+            }
+        }
+
+        // Register the new session
+        activeSessions.set(securityId, { socketId: socket.id, username, idName, designType });
+        socketIdToSecurityId[socket.id] = securityId;
+        
+        console.log('Session registered');
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('Disconnected');
+        
+        // Clean up session data
+        const securityId = socketIdToSecurityId[socket.id];
+        if (securityId) {
+            activeSessions.delete(securityId);
+            delete socketIdToSecurityId[socket.id];
+            console.log('Session removed');
+        }
+    });
+});
+
+// Helper function to broadcast album updates
+function broadcastAlbumUpdate() {
+    io.emit('albumItemsChanged');
+}
+
+// Special maintenance endpoints

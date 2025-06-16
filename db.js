@@ -230,7 +230,7 @@ export async function getRequests() {
         return data;
     } catch (error) {
         console.error('Error fetching requests:', error);
-        return [];
+        throw error;
     }
 }
 
@@ -307,21 +307,17 @@ export async function registerSessionWithServer(user) {
 
 export async function getAntiTamperLogs() {
     try {
-        const response = await fetch('/api/anti-tamper-logs', {
-            headers: {
-                'X-Session-Token': getLoggedInUser()?.securityId || ''
-            }
-        });
-        
+        console.log("API-Aufruf: Anti-Tamper-Logs abrufen");
+        const response = await fetch('/api/anti-tamper-logs');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         const data = await response.json();
+        console.log(`${data.length} Anti-Tamper-Logs erhalten`);
         return data;
     } catch (error) {
         console.error('Error fetching anti-tamper logs:', error);
-        return [];
+        throw error;
     }
 }
 
@@ -367,17 +363,17 @@ export async function deleteAntiTamperLog(id) {
 
 export async function getAlbumItems() {
     try {
+        console.log("API-Aufruf: Album-Items abrufen");
         const response = await fetch('/api/album-items');
-        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         const data = await response.json();
+        console.log(`${data.length} Album-Items erhalten`);
         return data;
     } catch (error) {
         console.error('Error fetching album items:', error);
-        return [];
+        throw error;
     }
 }
 

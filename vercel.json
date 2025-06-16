@@ -22,15 +22,19 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/index.js"
+      "dest": "index.js"
     },
     {
       "src": "/socket-io-emulate",
-      "dest": "/index.js"
+      "dest": "index.js"
+    },
+    {
+      "src": "/status",
+      "dest": "index.js"
     },
     {
       "src": "/db.js",
-      "dest": "/db.js"
+      "dest": "db.js"
     },
     {
       "src": "/index.html",
@@ -50,10 +54,6 @@
     },
     {
       "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.js"
     }
   ]
 } 

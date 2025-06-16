@@ -333,78 +333,7 @@ if (initialRequestCount === 0) {
 
 app.use(express.json()); // For parsing application/json
 
-// API Endpoints
-app.get('/api/requests', (req, res) => {
-    const requests = db.prepare('SELECT * FROM requests ORDER BY timestamp DESC').all();
-    res.json(requests);
-});
-
-// New API endpoint for anti-tamper logs
-app.get('/api/anti-tamper-logs', (req, res) => {
-    const logs = db.prepare('SELECT * FROM anti_tamper_logs ORDER BY timestamp DESC').all();
-    res.json(logs);
-});
-
-// New API endpoint to clear anti-tamper logs
-app.delete('/api/anti-tamper-logs', (req, res) => {
-    const result = db.prepare('DELETE FROM anti_tamper_logs').run();
-    console.log(`Cleared ${result.changes} anti-tamper logs.`);
-    io.emit('antiTamperLogsCleared'); // Notify clients that logs have been cleared
-    res.status(200).json({ message: `Cleared ${result.changes} anti-tamper logs.` });
-});
-
-// New API endpoint to delete a single anti-tamper log
-app.delete('/api/anti-tamper-logs/:id', (req, res) => {
-    const idToDelete = String(req.params.id); // Ensure ID is a string
-    console.log(`Server: Received DELETE request for anti-tamper log with ID: ${idToDelete}`);
-    try {
-        const stmt = db.prepare('DELETE FROM anti_tamper_logs WHERE id = ?');
-        const result = stmt.run(idToDelete);
-        
-        if (result.changes > 0) {
-            console.log(`Server: Successfully deleted anti-tamper log with ID: ${idToDelete}. Changes: ${result.changes}`);
-            io.emit('antiTamperNotification'); // Trigger re-render for all clients
-            res.status(200).json({ message: `Anti-tamper log ${idToDelete} deleted successfully` });
-        } else {
-            console.log(`Server: Failed to delete anti-tamper log with ID: ${idToDelete}. Log not found or no changes.`);
-            res.status(404).json({ message: `Anti-tamper log with ID ${idToDelete} not found` });
-        }
-    } catch (error) {
-        console.error(`Server: Error during deletion of anti-tamper log ${idToDelete}:`, error);
-        res.status(500).json({ message: `Internal server error during deletion: ${error.message}` });
-    }
-});
-
-// API Endpoints for Album Items
-app.get('/api/album-items', (req, res) => {
-    console.log('GET /api/album-items: Redirecting to /api/albums');
-    // Forward to the new endpoint
-    req.url = '/api/albums';
-    app.handle(req, res);
-});
-
-app.post('/api/album-items', (req, res) => {
-    console.log('POST /api/album-items: Redirecting to /api/albums');
-    // Forward to the new endpoint
-    req.url = '/api/albums';
-    app.handle(req, res);
-});
-
-app.put('/api/album-items/:id', (req, res) => {
-    console.log(`PUT /api/album-items/:id: Redirecting to /api/albums/:id`);
-    // Forward to the new endpoint
-    req.url = `/api/albums/${req.params.id}`;
-    app.handle(req, res);
-});
-
-app.delete('/api/album-items/:id', (req, res) => {
-    console.log(`DELETE /api/album-items/${req.params.id}: Redirecting to /api/albums/${req.params.id}`);
-    // Forward to the new endpoint
-    req.url = `/api/albums/${req.params.id}`;
-    app.handle(req, res);
-});
-
-// API endpoints for MongoDB
+// API Endpoints for MongoDB
 // GET /api/requests - Get all requests
 app.get('/api/requests', async (req, res) => {
     try {
@@ -460,6 +389,35 @@ app.delete('/api/anti-tamper-logs/:id', async (req, res) => {
         console.error(`Server: Error during deletion of anti-tamper log ${idToDelete}:`, error);
         res.status(500).json({ message: `Internal server error during deletion: ${error.message}` });
     }
+});
+
+// API Endpoints for Album Items
+app.get('/api/album-items', (req, res) => {
+    console.log('GET /api/album-items: Redirecting to /api/albums');
+    // Forward to the new endpoint
+    req.url = '/api/albums';
+    app.handle(req, res);
+});
+
+app.post('/api/album-items', (req, res) => {
+    console.log('POST /api/album-items: Redirecting to /api/albums');
+    // Forward to the new endpoint
+    req.url = '/api/albums';
+    app.handle(req, res);
+});
+
+app.put('/api/album-items/:id', (req, res) => {
+    console.log(`PUT /api/album-items/:id: Redirecting to /api/albums/:id`);
+    // Forward to the new endpoint
+    req.url = `/api/albums/${req.params.id}`;
+    app.handle(req, res);
+});
+
+app.delete('/api/album-items/:id', (req, res) => {
+    console.log(`DELETE /api/album-items/${req.params.id}: Redirecting to /api/albums/${req.params.id}`);
+    // Forward to the new endpoint
+    req.url = `/api/albums/${req.params.id}`;
+    app.handle(req, res);
 });
 
 // POST /api/albums - Create a new album

@@ -356,6 +356,51 @@ app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
     }
 });
 
+// API endpoint for reporting albums
+app.post('/api/report-album', async (req, res) => {
+    try {
+        const { albumId, albumName, reportedBy, message } = req.body;
+        
+        if (!albumId || !albumName || !reportedBy) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Create a unique ID for the report
+        const logId = Date.now().toString();
+        
+        // Create anti-tamper log entry for the report
+        const antiTamperLog = new AntiTamperLog({
+            id: logId,
+            timestamp: Date.now(),
+            message: message || `Album reported: "${albumName}" by ${reportedBy}`
+        });
+        
+        await antiTamperLog.save();
+        console.log('Report created');
+        
+        // Notify all admin users about the report
+        activeSessions.forEach((session, key) => {
+            if (session.designType === 'owner' || session.idName === 'Amo') {
+                try {
+                    io.to(session.socketId).emit('antiTamperNotification', { 
+                        id: logId,
+                        timestamp: Date.now(),
+                        message: message || `Album reported: "${albumName}" by ${reportedBy}`
+                    });
+                    console.log('Admin notified');
+                } catch (err) {
+                    // Ignore errors sending to potentially disconnected sockets
+                }
+            }
+        });
+        
+        return res.status(201).json({ success: true, message: 'Album reported successfully' });
+    } catch (error) {
+        console.error('Report error:', error);
+        return res.status(500).json({ error: 'Failed to report album' });
+    }
+});
+
 // Start server
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

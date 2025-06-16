@@ -2,11 +2,11 @@
   "name": "trnt-app",
   "version": "1.0.0",
   "description": "TRNT Application",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "build": "echo 'Build step completed'"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "build": "cp *.html *.js *.css ./ && echo 'Build completed'"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +16,8 @@
     "socket.io": "^4.0.0",
     "mongodb": "^5.7.0",
     "mongoose": "^7.4.3",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "body-parser": "^1.19.0"
   },
   "engines": {
     "node": "18.x"

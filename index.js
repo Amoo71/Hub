@@ -1,24 +1,20 @@
 const express = require('express');
-const http = require('http');
-const path = require('path');
 const bodyParser = require('body-parser');
 const apiRoutes = require('./api/index');
 
 // Express-App erstellen
 const app = express();
 
-// In einer Serverless-Umgebung wie Vercel funktioniert Socket.io nicht wie gewohnt
-// Stattdessen verwenden wir eine einfachere Konfiguration
-// Die Socket.io-Funktionalität wird auf der Client-Seite simuliert
+// Für Vercel Logs
+console.log('Serverless function startup. Node version:', process.version);
 
 // Middleware
-app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 app.use(bodyParser.json());
 
 // Debug-Logging für Anfragen
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
@@ -35,6 +31,27 @@ app.use((req, res, next) => {
   next();
 });
 
+// API-Routen
+app.use('/api', apiRoutes);
+
+// Socket.io Endpunkt für Server-Sent Events Simulation
+app.post('/socket-io-emulate', (req, res) => {
+  // Hier empfangen wir eine Anfrage, die ein Socket.io Ereignis auslöst
+  const { event, data } = req.body;
+  console.log(`Socket.IO Event emuliert: ${event}`, data);
+  
+  // Erfolg zurückgeben
+  res.json({ success: true, event, received: true });
+});
+
+// Gesundheitscheck
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: Date.now()
+  });
+});
+
 // Error-Handler für Express
 app.use((err, req, res, next) => {
   console.error('Express Error:', err);
@@ -45,80 +62,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-// API-Routen
-app.use('/api', apiRoutes);
-
-// Socket.io Endpunkt für Server-Sent Events Simulation
-app.post('/socket-io-emulate', (req, res) => {
-  // Hier empfangen wir eine Anfrage, die ein Socket.io Ereignis auslöst
-  // Da wir in einer Serverless-Umgebung sind, verwenden wir diesen Endpunkt,
-  // um die Ereignisse zu verarbeiten und zu loggen
-  const { event, data } = req.body;
-  console.log(`Socket.IO Event emuliert: ${event}`, data);
-  
-  // Erfolg zurückgeben
-  res.json({ success: true, event, received: true });
-});
-
-// Root-Route für Statusinformationen
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Login-Route
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
-});
-
-// db.js-Route für Frontend
-app.get('/db.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'db.js'));
-});
-
-// Catch-all für statische Dateien
-app.get('*', (req, res, next) => {
-  try {
-    const filePath = path.join(__dirname, req.path);
-    // Prüfen, ob die Datei existiert
-    if (require('fs').existsSync(filePath)) {
-      return res.sendFile(filePath);
-    }
-    next();
-  } catch (err) {
-    next(err);
+// 404-Handler für unbekannte API-Routen
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    res.status(404).json({
+      error: 'API-Endpunkt nicht gefunden',
+      path: req.path
+    });
+  } else {
+    // Für alle anderen Routen - lassen wir Vercel die statischen Dateien servieren
+    res.status(404).send('Not found');
   }
 });
-
-// 404-Handler für nicht gefundene Routen
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Route nicht gefunden',
-    path: req.path,
-    method: req.method
-  });
-});
-
-// Server starten, wenn wir nicht in Vercel's Serverless-Umgebung sind
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  const server = http.createServer(app);
-  
-  // Hier können wir in einer nicht-serverless Umgebung Socket.io verwenden
-  const socketIo = require('socket.io');
-  const io = socketIo(server);
-  
-  io.on('connection', (socket) => {
-    console.log('Socket.io Verbindung hergestellt:', socket.id);
-    
-    // Hier können die Socket-Events wie gewohnt implementiert werden
-  });
-  
-  server.listen(PORT, () => {
-    console.log(`Server läuft auf Port ${PORT}`);
-  });
-} else {
-  console.log('Server läuft im Serverless-Modus auf Vercel');
-}
 
 // Für Vercel Serverless-Funktionen exportieren wir die Express-App
 module.exports = app; 

@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
   "builds": [
     {
       "src": "index.js",
@@ -10,17 +11,21 @@
       "use": "@vercel/static"
     },
     {
-      "src": "db.js",
+      "src": "*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/index.js"
     },
     {
-      "src": "/socket.io/(.*)",
+      "src": "/socket-io-emulate",
       "dest": "/index.js"
     },
     {
@@ -28,8 +33,8 @@
       "dest": "/db.js"
     },
     {
-      "src": "/login",
-      "dest": "/login.html"
+      "src": "/index.html",
+      "dest": "/index.html"
     },
     {
       "src": "/login.html",
@@ -40,12 +45,11 @@
       "dest": "/index.html"
     },
     {
-      "src": "/(.*)\\.js",
-      "dest": "/$1.js"
+      "src": "/login",
+      "dest": "/login.html"
     },
     {
-      "src": "/(.*)\\.css",
-      "dest": "/$1.css"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",

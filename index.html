@@ -1954,20 +1954,15 @@
                 } else {
                     if (loggedInUser.idName === 'Amo') { // Assuming 'Amo' is the admin
                         adminToggleButton.classList.remove('hidden');
-                        try {
-                            const logs = await getAntiTamperLogs();
-                            if (logs.length > 0) {
-                                adminToggleButton.textContent = '!';
-                                adminToggleButton.classList.add('notification-active');
-                                notificationGlowActive = true;
-                            } else {
-                                adminToggleButton.textContent = '—';
-                                adminToggleButton.classList.remove('notification-active');
-                                notificationGlowActive = false;
-                            }
-                        } catch (error) {
-                            console.error('Error fetching anti-tamper logs:', error);
-                            adminToggleButton.textContent = '?';
+                        const logs = await getAntiTamperLogs();
+                        if (logs.length > 0) {
+                            adminToggleButton.textContent = '!';
+                            adminToggleButton.classList.add('notification-active');
+                            notificationGlowActive = true;
+                        } else {
+                            adminToggleButton.textContent = '—';
+                            adminToggleButton.classList.remove('notification-active');
+                            notificationGlowActive = false;
                         }
                     } else {
                         adminToggleButton.classList.add('hidden');
@@ -3023,75 +3018,69 @@
             }
 
             async function renderRequests() {
-                try {
-                    const requestsList = document.querySelector('.requests-list');
-                    requestsList.innerHTML = '<h4>Requests:</h4>'; // Clear existing requests except the title
+                const requestsList = document.querySelector('.requests-list');
+                requestsList.innerHTML = '<h4>Requests:</h4>'; // Clear existing requests except the title
 
-                    const requests = await getRequests(); // Fetch requests from server
+                const requests = await getRequests(); // Fetch requests from server
 
-                    if (requests.length === 0) {
-                        const initialPlaceholder = document.createElement('div');
-                        initialPlaceholder.id = 'initial-request-placeholder';
-                        initialPlaceholder.classList.add('request-item');
-                        initialPlaceholder.textContent = '//';
-                        requestsList.appendChild(initialPlaceholder);
+                if (requests.length === 0) {
+                    const initialPlaceholder = document.createElement('div');
+                    initialPlaceholder.id = 'initial-request-placeholder';
+                    initialPlaceholder.classList.add('request-item');
+                    initialPlaceholder.textContent = '//';
+                    requestsList.appendChild(initialPlaceholder);
+                    
+                    // Remove scrollable class if no requests
+                    requestsList.classList.remove('scrollable');
+                } else {
+                    // Sort all requests by timestamp (newest first)
+                    const sortedRequests = requests.sort((a, b) => b.timestamp - a.timestamp);
+
+                    // Render each request as a separate item
+                    sortedRequests.forEach((req) => {
+                        const newRequestItem = document.createElement('div');
+                        newRequestItem.classList.add('request-item');
+                        newRequestItem.classList.add(req.designType);
+                        newRequestItem.setAttribute('data-request-id', req.id);
+
+                        const requestUsernameDiv = document.createElement('div');
+                        requestUsernameDiv.classList.add('request-username');
+                        requestUsernameDiv.textContent = req.username;
+                        requestUsernameDiv.classList.add(req.designType);
+                        requestUsernameDiv.setAttribute('data-id-name', req.idName);
+
+                        const requestSeparatorDiv = document.createElement('div');
+                        requestSeparatorDiv.classList.add('request-separator');
+                        requestSeparatorDiv.textContent = '|';
+
+                        const requestTextDiv = document.createElement('div');
+                        requestTextDiv.classList.add('request-text');
+                        requestTextDiv.textContent = req.text;
+
+                        const requestTimeDiv = document.createElement('div');
+                        requestTimeDiv.classList.add('request-time');
                         
-                        // Remove scrollable class if no requests
-                        requestsList.classList.remove('scrollable');
+                        // Calculate relative time
+                        const relativeTime = getRelativeTimeString(req.timestamp);
+                        requestTimeDiv.textContent = relativeTime;
+
+                        newRequestItem.appendChild(requestUsernameDiv);
+                        newRequestItem.appendChild(requestSeparatorDiv);
+                        newRequestItem.appendChild(requestTextDiv);
+                        newRequestItem.appendChild(requestTimeDiv);
+
+                        requestsList.appendChild(newRequestItem);
+                    });
+                    
+                    // Add scrollable class if more than 3 requests
+                    if (sortedRequests.length > 3) {
+                        requestsList.classList.add('scrollable');
                     } else {
-                        // Sort all requests by timestamp (newest first)
-                        const sortedRequests = requests.sort((a, b) => b.timestamp - a.timestamp);
-
-                        // Render each request as a separate item
-                        sortedRequests.forEach((req) => {
-                            const newRequestItem = document.createElement('div');
-                            newRequestItem.classList.add('request-item');
-                            newRequestItem.classList.add(req.designType);
-                            newRequestItem.setAttribute('data-request-id', req.id);
-
-                            const requestUsernameDiv = document.createElement('div');
-                            requestUsernameDiv.classList.add('request-username');
-                            requestUsernameDiv.textContent = req.username;
-                            requestUsernameDiv.classList.add(req.designType);
-                            requestUsernameDiv.setAttribute('data-id-name', req.idName);
-
-                            const requestSeparatorDiv = document.createElement('div');
-                            requestSeparatorDiv.classList.add('request-separator');
-                            requestSeparatorDiv.textContent = '|';
-
-                            const requestTextDiv = document.createElement('div');
-                            requestTextDiv.classList.add('request-text');
-                            requestTextDiv.textContent = req.text;
-
-                            const requestTimeDiv = document.createElement('div');
-                            requestTimeDiv.classList.add('request-time');
-                            
-                            // Calculate relative time
-                            const relativeTime = getRelativeTimeString(req.timestamp);
-                            requestTimeDiv.textContent = relativeTime;
-
-                            newRequestItem.appendChild(requestUsernameDiv);
-                            newRequestItem.appendChild(requestSeparatorDiv);
-                            newRequestItem.appendChild(requestTextDiv);
-                            newRequestItem.appendChild(requestTimeDiv);
-
-                            requestsList.appendChild(newRequestItem);
-                        });
-                        
-                        // Add scrollable class if more than 3 requests
-                        if (sortedRequests.length > 3) {
-                            requestsList.classList.add('scrollable');
-                        } else {
-                            requestsList.classList.remove('scrollable');
-                        }
+                        requestsList.classList.remove('scrollable');
                     }
-                    setupHoverEffects();
-                    toggleAdminView(requestSection.classList.contains('admin-mode'));
-                } catch (error) {
-                    console.error('Error rendering requests:', error);
-                    const requestsList = document.querySelector('.requests-list');
-                    requestsList.innerHTML = '<h4>Requests:</h4><div class="request-item error">Failed to load requests</div>';
                 }
+                setupHoverEffects();
+                toggleAdminView(requestSection.classList.contains('admin-mode'));
             }
 
             // Function to calculate relative time string (1m, 1h1m, 1d, etc.)
@@ -3660,15 +3649,6 @@
                 
                 // Show the modal
                 albumDetailModalOverlay.classList.add('visible');
-            }
-
-            async function getAntiTamperMessages() {
-                try {
-                    return await getAntiTamperLogs();
-                } catch (error) {
-                    console.error('Error fetching anti-tamper messages:', error);
-                    return [];
-                }
             }
         });
     </script>

@@ -1,9 +1,30 @@
-/* Client-seitige Datenbank-Schnittstelle (ohne direkte Socket.io-Abhängigkeit) */
+import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
 
 let loggedInUser = null;
+// Removed local 'requests' array as it's now server-managed
+// Removed sessionStorage.getItem('requests') initialization
 
 // =====================================================================
-// BENUTZER-KONFIGURATION
+// BENUTZER-KONFIGURATION - EINFACH ZU BEARBEITEN
+// =====================================================================
+// 
+// ANLEITUNG ZUM HINZUFÜGEN NEUER BENUTZER:
+// 1. Füge einen neuen Eintrag mit einer eindeutigen Security-ID als Schlüssel hinzu
+// 2. Definiere die Eigenschaften: idName, designType
+// 3. Speichere die Datei und starte den Server neu
+//
+// VERFÜGBARE DESIGN-TYPEN:
+// - 'owner': Besondere Rechte und Styling (lila Farbverlauf, Glühen, Admin-Zugriff)
+// - 'green-member': Grünes Styling ohne Glühen
+// - Eigene Typen können definiert werden - füge sie einfach in der CSS-Definition hinzu
+//
+// BEISPIEL FÜR EINEN NEUEN BENUTZER:
+// 'neue-id-123': { idName: 'Neuer-Benutzer', designType: 'custom-style' }
+// 
+// CSS-STYLING BEFINDET SICH IN index.html:
+// - Für owner: .request-username.owner { ... }
+// - Für green-member: .request-username.green-member { ... }
+// - Für request-item: .request-item.owner, .request-item.green-member { ... }
 // =====================================================================
 
 export const userAccounts = {
@@ -24,9 +45,47 @@ export const userAccounts = {
         idName: 'Test-Premium 1', 
         designType: 'prem-gold-pulse' 
     }
+    
+    
+    // Kopiere diesen Block, um einen neuen Benutzer hinzuzufügen:
+    /*
+    'security-id': { 
+        idName: 'Anzeigename', 
+        designType: 'design-typ' 
+    },
+    */
 };
 
-// Session-Token abrufen
+// CSS-STYLING-REFERENZ (aus index.html)
+/*
+.request-username.owner {
+    font-weight: 600;
+    background: linear-gradient(135deg, #1a1a2e, #0f3460, #533483, #2d0036, #000, #8e24aa);
+    background-size: 400% 400%;
+    animation: owner-gradient 3s ease-in-out infinite, request-glow 3s linear infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    border-radius: 6px;
+    padding: 2px 10px;
+    box-shadow: 0 0 4px 1px #1a1a2e, 0 0 6px 1px #533483, 0 0 3px 1px #2d0036;
+}
+
+.request-username.green-member {
+    font-weight: 600;
+    color: var(--glow-green);
+    border-radius: 6px;
+    padding: 2px 10px;
+}
+
+.request-item.green-member {
+    box-shadow: none;
+    animation: none;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+*/
+
+// Function to get the current session token (security ID) for authentication
 function getSessionToken() {
     const user = getLoggedInUser();
     return user ? user.securityId : null;
@@ -70,101 +129,11 @@ export function setLoggedInUser(user) {
 export function logoutUser() {
     loggedInUser = null;
     sessionStorage.removeItem('loggedInSession');
+    // Removed sessionStorage.removeItem('requests') as requests are server-managed
 }
 
-// Simulierte Socket.io-Kommunikation für Serverless-Umgebung
-console.log("Socket.io-Simulation wird initialisiert für Serverless-Umgebung");
-
-// Wir verwenden eine einfache Polling-Strategie, um Updates zu erhalten
-class ServerlessSocketSimulation {
-    constructor() {
-        this.eventHandlers = {};
-        this.connected = false;
-        this.id = 'sim-' + Date.now();
-        this.pollInterval = 5000; // 5 Sekunden
-        this.pollTimeoutId = null;
-        
-        // Bei Start direkt verbinden
-        this.connect();
-    }
-    
-    connect() {
-        this.connected = true;
-        console.log("Socket.io-Simulation verbunden mit ID:", this.id);
-        
-        // Polling starten für Event-Prüfung (bei Bedarf)
-        this.startPolling();
-        
-        // Emit connect event
-        this._triggerEvent('connect');
-    }
-    
-    startPolling() {
-        // In einer vollständigen Implementierung würden wir hier 
-        // regelmäßig den Server nach neuen Events fragen
-        if (this.pollTimeoutId) clearTimeout(this.pollTimeoutId);
-        
-        const poll = async () => {
-            if (!this.connected) return;
-            
-            try {
-                // Hier könnte ein API-Endpoint abgefragt werden, der Events zurückgibt
-                // In diesem Fall simulieren wir das Verhalten
-                console.log("Socket.io-Simulation: Polling für Events");
-                
-                // Nächstes Polling planen
-                this.pollTimeoutId = setTimeout(poll, this.pollInterval);
-                
-            } catch (error) {
-                console.error("Socket.io-Simulation: Polling-Fehler", error);
-                // Bei Fehler trotzdem weiter pollen
-                this.pollTimeoutId = setTimeout(poll, this.pollInterval);
-            }
-        };
-        
-        // Ersten Poll starten
-        this.pollTimeoutId = setTimeout(poll, this.pollInterval);
-    }
-    
-    on(eventName, callback) {
-        if (!this.eventHandlers[eventName]) {
-            this.eventHandlers[eventName] = [];
-        }
-        this.eventHandlers[eventName].push(callback);
-        console.log(`Socket.io-Simulation: Event-Handler für '${eventName}' registriert`);
-    }
-    
-    emit(eventName, data) {
-        if (eventName === 'register_session') {
-            console.log("Sende Sitzung an Server", data);
-            // Simulierter Server-Empfang
-            this._triggerEvent('session_registered', { success: true });
-            
-            // Bei einer vollständigen Implementierung würden wir hier einen API-Call machen
-            fetch('/socket-io-emulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ event: eventName, data })
-            }).catch(err => console.error("Socket.io-Emulation API-Fehler:", err));
-        }
-        
-        return true;
-    }
-    
-    _triggerEvent(eventName, data) {
-        const handlers = this.eventHandlers[eventName] || [];
-        handlers.forEach(handler => {
-            try {
-                handler(data);
-            } catch (error) {
-                console.error(`Socket.io-Simulation: Fehler beim Auslösen des Events '${eventName}'`, error);
-            }
-        });
-    }
-}
-
-// Socket.io-Simulation erstellen
-const socket = new ServerlessSocketSimulation();
+// Socket.IO client setup
+const socket = io();
 
 export function setRequestUpdateCallback(callback) {
     requestUpdateCallback = callback;
@@ -174,19 +143,20 @@ export function setAntiTamperNotificationCallback(callback) {
     antiTamperNotificationCallback = callback;
 }
 
-// Listen for real-time events (simuliert) 
+// Listen for real-time events from server
 socket.on('requestAdded', (newRequest) => {
-    console.log('New request event');
+    console.log('New request');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('requestDeleted', (deletedRequestId) => {
-    console.log('Request deleted event');
+    console.log('Request deleted');
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
 socket.on('sessionInvalidated', () => {
-    console.log('Session invalid event');
+    console.log('Session invalid');
+    // Force logout by clearing the user data
     localStorage.removeItem('loggedInUser');
     if (window.location.pathname !== '/login.html') {
         window.location.href = 'login.html';
@@ -194,49 +164,36 @@ socket.on('sessionInvalidated', () => {
 });
 
 socket.on('antiTamperNotification', (message) => {
-    console.log('Security alert event');
+    console.log('Security alert');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback(message);
 });
 
 socket.on('antiTamperLogsCleared', () => {
-    console.log('Logs cleared event');
+    console.log('Logs cleared');
     if (antiTamperNotificationCallback) antiTamperNotificationCallback();
 });
 
 socket.on('albumItemsChanged', () => {
-    console.log('Albums updated event');
+    console.log('Albums updated');
     if (albumItemUpdateCallback) albumItemUpdateCallback();
 });
 
-// Manuelle Event-Auslösung bei API-Calls
-function triggerEvent(eventName, data) {
-    if (socket && socket._triggerEvent) {
-        socket._triggerEvent(eventName, data);
-        return true;
-    }
-    return false;
-}
-
-// API-Funktionen
 export async function getRequests() {
     try {
-        console.log("API-Aufruf: Anfragen abrufen");
         const response = await fetch('/api/requests');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(`${data.length} Anfragen erhalten`);
         return data;
     } catch (error) {
         console.error('Error fetching requests:', error);
-        throw error;
+        return [];
     }
 }
 
 export async function addRequest(request) {
     try {
-        console.log("API-Aufruf: Anfrage hinzufügen", request);
         const response = await fetch('/api/requests', {
             method: 'POST',
             headers: {
@@ -246,26 +203,17 @@ export async function addRequest(request) {
             body: JSON.stringify(request)
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const data = await response.json();
-        console.log('Request added:', data);
-        
-        // Lokale Event-Auslösung
-        triggerEvent('requestAdded', data);
-        
+        console.log('Request added');
         return data;
     } catch (error) {
-        console.error('Add request error:', error);
+        console.error('Add error');
         throw error;
     }
 }
 
 export async function deleteRequest(id) {
     try {
-        console.log("API-Aufruf: Anfrage löschen", id);
         const response = await fetch(`/api/requests/${id}`, {
             method: 'DELETE',
             headers: {
@@ -274,50 +222,40 @@ export async function deleteRequest(id) {
             }
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const data = await response.json();
-        console.log('Request deleted:', data);
-        
-        // Lokale Event-Auslösung
-        triggerEvent('requestDeleted', id);
-        
+        console.log('Request deleted');
         return data;
     } catch (error) {
-        console.error('Delete request error:', error);
+        console.error('Delete error');
         throw error;
     }
 }
 
 export async function registerSessionWithServer(user) {
     try {
-        console.log('Registering session with server', user);
+        console.log('Registering');
         
-        // Simulierte Socket-Registrierung
+        // Emit the register session event to the server - use correct event name
         socket.emit('register_session', user);
         
         return true;
     } catch (error) {
-        console.error('Register session error:', error);
+        console.error('Register error');
         return false;
     }
 }
 
 export async function getAntiTamperLogs() {
     try {
-        console.log("API-Aufruf: Anti-Tamper-Logs abrufen");
         const response = await fetch('/api/anti-tamper-logs');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log(`${data.length} Anti-Tamper-Logs erhalten`);
         return data;
     } catch (error) {
         console.error('Error fetching anti-tamper logs:', error);
-        throw error;
+        return [];
     }
 }
 
@@ -326,18 +264,17 @@ export async function clearAntiTamperLogs() {
         const response = await fetch('/api/anti-tamper-logs', {
             method: 'DELETE',
             headers: {
+                'Content-Type': 'application/json',
                 'X-Session-Token': getLoggedInUser()?.securityId || ''
             }
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return true;
+        const data = await response.json();
+        console.log('Logs cleared');
+        return data;
     } catch (error) {
-        console.error('Error clearing anti-tamper logs:', error);
-        return false;
+        console.error('Clear error');
+        throw error;
     }
 }
 
@@ -346,88 +283,102 @@ export async function deleteAntiTamperLog(id) {
         const response = await fetch(`/api/anti-tamper-logs/${id}`, {
             method: 'DELETE',
             headers: {
+                'Content-Type': 'application/json',
                 'X-Session-Token': getLoggedInUser()?.securityId || ''
             }
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Error deleting anti-tamper log:', error);
-        return false;
-    }
-}
-
-export async function getAlbumItems() {
-    try {
-        console.log("API-Aufruf: Album-Items abrufen");
-        const response = await fetch('/api/album-items');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
         const data = await response.json();
-        console.log(`${data.length} Album-Items erhalten`);
+        console.log('Log deleted');
         return data;
     } catch (error) {
-        console.error('Error fetching album items:', error);
+        console.error('Delete error');
         throw error;
     }
 }
 
-export async function addAlbumItem(albumItem) {
+// Album Item Functions
+export async function getAlbumItems() {
     try {
-        const response = await fetch('/api/album-items', {
+        const response = await fetch('/api/albums');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Error fetching albums: ${errorData.error || response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error in getAlbumItems:', error);
+        return [];
+    }
+}
+
+export async function addAlbumItem(albumItem) {
+    const sessionToken = getSessionToken();
+    if (!sessionToken) {
+        console.error('No valid session token found when trying to add album item');
+        throw new Error('Authentication required');
+    }
+    
+    try {
+        const response = await fetch('/api/albums', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Session-Token': getLoggedInUser()?.securityId || ''
+                'X-Session-Token': sessionToken
             },
             body: JSON.stringify(albumItem)
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Unknown error');
+            throw new Error(`Failed to add album: ${errorData.error || response.statusText}`);
         }
         
-        const data = await response.json();
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error('Error adding album item:', error);
+        console.error('Error in addAlbumItem:', error);
         throw error;
     }
 }
 
 export async function updateAlbumItem(id, albumItem) {
+    const sessionToken = getSessionToken();
+    if (!sessionToken) {
+        console.error('No valid session token found when trying to update album item');
+        throw new Error('Authentication required');
+    }
+    
     try {
-        const response = await fetch(`/api/album-items/${id}`, {
+        const response = await fetch(`/api/albums/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Session-Token': getLoggedInUser()?.securityId || ''
+                'X-Session-Token': sessionToken
             },
             body: JSON.stringify(albumItem)
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Unknown error');
+            throw new Error(`Failed to update album: ${errorData.error || response.statusText}`);
         }
         
-        const data = await response.json();
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error('Error updating album item:', error);
+        console.error('Error in updateAlbumItem:', error);
         throw error;
     }
 }
 
 export async function deleteAlbumItem(id) {
     try {
-        const response = await fetch(`/api/album-items/${id}`, {
+        console.log('Deleting album');
+        
+        // Ensure ID is properly formatted for the request
+        const idString = id.toString();
+        console.log('ID formatted');
+        
+        const response = await fetch(`/api/albums/${idString}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -437,12 +388,13 @@ export async function deleteAlbumItem(id) {
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Unknown error');
+            throw new Error(errorData.error || 'Failed to delete album');
         }
         
-        return true;
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error('Error deleting album item:', error);
+        console.error('Delete error');
         throw error;
     }
 } 

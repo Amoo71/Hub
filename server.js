@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const socketIo = require('socket.io');
 const { Server } = require('socket.io');
-// MongoDB statt SQLite
-const { connectToDatabase, models } = require('./db-config');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
@@ -17,7 +17,43 @@ const activeSessions = new Map();
 const socketIdToSecurityId = {};
 
 const PORT = process.env.PORT || 3000;
-let isDbInitialized = false;
+
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/trntapp';
+
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Define MongoDB Schemas and Models
+const requestSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  username: { type: String, required: true },
+  text: { type: String, required: true },
+  designType: { type: String, required: true },
+  idName: { type: String, required: true },
+  time: { type: String, required: true },
+  timestamp: { type: Number, required: true }
+});
+
+const antiTamperLogSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  timestamp: { type: Number, required: true },
+  message: { type: String, required: true }
+});
+
+const albumItemSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  imageUrl: { type: String, default: '' },
+  acc: { type: String, default: 'Empty' },
+  pw: { type: String, default: 'Empty' },
+  timestamp: { type: Number, required: true }
+});
+
+const Request = mongoose.model('Request', requestSchema);
+const AntiTamperLog = mongoose.model('AntiTamperLog', antiTamperLogSchema);
+const AlbumItem = mongoose.model('AlbumItem', albumItemSchema);
 
 // Middleware to check authentication for admin routes
 const checkAuth = (req, res, next) => {
@@ -62,40 +98,21 @@ const checkAuth = (req, res, next) => {
     }
 };
 
-// Initialisierung der Datenbankverbindung und Anlegen von Beispieldaten, wenn nötig
+// Initialize database with default data
 async function initializeDb() {
     try {
-        if (isDbInitialized) return;
+        // Check if there are any requests
+        const requestCount = await Request.countDocuments();
+        console.log(`Current request count: ${requestCount}`);
         
-        await connectToDatabase();
-        console.log('MongoDB-Verbindung initialisiert');
-        
-        // Prüfen, ob Beispiel-Album existiert
-        const albumCount = await models.AlbumItem.countDocuments();
-        console.log(`Aktuell vorhandene Albums: ${albumCount}`);
-    
-        if (albumCount === 0) {
-            console.log('Füge Beispiel-Album hinzu');
-            const now = Date.now();
-            const sampleAlbum = new models.AlbumItem({
-                id: now.toString(),
-                name: 'Sample Album',
-                imageUrl: '',
-                acc: 'SAMPLE-ACC-001',
-                pw: 'SAMPLE-PW-001',
-                timestamp: now
-            });
-            await sampleAlbum.save();
-        }
-        
-        // Prüfen, ob initialer Request existiert
-        const requestCount = await models.Request.countDocuments();
+        // Add initial Amo request if collection is empty
         if (requestCount === 0) {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const time = `${hours}:${minutes}`;
-            const initialAmoRequest = new models.Request({
+            
+            const initialAmoRequest = new Request({
                 id: Date.now().toString(),
                 username: 'Amo',
                 text: 'Amo\'s initial fixed request.',
@@ -104,247 +121,275 @@ async function initializeDb() {
                 time: time,
                 timestamp: now.getTime()
             });
+            
             await initialAmoRequest.save();
+            console.log('Added initial Amo request');
         }
         
-        isDbInitialized = true;
-        console.log('Datenbank erfolgreich initialisiert');
-    } catch (error) {
-        console.error('Fehler bei der Datenbankinitialisierung:', error);
-        // Fehler für Debugging-Zwecke loggen, aber nicht abstürzen
-    }
-}
-
-// Middleware
-app.use(express.static(path.join(__dirname)));
-app.use(bodyParser.json());
-
-// Socket.io connection handling
-io.on('connection', (socket) => {
-    console.log('Neue Socket-Verbindung:', socket.id);
-    
-    // Client registriert seine Session
-    socket.on('register_session', (userInfo) => {
-        if (userInfo && userInfo.securityId) {
-            console.log(`Session registriert für ${userInfo.idName} (${userInfo.securityId})`);
-            
-            // Speichere die Session
-            activeSessions.set(userInfo.securityId, {
-                socketId: socket.id,
-                username: userInfo.username || userInfo.securityId,
-                idName: userInfo.idName || 'Unbekannt',
-                designType: userInfo.designType || 'standard'
+        // Check if there are any album items
+        const albumCount = await AlbumItem.countDocuments();
+        console.log(`Current album count: ${albumCount}`);
+        
+        // Add sample album if collection is empty
+        if (albumCount === 0) {
+            const now = Date.now();
+            const sampleAlbum = new AlbumItem({
+                id: now.toString(),
+                name: 'Sample Album',
+                imageUrl: '',
+                acc: 'SAMPLE-ACC-001',
+                pw: 'SAMPLE-PW-001',
+                timestamp: now
             });
             
-            // Speichere Mapping für einfacheres Aufräumen
-            socketIdToSecurityId[socket.id] = userInfo.securityId;
+            await sampleAlbum.save();
+            console.log('Added sample album');
         }
-    });
-
-    // Verbindung getrennt
-    socket.on('disconnect', () => {
-        console.log(`Socket getrennt: ${socket.id}`);
-        const securityId = socketIdToSecurityId[socket.id];
         
-        if (securityId) {
-            console.log(`Entferne Session für securityId: ${securityId}`);
-            activeSessions.delete(securityId);
-            delete socketIdToSecurityId[socket.id];
-        }
-    });
-});
-
-// Hilfsfunktion zur Datenbankinitialisierung für alle API-Routen
-const withDatabase = (handler) => async (req, res) => {
-    try {
-        await initializeDb();
-        return handler(req, res);
+        console.log('Database initialized');
     } catch (error) {
-        console.error('Fehler bei der Datenbankoperation:', error);
-        return res.status(500).json({ error: 'Datenbankfehler', details: error.message });
+        console.error('Error initializing database:', error);
     }
-};
-
-// API-Routen
-
-// GET all requests
-app.get('/api/requests', withDatabase(async (req, res) => {
-    try {
-        const requests = await models.Request.find().sort({ timestamp: -1 });
-        res.json(requests);
-    } catch (error) {
-        console.error('Fehler beim Abrufen der Anfragen:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Add a new request
-app.post('/api/requests', withDatabase(async (req, res) => {
-    try {
-        const request = req.body;
-        const currentDate = new Date();
-        request.timestamp = currentDate.getTime();
-
-        // Speichern des Requests in MongoDB
-        const newRequest = new models.Request(request);
-        await newRequest.save();
-        
-        // Echtzeit-Update an alle verbundenen Clients
-        io.emit('requestAdded', newRequest);
-        res.json(newRequest);
-    } catch (error) {
-        console.error('Fehler beim Hinzufügen der Anfrage:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Delete a request
-app.delete('/api/requests/:id', withDatabase(async (req, res) => {
-    try {
-        const { id } = req.params;
-        await models.Request.deleteOne({ id });
-        
-        // Echtzeit-Update an alle verbundenen Clients
-        io.emit('requestDeleted', id);
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Fehler beim Löschen der Anfrage:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// GET all anti-tamper logs
-app.get('/api/anti-tamper-logs', checkAuth, withDatabase(async (req, res) => {
-    try {
-        const logs = await models.AntiTamperLog.find().sort({ timestamp: -1 });
-        res.json(logs);
-    } catch (error) {
-        console.error('Fehler beim Abrufen der Anti-Tamper-Logs:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Clear all anti-tamper logs
-app.delete('/api/anti-tamper-logs', checkAuth, withDatabase(async (req, res) => {
-    try {
-        await models.AntiTamperLog.deleteMany({});
-        
-        // Echtzeit-Update an alle verbundenen Clients
-        io.emit('antiTamperLogsCleared');
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Fehler beim Löschen der Anti-Tamper-Logs:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Delete a specific anti-tamper log
-app.delete('/api/anti-tamper-logs/:id', checkAuth, withDatabase(async (req, res) => {
-    try {
-        const { id } = req.params;
-        await models.AntiTamperLog.deleteOne({ id });
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Fehler beim Löschen des Anti-Tamper-Logs:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// GET all album items
-app.get('/api/album-items', withDatabase(async (req, res) => {
-    try {
-        const albumItems = await models.AlbumItem.find().sort({ timestamp: -1 });
-        res.json(albumItems);
-    } catch (error) {
-        console.error('Fehler beim Abrufen der Album-Items:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Add a new album item
-app.post('/api/album-items', checkAuth, withDatabase(async (req, res) => {
-    try {
-        const albumItem = req.body;
-        albumItem.timestamp = Date.now();
-        
-        // Speichern des Album-Items in MongoDB
-        const newAlbumItem = new models.AlbumItem(albumItem);
-        await newAlbumItem.save();
-        
-        // Echtzeit-Update an alle verbundenen Clients
-        broadcastAlbumUpdate();
-        res.json(newAlbumItem);
-    } catch (error) {
-        console.error('Fehler beim Hinzufügen des Album-Items:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Update an album item
-app.put('/api/album-items/:id', checkAuth, withDatabase(async (req, res) => {
-    try {
-        const { id } = req.params;
-        const albumItem = req.body;
-        albumItem.timestamp = Date.now();
-        
-        // Aktualisieren des Album-Items in MongoDB
-        await models.AlbumItem.updateOne({ id }, albumItem);
-        
-        // Echtzeit-Update an alle verbundenen Clients
-        broadcastAlbumUpdate();
-        res.json(albumItem);
-    } catch (error) {
-        console.error('Fehler beim Aktualisieren des Album-Items:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Delete an album item
-app.delete('/api/album-items/:id', checkAuth, withDatabase(async (req, res) => {
-    try {
-        const { id } = req.params;
-        await models.AlbumItem.deleteOne({ id });
-        
-        // Echtzeit-Update an alle verbundenen Clients
-        broadcastAlbumUpdate();
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Fehler beim Löschen des Album-Items:', error);
-        res.status(500).json({ error: 'Interner Serverfehler' });
-    }
-}));
-
-// Function to broadcast album updates to all connected clients
-function broadcastAlbumUpdate() {
-    io.emit('albumItemsChanged');
 }
 
-// Gesundheitscheck-Route für Vercel
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'OK', timestamp: Date.now() });
+// Initialize database
+initializeDb();
+
+// Handle serving static files
+app.use(express.static('.'));
+app.use(express.json());
+
+// API endpoints for requests
+app.get('/api/requests', async (req, res) => {
+    try {
+        const requests = await Request.find().sort({ timestamp: -1 });
+        res.json(requests);
+    } catch (error) {
+        console.error('Error fetching requests:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
-// Route zu statischen HTML-Dateien
-app.get('/', (req, res) => {
+app.post('/api/requests', async (req, res) => {
+    try {
+        const { username, text, designType, idName, time } = req.body;
+        
+        const newRequest = new Request({
+            id: Date.now().toString(),
+            username,
+            text,
+            designType,
+            idName,
+            time,
+            timestamp: Date.now()
+        });
+        
+        await newRequest.save();
+        
+        // Broadcast to all clients
+        io.emit('requestAdded', newRequest);
+        
+        res.status(201).json(newRequest);
+    } catch (error) {
+        console.error('Error adding request:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/requests/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await Request.findOneAndDelete({ id });
+        
+        if (!result) {
+            return res.status(404).json({ error: 'Request not found' });
+        }
+        
+        // Broadcast to all clients
+        io.emit('requestDeleted', id);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting request:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// API endpoints for anti-tamper logs
+app.get('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+    try {
+        const logs = await AntiTamperLog.find().sort({ timestamp: -1 });
+        res.json(logs);
+    } catch (error) {
+        console.error('Error fetching anti-tamper logs:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+    try {
+        await AntiTamperLog.deleteMany({});
+        
+        // Broadcast to all clients
+        io.emit('antiTamperLogsCleared');
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing anti-tamper logs:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await AntiTamperLog.findOneAndDelete({ id });
+        
+        if (!result) {
+            return res.status(404).json({ error: 'Log not found' });
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting anti-tamper log:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// API endpoints for album items
+app.get('/api/album-items', async (req, res) => {
+    try {
+        const albumItems = await AlbumItem.find().sort({ timestamp: -1 });
+        res.json(albumItems);
+    } catch (error) {
+        console.error('Error fetching album items:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/album-items', async (req, res) => {
+    try {
+        const { name, imageUrl, acc, pw } = req.body;
+        
+        const newAlbumItem = new AlbumItem({
+            id: Date.now().toString(),
+            name,
+            imageUrl: imageUrl || '',
+            acc: acc || 'Empty',
+            pw: pw || 'Empty',
+            timestamp: Date.now()
+        });
+        
+        await newAlbumItem.save();
+        
+        // Broadcast to all clients
+        io.emit('albumItemsChanged');
+        
+        res.status(201).json(newAlbumItem);
+    } catch (error) {
+        console.error('Error adding album item:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.put('/api/album-items/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, imageUrl, acc, pw } = req.body;
+        
+        const updateData = {
+            name,
+            imageUrl: imageUrl || '',
+            acc: acc || 'Empty',
+            pw: pw || 'Empty'
+        };
+        
+        const updatedAlbumItem = await AlbumItem.findOneAndUpdate(
+            { id },
+            updateData,
+            { new: true }
+        );
+        
+        if (!updatedAlbumItem) {
+            return res.status(404).json({ error: 'Album item not found' });
+        }
+        
+        // Broadcast to all clients
+        io.emit('albumItemsChanged');
+        
+        res.json(updatedAlbumItem);
+    } catch (error) {
+        console.error('Error updating album item:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/album-items/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await AlbumItem.findOneAndDelete({ id });
+        
+        if (!result) {
+            return res.status(404).json({ error: 'Album item not found' });
+        }
+        
+        // Broadcast to all clients
+        io.emit('albumItemsChanged');
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting album item:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Socket.IO event handlers
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+    
+    socket.on('register_session', (user) => {
+        console.log('Registering session for user:', user.idName);
+        
+        if (user && user.securityId && user.idName) {
+            // Store in our active sessions map
+            activeSessions.set(user.securityId, {
+                socketId: socket.id,
+                username: user.username,
+                idName: user.idName,
+                designType: user.designType
+            });
+            
+            // Store reverse mapping for easy cleanup
+            socketIdToSecurityId[socket.id] = user.securityId;
+            
+            console.log('Session registered successfully');
+        } else {
+            console.log('Invalid user data for session registration');
+        }
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+        
+        // Clean up from our maps using the reverse mapping
+        const securityId = socketIdToSecurityId[socket.id];
+        if (securityId) {
+            activeSessions.delete(securityId);
+            delete socketIdToSecurityId[socket.id];
+            console.log('Session cleaned up for:', securityId);
+        }
+    });
+});
+
+// Catch-all route to serve index.html
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
-});
-
 // Start the server
-// Initialisiere die Datenbank, wenn der Server startet
-initializeDb().catch(err => console.error('Initialisierungsfehler:', err));
-
-// Starte den Server nur, wenn wir nicht in einer Serverless-Umgebung sind
-if (process.env.NODE_ENV !== 'production') {
-    server.listen(PORT, () => {
-        console.log(`Server läuft auf Port ${PORT}`);
-    });
-} else {
-    console.log('Server läuft im Serverless-Modus');
-}
-
-// Exportiere die Express-App für Vercel
-module.exports = app; 
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+}); 

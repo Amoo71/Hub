@@ -1,59 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
   "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.css",
-      "use": "@vercel/static"
-    }
+    { "src": "server.js", "use": "@vercel/node" }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "index.js"
-    },
-    {
-      "src": "/socket-io-emulate",
-      "dest": "index.js"
-    },
-    {
-      "src": "/status",
-      "dest": "index.js"
-    },
-    {
-      "src": "/db.js",
-      "dest": "db.js"
-    },
-    {
-      "src": "/index.html",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/login.html",
-      "dest": "/login.html"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/login",
-      "dest": "/login.html"
-    },
-    {
-      "handle": "filesystem"
-    }
+    { "src": "/(.*)", "dest": "/server.js" }
   ]
 } 

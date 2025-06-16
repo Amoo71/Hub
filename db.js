@@ -91,8 +91,29 @@ export function logoutUser() {
     sessionStorage.removeItem('loggedInSession');
 }
 
-// Socket.IO client setup - automatisch die richtige Host-URL verwenden
-const socket = io(window.location.origin);
+// Socket.IO client setup - verbessert für Vercel-Kompatibilität
+console.log("Verbinde mit Socket.IO auf", window.location.origin);
+const socketOptions = {
+    path: '/socket.io',
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 5
+};
+const socket = io(window.location.origin, socketOptions);
+
+// Log Socket.IO Verbindungsstatus
+socket.on('connect', () => {
+    console.log('Socket.IO verbunden:', socket.id);
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Socket.IO Verbindungsfehler:', error);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Socket.IO getrennt:', reason);
+});
 
 export function setRequestUpdateCallback(callback) {
     requestUpdateCallback = callback;

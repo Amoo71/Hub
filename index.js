@@ -8,7 +8,19 @@ const apiRoutes = require('./api/index');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+
+// Socket.io mit verbesserter Konfiguration für Vercel
+const io = socketIo(server, {
+  path: '/socket.io',
+  serveClient: false,
+  pingInterval: 10000,
+  pingTimeout: 5000,
+  cookie: false,
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
 
 // Store active sessions: { securityId: { socketId: string, username: string, idName: string, designType: string } }
 const activeSessions = new Map();
@@ -43,6 +55,9 @@ io.on('connection', (socket) => {
             
             // Speichere Mapping für einfacheres Aufräumen
             socketIdToSecurityId[socket.id] = userInfo.securityId;
+            
+            // Sende eine Bestätigungsnachricht zurück
+            socket.emit('session_registered', { success: true });
         }
     });
 
@@ -57,10 +72,34 @@ io.on('connection', (socket) => {
             delete socketIdToSecurityId[socket.id];
         }
     });
+    
+    // Event-Handler für Benachrichtigungen
+    socket.on('requestAdded', (data) => {
+        // Broadcast an alle verbundenen Clients (außer Sender)
+        socket.broadcast.emit('requestAdded', data);
+    });
+    
+    socket.on('requestDeleted', (id) => {
+        // Broadcast an alle verbundenen Clients (außer Sender)
+        socket.broadcast.emit('requestDeleted', id);
+    });
+    
+    socket.on('albumItemsChanged', () => {
+        // Broadcast an alle verbundenen Clients (außer Sender)
+        socket.broadcast.emit('albumItemsChanged');
+    });
 });
 
 // Weitergabe der Socket.io-Instanz an den Rest der Anwendung
 app.set('io', io);
+
+// CORS aktivieren für API-Anfragen
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Session-Token');
+  next();
+});
 
 // Hauptrouten für HTML-Seiten
 app.get('/', (req, res) => {
@@ -69,6 +108,25 @@ app.get('/', (req, res) => {
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Spezielle Route für db.js, um sicherzustellen, dass sie korrekt bedient wird
+app.get('/db.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'db.js'));
+});
+
+// Catch-all-Route für statische Dateien
+app.get('*', (req, res, next) => {
+    const filePath = path.join(__dirname, req.url);
+    // Prüfen, ob die Datei existiert, sonst zur nächsten Route weitergehen
+    try {
+        if (require('fs').existsSync(filePath)) {
+            return res.sendFile(filePath);
+        }
+    } catch (err) {
+        console.error('Dateizugriffsfehler:', err);
+    }
+    next();
 });
 
 // Datenbankinitalisierung

@@ -8,6 +8,10 @@
     {
       "src": "*.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "db.js",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -24,16 +28,28 @@
       "dest": "/db.js"
     },
     {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
       "src": "/login",
       "dest": "/login.html"
     },
     {
+      "src": "/login.html",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)\\.js",
+      "dest": "/$1.js"
+    },
+    {
+      "src": "/(.*)\\.css",
+      "dest": "/$1.css"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/index.js"
     }
   ]
 } 

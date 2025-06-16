@@ -25,59 +25,11 @@ export function setAlbumItemUpdateCallback(callback) {
     albumItemUpdateCallback = callback;
 }
 
-export function getLoggedInUser() {
-    const storedSession = sessionStorage.getItem('loggedInSession');
-    if (storedSession) {
-        const { user, timestamp, lastActivityTime } = JSON.parse(storedSession);
-        const now = Date.now();
-        const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
-        
-        // Use lastActivityTime if available, otherwise fall back to timestamp
-        const lastActive = lastActivityTime || timestamp;
-        
-        if (now - lastActive < threeMinutes) {
-            // Only update timestamp if this is a genuine user activity check
-            // not just a background check
-            const callerIsUserActivity = new Error().stack.includes('trackUserActivity');
-            
-            if (callerIsUserActivity) {
-                // Update the last activity time while preserving the original login timestamp
-                const sessionData = JSON.parse(sessionStorage.getItem('loggedInSession'));
-                sessionData.lastActivityTime = now;
-                sessionStorage.setItem('loggedInSession', JSON.stringify(sessionData));
-                console.log('Session activity time updated');
-            }
-            
-            loggedInUser = user;
-            return loggedInUser;
-        } else {
-            console.log('Session expired due to inactivity');
-            logoutUser();
-            return null;
-        }
-    }
-    loggedInUser = null;
-    return null;
-}
-
-export function setLoggedInUser(user) {
-    loggedInUser = user;
-    const timestamp = Date.now();
-    sessionStorage.setItem('loggedInSession', JSON.stringify({ 
-        user, 
-        timestamp,  // Original login time
-        lastActivityTime: timestamp  // Last activity time (initially same as login time)
-    }));
-}
-
-export function logoutUser() {
-    loggedInUser = null;
-    sessionStorage.removeItem('loggedInSession');
-    // Removed sessionStorage.removeItem('requests') as requests are server-managed
-}
-
 // Socket.IO client setup
 const socket = io();
+
+// Heartbeat interval to keep session alive (every 30 seconds)
+let heartbeatInterval = null;
 
 export function setRequestUpdateCallback(callback) {
     requestUpdateCallback = callback;
@@ -100,6 +52,8 @@ socket.on('requestDeleted', (deletedRequestId) => {
 
 socket.on('sessionInvalidated', (data) => {
     console.log('Session invalidated by server:', data?.message || 'Your session was invalidated');
+    // Stop heartbeat
+    stopHeartbeat();
     // Force logout by clearing the user data
     logoutUser();
     // Redirect to login page if not already there
@@ -123,24 +77,110 @@ socket.on('albumItemsChanged', () => {
     if (albumItemUpdateCallback) albumItemUpdateCallback();
 });
 
-// User authentication function
-export async function authenticateUser(securityId) {
-    try {
-        const response = await fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ securityId })
-        });
+// Start sending heartbeats to keep the session alive
+function startHeartbeat(securityId) {
+    // Clear any existing heartbeat interval
+    stopHeartbeat();
+    
+    // Set up new heartbeat interval (every 30 seconds)
+    heartbeatInterval = setInterval(() => {
+        const user = getLoggedInUser();
+        if (user && user.securityId) {
+            // Send heartbeat to server
+            socket.emit('heartbeat', user.securityId);
+        } else {
+            // If no user is logged in, stop the heartbeat
+            stopHeartbeat();
+        }
+    }, 30000); // 30 seconds
+}
 
-        if (!response.ok) {
+// Stop sending heartbeats
+function stopHeartbeat() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
+}
+
+export function getLoggedInUser() {
+    const storedSession = sessionStorage.getItem('loggedInSession');
+    if (storedSession) {
+        try {
+            const { user, timestamp } = JSON.parse(storedSession);
+            const now = Date.now();
+            const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
+
+            if (now - timestamp < threeMinutes) {
+                // Update the timestamp to extend the session
+                setLoggedInUser(user); // This will update the timestamp
+                loggedInUser = user;
+                return loggedInUser;
+            } else {
+                console.log('Session expired due to 3-minute inactivity timeout');
+                logoutUser();
+                return null;
+            }
+        } catch (error) {
+            console.error('Error parsing stored session:', error);
+            logoutUser();
             return null;
         }
+    }
+    loggedInUser = null;
+    return null;
+}
 
-        const userData = await response.json();
-        return userData;
+export function setLoggedInUser(user) {
+    if (!user) return;
+    
+    loggedInUser = user;
+    const timestamp = Date.now();
+    sessionStorage.setItem('loggedInSession', JSON.stringify({ user, timestamp }));
+}
+
+export function logoutUser() {
+    // Stop heartbeat when logging out
+    stopHeartbeat();
+    
+    // Clear user data
+    loggedInUser = null;
+    sessionStorage.removeItem('loggedInSession');
+}
+
+export async function registerSessionWithServer(user) {
+    try {
+        console.log('Registering session with server');
+        
+        // Only register if we have a valid session
+        if (user && user.securityId) {
+            // Emit the register session event to the server
+            socket.emit('register_session', user);
+            
+            // Start heartbeat to keep session alive
+            startHeartbeat(user.securityId);
+            
+            // Set up automatic re-registration if the socket reconnects
+            // Remove previous listener first to avoid duplicates
+            socket.off('reconnect');
+            socket.on('reconnect', () => {
+                console.log('Socket reconnected, re-registering session');
+                const currentUser = getLoggedInUser();
+                if (currentUser && currentUser.securityId) {
+                    socket.emit('register_session', currentUser);
+                    // Restart heartbeat
+                    startHeartbeat(currentUser.securityId);
+                }
+            });
+            
+            return true;
+        } else {
+            console.warn('Cannot register session: Missing user data or securityId');
+            return false;
+        }
     } catch (error) {
-        console.error('Authentication error:', error);
-        return null;
+        console.error('Session registration error:', error);
+        return false;
     }
 }
 
@@ -194,67 +234,6 @@ export async function deleteRequest(id) {
     } catch (error) {
         console.error('Delete error');
         throw error;
-    }
-}
-
-export async function registerSessionWithServer(user) {
-    try {
-        console.log('Registering session with server');
-        
-        // Only register if we have a valid session
-        if (user && user.securityId) {
-            // Check if this is a reconnect (page refresh or navigation)
-            // We consider it a reconnect if we've already registered this securityId before
-            const isReconnect = sessionStorage.getItem('sessionRegistered') === user.securityId;
-            
-            // Emit the register session event to the server
-            socket.emit('register_session', {
-                ...user,
-                isReconnect: isReconnect
-            });
-            
-            // Mark this securityId as registered
-            sessionStorage.setItem('sessionRegistered', user.securityId);
-            
-            // Set up automatic re-registration if the socket reconnects
-            // Remove previous listener first to avoid duplicates
-            socket.off('reconnect');
-            socket.on('reconnect', () => {
-                console.log('Socket reconnected, re-registering session');
-                const currentUser = getLoggedInUser();
-                if (currentUser && currentUser.securityId) {
-                    socket.emit('register_session', {
-                        ...currentUser,
-                        isReconnect: true // Always treat socket.io reconnects as reconnects
-                    });
-                }
-            });
-            
-            // Set up a heartbeat to keep the session alive
-            if (!window._sessionHeartbeat) {
-                window._sessionHeartbeat = setInterval(() => {
-                    const currentUser = getLoggedInUser();
-                    if (currentUser && currentUser.securityId) {
-                        // Send a heartbeat to keep the connection alive
-                        socket.emit('session_heartbeat', {
-                            securityId: currentUser.securityId
-                        });
-                    } else {
-                        // If no user is logged in, clear the heartbeat
-                        clearInterval(window._sessionHeartbeat);
-                        window._sessionHeartbeat = null;
-                    }
-                }, 45000); // Every 45 seconds
-            }
-            
-            return true;
-        } else {
-            console.warn('Cannot register session: Missing user data or securityId');
-            return false;
-        }
-    } catch (error) {
-        console.error('Session registration error:', error);
-        return false;
     }
 }
 
@@ -409,5 +388,26 @@ export async function deleteAlbumItem(id) {
     } catch (error) {
         console.error('Delete error');
         throw error;
+    }
+}
+
+// User authentication function
+export async function authenticateUser(securityId) {
+    try {
+        const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ securityId })
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const userData = await response.json();
+        return userData;
+    } catch (error) {
+        console.error('Authentication error:', error);
+        return null;
     }
 } 

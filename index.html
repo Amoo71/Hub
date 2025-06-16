@@ -1980,81 +1980,60 @@
             // Initial session check on page load
             checkSessionAndRedirect();
 
-            // Ersetze das bestehende Intervall durch eine verbesserte Version
-            if (sessionCheckInterval) {
-                clearInterval(sessionCheckInterval);
-            }
-            
             // Set up a periodic session check (e.g., every minute)
-            // Aber nur, wenn die Seite aktiv ist (nicht minimiert oder im Hintergrund)
-            function startSessionCheck() {
-                if (sessionCheckInterval) {
-                    clearInterval(sessionCheckInterval);
-                }
-                sessionCheckInterval = setInterval(() => {
-                    // Nur prüfen, wenn die Seite aktiv ist
-                    if (!document.hidden) {
-                        checkSessionAndRedirect();
-                    }
-                }, 60 * 1000); // Check every 1 minute
-            }
-            
-            // Starte die Session-Überprüfung
-            startSessionCheck();
-            
-            // Überwache Sichtbarkeitsänderungen der Seite
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    // Wenn die Seite minimiert oder im Hintergrund ist, stoppe die Überprüfung
-                    if (sessionCheckInterval) {
-                        clearInterval(sessionCheckInterval);
-                        sessionCheckInterval = null;
-                    }
-                } else {
-                    // Wenn die Seite wieder aktiv ist, starte die Überprüfung neu
-                    startSessionCheck();
-                    // Und führe sofort eine Aktivitätsaktualisierung durch
-                    trackUserActivity();
-                }
-            });
+            sessionCheckInterval = setInterval(checkSessionAndRedirect, 60 * 1000); // Check every 1 minute
             
             // User activity tracking to reset session timeout
             function trackUserActivity() {
                 const loggedInUser = getLoggedInUser();
                 if (loggedInUser) {
-                    // getLoggedInUser wird die Aktivitätszeit aktualisieren, wenn es von trackUserActivity aufgerufen wird
-                    console.log('User activity detected');
+                    // Just calling getLoggedInUser will refresh the timestamp if user is logged in
+                    setLoggedInUser(loggedInUser); // Explicitly reset the timestamp
                     
-                    // Check if we need to show a warning
-                    checkSessionExpiration();
+                    // Reset inactivity timer
+                    resetInactivityTimer();
                 }
             }
             
-            // Funktion zur Überprüfung, ob die Session bald abläuft
-            function checkSessionExpiration() {
-                const storedSession = sessionStorage.getItem('loggedInSession');
-                if (storedSession) {
-                    const { lastActivityTime } = JSON.parse(storedSession);
-                    const now = Date.now();
-                    const threeMinutes = 3 * 60 * 1000;
-                    const timeLeft = threeMinutes - (now - lastActivityTime);
-                    
-                    // Wenn weniger als 1 Minute übrig ist, zeige Warnung
-                    if (timeLeft < 60000 && timeLeft > 0) {
-                        showSessionWarning(Math.floor(timeLeft / 1000));
-                    } else {
-                        // Entferne Warnung, wenn mehr als 1 Minute übrig ist
-                        hideSessionWarning();
+            // Inactivity timer for auto logout
+            let inactivityTimeout;
+            let warningTimeout;
+            
+            function resetInactivityTimer() {
+                // Clear any existing timers
+                if (inactivityTimeout) {
+                    clearTimeout(inactivityTimeout);
+                }
+                if (warningTimeout) {
+                    clearTimeout(warningTimeout);
+                }
+                
+                // Hide any existing warning
+                const warningEl = document.getElementById('session-timeout-warning');
+                if (warningEl) {
+                    document.body.removeChild(warningEl);
+                }
+                
+                // Set warning timer for 2 minutes (1 minute before logout)
+                warningTimeout = setTimeout(() => {
+                    showSessionWarning();
+                }, 2 * 60 * 1000);
+                
+                // Set new timer for 3 minutes
+                inactivityTimeout = setTimeout(() => {
+                    const loggedInUser = getLoggedInUser();
+                    if (loggedInUser) {
+                        console.log('Session timeout: Logging out due to inactivity');
+                        logoutUser();
+                        window.location.href = 'login.html?reason=inactivity_timeout';
                     }
-                }
+                }, 3 * 60 * 1000); // 3 minutes
             }
             
-            // Funktion zum Anzeigen einer Session-Ablauf-Warnung
-            function showSessionWarning(secondsLeft) {
-                // Erstelle Warnungselement, wenn es nicht existiert
-                let warningEl = document.getElementById('session-timeout-warning');
-                if (!warningEl) {
-                    warningEl = document.createElement('div');
+            function showSessionWarning() {
+                // Create warning element if it doesn't exist
+                if (!document.getElementById('session-timeout-warning')) {
+                    const warningEl = document.createElement('div');
                     warningEl.id = 'session-timeout-warning';
                     warningEl.style.position = 'fixed';
                     warningEl.style.top = '20px';
@@ -2069,36 +2048,28 @@
                     warningEl.style.fontWeight = 'bold';
                     warningEl.style.textAlign = 'center';
                     warningEl.style.animation = 'fadeIn 0.5s ease-in-out';
+                    warningEl.innerHTML = 'Your session will expire in 60s!<br>Please interact with the page to stay logged in.';
                     
                     document.body.appendChild(warningEl);
                     
-                    // Klickereignis hinzufügen, um die Session zu verlängern
+                    // Add click event to reset timer when user clicks on warning
                     warningEl.addEventListener('click', () => {
                         trackUserActivity();
-                        hideSessionWarning();
                     });
                 }
-                
-                // Aktualisiere Warnungstext
-                warningEl.innerHTML = `Ihre Session läuft in ${secondsLeft} Sekunden ab!<br>Klicken Sie hier, um die Session zu verlängern.`;
             }
             
-            // Funktion zum Ausblenden der Warnung
-            function hideSessionWarning() {
-                const warningEl = document.getElementById('session-timeout-warning');
-                if (warningEl) {
-                    document.body.removeChild(warningEl);
-                }
+            // Initialize inactivity timer on page load if user is logged in
+            const loggedInUser = getLoggedInUser();
+            if (loggedInUser) {
+                resetInactivityTimer();
             }
-            
-            // Starte einen Timer, der regelmäßig prüft, ob die Session bald abläuft
-            setInterval(checkSessionExpiration, 10000); // Alle 10 Sekunden prüfen
             
             // Track various user interactions to keep session alive
-            document.addEventListener('mousemove', debounce(trackUserActivity, 30000)); // Alle 30 Sekunden bei Mausbewegung
+            document.addEventListener('mousemove', trackUserActivity);
             document.addEventListener('keypress', trackUserActivity);
             document.addEventListener('click', trackUserActivity);
-            document.addEventListener('scroll', debounce(trackUserActivity, 10000)); // Alle 10 Sekunden beim Scrollen
+            document.addEventListener('scroll', trackUserActivity);
             document.addEventListener('touchstart', trackUserActivity);
 
             // Admin button click to toggle anti-tamper panel
@@ -3681,19 +3652,6 @@
                 albumDetailModalOverlay.classList.add('visible');
             }
         });
-
-        // Debounce-Funktion, um zu häufige Aufrufe zu vermeiden
-        function debounce(func, wait) {
-            let timeout;
-            return function() {
-                const context = this;
-                const args = arguments;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    func.apply(context, args);
-                }, wait);
-            };
-        }
     </script>
 </body>
 </html>

@@ -1,11 +1,12 @@
 {
   "name": "trnt-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "TRNT Application",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node server.js",
+    "build": "echo 'Build step completed'"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +14,12 @@
   "dependencies": {
     "better-sqlite3": "^11.10.0",
     "express": "^4.17.1",
-    "socket.io": "^4.0.0"
+    "socket.io": "^4.0.0",
+    "mongodb": "^5.7.0",
+    "mongoose": "^7.4.3",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }

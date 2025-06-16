@@ -91,6 +91,25 @@ function broadcastAlbumUpdate() {
 
 // Middleware
 app.use(bodyParser.json());
+
+// Specific routes for HTML pages
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Serve static files - this must come after specific routes
 app.use(express.static(path.join(__dirname)));
 
 // API Routes

@@ -7,8 +7,8 @@
     { "src": "*.css", "use": "@vercel/static" }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/server.js" },
     { "source": "/socket.io/(.*)", "destination": "/server.js" },
+    { "source": "/api/(.*)", "destination": "/server.js" },
     { "source": "/(.*)", "destination": "/$1" }
   ],
   "headers": [
@@ -16,6 +16,15 @@
       "source": "/(.*).js",
       "headers": [
         { "key": "Content-Type", "value": "application/javascript" }
+      ]
+    },
+    {
+      "source": "/socket.io/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-Requested-With,Content-Type,Accept" },
+        { "key": "Access-Control-Allow-Credentials", "value": "true" }
       ]
     }
   ]

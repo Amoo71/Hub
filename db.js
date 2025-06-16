@@ -1,5 +1,39 @@
 // Socket.io wird über den Server geladen
-const socket = io();
+let socket;
+
+try {
+  // Try to connect with multiple transports and fallback options
+  socket = io({
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 20000
+  });
+
+  socket.on('connect', () => {
+    console.log('Socket connected successfully');
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Socket connection error:', error);
+  });
+
+  socket.on('reconnect', (attemptNumber) => {
+    console.log('Socket reconnected after', attemptNumber, 'attempts');
+  });
+
+  socket.on('reconnect_error', (error) => {
+    console.error('Socket reconnection error:', error);
+  });
+} catch (e) {
+  console.error('Error initializing socket:', e);
+  // Create a dummy socket object to prevent errors
+  socket = {
+    emit: () => console.log('Socket not connected - emit ignored'),
+    on: () => console.log('Socket not connected - on ignored')
+  };
+}
 
 let loggedInUser = null;
 // Removed local 'requests' array as it's now server-managed
@@ -142,39 +176,41 @@ function setAntiTamperNotificationCallback(callback) {
 }
 
 // Listen for real-time events from server
-socket.on('requestAdded', (newRequest) => {
-    console.log('New request');
-    if (requestUpdateCallback) requestUpdateCallback();
-});
-
-socket.on('requestDeleted', (deletedRequestId) => {
-    console.log('Request deleted');
-    if (requestUpdateCallback) requestUpdateCallback();
-});
-
-socket.on('sessionInvalidated', () => {
-    console.log('Session invalid');
-    // Force logout by clearing the user data
-    localStorage.removeItem('loggedInUser');
-    if (window.location.pathname !== '/login.html') {
-        window.location.href = 'login.html';
-    }
-});
-
-socket.on('antiTamperNotification', (message) => {
-    console.log('Security alert');
-    if (antiTamperNotificationCallback) antiTamperNotificationCallback(message);
-});
-
-socket.on('antiTamperLogsCleared', () => {
-    console.log('Logs cleared');
-    if (antiTamperNotificationCallback) antiTamperNotificationCallback();
-});
-
-socket.on('albumItemsChanged', () => {
-    console.log('Albums updated');
-    if (albumItemUpdateCallback) albumItemUpdateCallback();
-});
+if (socket) {
+    socket.on('requestAdded', (newRequest) => {
+        console.log('New request');
+        if (requestUpdateCallback) requestUpdateCallback();
+    });
+    
+    socket.on('requestDeleted', (deletedRequestId) => {
+        console.log('Request deleted');
+        if (requestUpdateCallback) requestUpdateCallback();
+    });
+    
+    socket.on('sessionInvalidated', () => {
+        console.log('Session invalid');
+        // Force logout by clearing the user data
+        localStorage.removeItem('loggedInUser');
+        if (window.location.pathname !== '/login.html') {
+            window.location.href = 'login.html';
+        }
+    });
+    
+    socket.on('antiTamperNotification', (message) => {
+        console.log('Security alert');
+        if (antiTamperNotificationCallback) antiTamperNotificationCallback(message);
+    });
+    
+    socket.on('antiTamperLogsCleared', () => {
+        console.log('Logs cleared');
+        if (antiTamperNotificationCallback) antiTamperNotificationCallback();
+    });
+    
+    socket.on('albumItemsChanged', () => {
+        console.log('Albums updated');
+        if (albumItemUpdateCallback) albumItemUpdateCallback();
+    });
+}
 
 async function getRequests() {
     try {
@@ -233,12 +269,17 @@ async function registerSessionWithServer(user) {
     try {
         console.log('Registering');
         
+        if (!socket || !socket.connected) {
+            console.error('Socket not connected, cannot register session');
+            return false;
+        }
+        
         // Emit the register session event to the server - use correct event name
         socket.emit('register_session', user);
         
         return true;
     } catch (error) {
-        console.error('Register error');
+        console.error('Register error', error);
         return false;
     }
 }

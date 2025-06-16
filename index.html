@@ -11,7 +11,7 @@
          */
         :root {
             /* Grundfarben */
-            --background-color: #080808;
+            --background-color: #111111;
             --text-color: #f0f0f0;
             --subtle-text-color: #a0a0a0;
             
@@ -29,13 +29,11 @@
             /* Farbverläufe */
             --green-gradient: linear-gradient(135deg, #00ff7f, #00cc66);
             --owner-gradient: linear-gradient(135deg, #6c004a, #2665b1, #7e39de, #77008f, #ca0b0b5e, #5e0370);
-            --background-gradient: linear-gradient(135deg, #080808, #151515, #080808);
             
             /* Benutzer-Glow-Farben - für designType-Styles */
             --owner-glow-colors: 0 0 4px 1px #388aa8, 0 0 6px 1px #610728, 0 0 3px 1px #610873;
             --request-glow-colors: 0 0 6px 1px #850000, 0 0 10px 2px #850000, 0 0 8px 1px #ffffff, 0 0 6px 1px #850000;
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -111,10 +109,6 @@
         }
         body {
             background-color: var(--background-color);
-            background-image: var(--background-gradient);
-            background-size: 400% 400%;
-            background-attachment: fixed;
-            animation: gradientBackground 30s ease infinite;
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
@@ -126,12 +120,6 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             position: relative;
-        }
-        
-        @keyframes gradientBackground {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
         
         #rain-canvas {
@@ -390,99 +378,31 @@
         }
         
         @media (max-width: 768px) {
-            .screen {
-                height: 100vh;
-                padding: 0;
-                box-sizing: border-box;
-                overflow-y: auto;
-            }
-            #main-screen {
-                padding-top: 5vh;
-                overflow-y: auto;
-                overflow-x: hidden;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-            #main-screen .search-bar {
-                width: min(450px, 80vw);
-                margin-bottom: 8vh;
-            }
-            #main-screen .main-title {
-                font-size: 2.2rem;
-                margin-top: 5px;
-                margin-bottom: 30px;
-            }
-            .gallery-container {
-                gap: 25px;
-                width: 100vw;
-                padding: 25px 0;
-                margin-bottom: 50px;
-            }
-            
-            .album-item-wrapper {
-                padding: 12px 5px;
-                margin: 8px 0;
-            }
-            
             .view-all-button {
                 font-size: 0.85rem;
                 padding: 6px 16px;
             }
             
+            #main-screen .main-title {
+                font-size: 2.2rem;
+                margin-top: 5px;
+                margin-bottom: 30px;
+            }
+            
             .main-title-container {
                 margin-top: 60px;
             }
-
-            .placeholder-image {
-                min-width: 200px;
-                width: 200px;
-                height: 280px;
-                font-size: 1.1rem;
+            
+            #main-screen .search-bar.has-value ~ .main-title-container {
+                margin-top: 60px;
             }
-            .request-section {
-                padding: 20px;
-                width: min(800px, 90vw);
-                min-height: 350px;
-                margin-bottom: 20px;
-            }
-            .input-form {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 30px;
-                transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-                min-height: 60px;
-                justify-content: center;
-            }
-            .input-wrapper.primary {
-                width: 300px;
-                flex-shrink: 0;
-            }
-            .input-wrapper.primary input {
-                text-align: center;
-            }
-            .input-wrapper.primary.shifted input {
-                text-align: left;
-            }
-            .send-button.visible {
-                width: 80px;
-                min-width: 80px;
-            }
-            .request-item {
-                display: flex;
-                align-items: center;
-                flex-direction: row;
-                gap: 0;
-            }
-            .request-separator {
-                display: inline;
-                margin: 0 15px;
-            }
-            .request-time {
-                margin-left: 15px;
+            
+            .search-result-item {
+                padding: 8px 12px;
+                font-size: 0.9rem;
             }
         }
+        
         @media (max-width: 480px) {
             #main-screen .main-title {
                 font-size: 1.8rem;
@@ -498,98 +418,20 @@
                 padding: 5px 14px;
             }
             
-            .gallery-container {
-                padding: 20px 0;
-                margin-bottom: 40px;
-                transform: scale(0.9);
-                width: 110vw; /* Kompensieren für die Skalierung */
-            }
-            
-            .album-item-wrapper {
-                padding: 10px 5px;
-                margin: 5px 0;
-            }
-            
             .placeholder-image {
                 min-width: 150px;
                 width: 150px;
                 height: 210px;
                 font-size: 1rem;
             }
-            .gallery-content {
-                padding-left: calc(50vw - 162.5px);
-                padding-right: calc(50vw - 162.5px);
-            }
-            .glassy-input {
-                font-size: 0.9rem;
-                padding: 10px 14px;
-            }
-            .request-section {
-                padding: 15px;
-                min-height: 300px;
-                width: 92vw;
-                margin-bottom: 15px;
-            }
-            .input-wrapper.primary {
-                width: 65vw;
-            }
-            .input-wrapper.secondary.visible {
-                width: 25vw;
-                min-width: 25vw;
-            }
-            .send-button.visible {
-                width: 60px;
-                min-width: 60px;
-                padding: 10px;
-            }
-            .request-username {
-                min-width: 50px;
-                font-size: 0.9rem;
-            }
-            .request-text {
-                font-size: 0.9rem;
-            }
-            .request-time {
-                font-size: 0.8rem;
+            
+            #main-screen .search-bar.has-value ~ .main-title-container {
+                margin-top: 50px;
             }
             
-            /* Verbesserte Skalierung für kleine Bildschirme */
-            html, body {
-                font-size: 14px;
-            }
-            
-            /* Anpassung der Höhe für kleine Geräte */
-            @media (max-height: 700px) {
-                .gallery-container {
-                    transform: scale(0.8);
-                    margin-bottom: 20px;
-                }
-                .request-section {
-                    min-height: 250px;
-                }
-                .main-title-container {
-                    margin-top: 20px;
-                }
-                #main-screen .search-bar {
-                    margin-bottom: 4vh;
-                }
-            }
-            
-            /* Anpassung für sehr kleine Geräte */
-            @media (max-height: 600px) {
-                .gallery-container {
-                    transform: scale(0.7);
-                    margin-bottom: 10px;
-                }
-                .placeholder-image {
-                    min-width: 130px;
-                    width: 130px;
-                    height: 180px;
-                }
-                .request-section {
-                    min-height: 200px;
-                    padding: 10px;
-                }
+            .search-result-item {
+                padding: 8px 10px;
+                font-size: 0.85rem;
             }
         }
         
@@ -1143,16 +985,11 @@
             .screen {
                 height: 100vh;
                 padding: 0;
-                box-sizing: border-box;
-                overflow-y: auto;
             }
             #main-screen {
                 padding-top: 5vh;
                 overflow-y: auto;
                 overflow-x: hidden;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
             }
             #main-screen .search-bar {
                 width: min(450px, 80vw);
@@ -1191,22 +1028,21 @@
                 font-size: 1.1rem;
             }
             .request-section {
-                padding: 20px;
-                width: min(800px, 90vw);
-                min-height: 350px;
-                margin-bottom: 20px;
+                padding: 30px;
+                width: min(800px, 80vw);
+                min-height: 400px;
             }
             .input-form {
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                margin-bottom: 30px;
+                gap: 15px;
+                margin-bottom: 40px;
                 transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
                 min-height: 60px;
                 justify-content: center;
             }
             .input-wrapper.primary {
-                width: 300px;
+                width: 350px;
                 flex-shrink: 0;
             }
             .input-wrapper.primary input {
@@ -1251,8 +1087,6 @@
             .gallery-container {
                 padding: 20px 0;
                 margin-bottom: 40px;
-                transform: scale(0.9);
-                width: 110vw; /* Kompensieren für die Skalierung */
             }
             
             .album-item-wrapper {
@@ -1271,145 +1105,442 @@
                 padding-right: calc(50vw - 162.5px);
             }
             .glassy-input {
-                font-size: 0.9rem;
-                padding: 10px 14px;
+                font-size: 1rem;
+                padding: 12px 16px;
             }
             .request-section {
-                padding: 15px;
-                min-height: 300px;
-                width: 92vw;
-                margin-bottom: 15px;
+                padding: 20px;
+                min-height: 350px;
             }
             .input-wrapper.primary {
-                width: 65vw;
-            }
-            .input-wrapper.secondary.visible {
-                width: 25vw;
-                min-width: 25vw;
-            }
-            .send-button.visible {
-                width: 60px;
-                min-width: 60px;
-                padding: 10px;
-            }
-            .request-username {
-                min-width: 50px;
-                font-size: 0.9rem;
-            }
-            .request-text {
-                font-size: 0.9rem;
-            }
-            .request-time {
-                font-size: 0.8rem;
-            }
-            
-            /* Verbesserte Skalierung für kleine Bildschirme */
-            html, body {
-                font-size: 14px;
-            }
-            
-            /* Anpassung der Höhe für kleine Geräte */
-            @media (max-height: 700px) {
-                .gallery-container {
-                    transform: scale(0.8);
-                    margin-bottom: 20px;
-                }
-                .request-section {
-                    min-height: 250px;
-                }
-                .main-title-container {
-                    margin-top: 20px;
-                }
-                #main-screen .search-bar {
-                    margin-bottom: 4vh;
-                }
-            }
-            
-            /* Anpassung für sehr kleine Geräte */
-            @media (max-height: 600px) {
-                .gallery-container {
-                    transform: scale(0.7);
-                    margin-bottom: 10px;
-                }
-                .placeholder-image {
-                    min-width: 130px;
-                    width: 130px;
-                    height: 180px;
-                }
-                .request-section {
-                    min-height: 200px;
-                    padding: 10px;
-                }
+                width: 300px;
             }
         }
-        
-        /* --- Gallery Styles --- */
-        .gallery-container {
-            display: flex;
+        /* Style for the ID Name Tooltip */
+        #id-name-tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            white-space: nowrap;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100vw;
-            overflow-x: hidden;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            scroll-behavior: smooth;
-            margin-top: 20px;
-            margin-bottom: 60px;
-            padding: 30px 0;
-            position: relative;
-            justify-content: center;
-            user-select: none; /* Prevent text selection while dragging */
-            touch-action: pan-x; /* Enable horizontal pan gesture */
-            cursor: grab;
-        }
-        
-        .gallery-container::-webkit-scrollbar {
-            display: none; /* Hide scrollbar */
-        }
-        
-        .gallery-content {
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: flex;
-            gap: 25px;
             justify-content: center;
-            align-items: flex-start;
-            user-select: none;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+        /* Modal Content */
+        .modal-content {
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            width: min(500px, 95vw);
+            max-height: 80vh;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+            transform: scale(0.7);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            pointer-events: auto;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .close-button {
+            background: none;
+            border: none;
+            color: var(--subtle-text-color);
+            font-size: 1.8rem;
             cursor: pointer;
-            transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); /* Improved easing */
-            will-change: transform;
-            padding-left: 0; /* We'll center via JavaScript */
-            padding-right: 0;
-            margin: 15px auto; /* Add vertical margin */
-            position: relative; /* For absolute positioning of children */
+            padding: 0 5px;
+            transition: color 0.2s ease;
+        }
+        .close-button:hover {
+            color: var(--text-color);
+        }
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 20px;
+        }
+        .modal-image-placeholder {
+            width: 250px;
+            height: 350px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--subtle-text-color);
+            font-size: 0.9em;
+        }
+        .modal-album-name {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .glassy-button {
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 25px;
+            color: var(--text-color);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .glassy-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+        .glassy-button:active {
+            transform: translateY(0);
+        }
+        .glassy-button.gradient-animated {
+            background: linear-gradient(135deg, #a00050, #0000A0, #7300a0);
+            background-size: 200% 200%;
+            animation: owner-gradient 3s ease-in-out infinite;
+            color: white;
+            border: none;
+        }
+        .glassy-button.gradient-animated:hover {
+            box-shadow: 0 8px 25px rgba(143, 2, 91, 0.344);
+        }
+        .glassy-button.is-empty {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+            background: var(--glass-background) !important;
+            color: var(--subtle-text-color) !important;
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: none !important;
+            animation: none !important;
+        }
+        .glassy-button.copied {
+            background: #00FF7F !important;
+            color: black !important;
+            box-shadow: 0 0 15px 5px rgba(0, 255, 127, 0.6), 0 0 30px 10px rgba(0, 255, 127, 0.4) !important;
+            animation: none !important;
+        }
+        .album-item-wrapper:not(:has(.placeholder-image.active)):not(:has(.placeholder-image.left1)):not(:has(.placeholder-image.right1)):not(:has(.placeholder-image.left2)):not(:has(.placeholder-image.right2)) {
+            display: none;
+            opacity: 0;
+        }
+        #initial-request-placeholder {
+            box-shadow: none !important;
+            animation: none !important;
+            justify-content: flex-start;
+            padding: 15px 20px;
+            color: var(--subtle-text-color);
+            font-style: normal;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-background);
+            display: flex;
+            align-items: center;
+        }
+
+        .admin-toggle-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: transparent; /* No background */
+            border: 1px solid transparent; /* Subtle border that can glow */
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem; /* Make it a bit larger to ensure visibility */
+            font-weight: bold;
+            color: white !important; /* Force white color */
+            cursor: pointer;
+            z-index: 9999; /* Higher z-index */
+            box-shadow: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: auto !important;
+            line-height: 0.8; /* Adjust line-height to center the dash */
+        }
+
+        .admin-toggle-button:hover {
+            background: rgba(255, 255, 255, 0.1); /* Subtle hover background */
+            color: white !important;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); /* Subtle hover shadow */
+            transform: translateY(-2px);
+        }
+
+        .admin-toggle-button:active {
+            transform: translateY(0);
+        }
+
+        .admin-toggle-button.notification-active {
+            animation: glow-red 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate; /* Keep glow for active notification */
+            color: var(--glow-red) !important;
+            border-color: var(--glow-red);
+            box-shadow: 0 0 15px 5px rgba(255, 77, 77, 0.5), 0 0 30px 10px rgba(255, 77, 77, 0.3); /* Enhanced glow */
+        }
+
+        .request-section.admin-mode .request-item {
+            padding-right: 50px;
+            position: relative;
+        }
+
+        .delete-request-button {
+            background: var(--glow-red);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background-color 0.3s ease;
+        }
+
+        .request-section.admin-mode .delete-request-button {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .delete-request-button:hover {
+            background: #ff6666;
+        }
+
+        .delete-request-button:active {
+            background: #cc3333;
+        }
+        /* Anti-tamper notification panel */
+        .anti-tamper-notification-panel {
+            position: fixed;
+            bottom: 65px; /* Position above the admin button (button height + some margin) */
+            right: 20px;
+            background: var(--glass-background); /* Glassy background */
+            border: 1px solid var(--glass-border); /* Glassy border */
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); /* Subtle shadow */
+            padding: 15px;
+            width: 280px; /* Fixed width */
+            max-height: 200px; /* Max height to allow scrolling */
+            overflow-y: auto; /* Enable scrolling for multiple messages */
+            color: var(--text-color);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            z-index: 9998; /* Below admin button's z-index */
+            opacity: 0;
+            visibility: hidden;
+            /* Animation from slightly below its final position, moving up */
+            transform: translateY(20px); /* Start 20px below its final `bottom: 65px` */
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; /* Use flex for internal content */
+            flex-direction: column;
+            gap: 10px; /* Space between messages */
+        }
+
+        .anti-tamper-notification-panel.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0); /* End at its `bottom: 65px` position */
+        }
+
+        .anti-tamper-notification-panel .message-item {
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            word-break: break-word;
+            display: flex; /* Make it a flex container */
+            justify-content: space-between; /* Space out content and button */
+            align-items: center;
+        }
+
+        .anti-tamper-notification-panel .delete-anti-tamper-log-button {
+            background: var(--subtle-red-color); /* Subtle red background */
+            color: white; /* White 'x' */
+            border: none;
+            border-radius: 50%; /* Circular button */
+            width: 20px; /* Small size */
+            height: 20px;
+            font-size: 0.8rem; /* Small font size for 'x' */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0; /* Prevent button from shrinking */
+            margin-left: 10px; /* Space from message text */
+            transition: background-color 0.2s ease;
+        }
+
+        .anti-tamper-notification-panel .delete-anti-tamper-log-button:hover {
+            background: #ff4d4d; /* Brighter red on hover */
+        }
+
+        .anti-tamper-notification-panel .clear-button {
+            background: var(--subtle-red-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            align-self: flex-end; /* Align to the right */
+            transition: background-color 0.2s ease;
+        }
+
+        @media (max-width: 480px) {
+            .admin-toggle-button {
+                width: 30px;
+                height: 30px;
+                font-size: 1.2rem; /* Adjusted for smaller screens */
+            }
+            .anti-tamper-notification-panel {
+                width: calc(100vw - 40px); /* Full width minus margin */
+                right: 20px;
+                left: 20px; /* Center for mobile */
+                transform: translateY(20px); /* Keep consistent animation */
+            }
+            .anti-tamper-notification-panel.visible {
+                transform: translateY(0);
+            }
         }
         
-        .gallery-container.dragging .gallery-content {
-            transition: none; /* Disable transition while dragging */
+        /* Albums Grid Styles */
+        .albums-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            width: 100%;
+            padding: 10px 10px 30px 10px;
+            justify-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
         
-        .album-item-wrapper {
+        .grid-album-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s;
-            border-radius: 15px;
-            padding: 15px 5px;
-            margin: 10px 0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .album-item-wrapper:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+        
+        .grid-album-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        .placeholder-image {
-            min-width: 200px;
-            width: 200px;
-            height: 280px;
+        
+        .grid-album-image {
+            width: 150px;
+            height: 210px;
             background: var(--glass-background);
             border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            box-shadow: none !important;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .grid-album-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .albums-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 15px;
+            }
+            
+            .grid-album-image {
+                width: 130px;
+                height: 180px;
+            }
+        }
+        
+        .album-item-wrapper:not(:has(.placeholder-image.active)):not(:has(.placeholder-image.left1)):not(:has(.placeholder-image.right1)):not(:has(.placeholder-image.left2)):not(:has(.placeholder-image.right2)) {
+            display: none;
+            opacity: 0;
+        }
+        /* View All Albums Modal */
+        #view-all-modal {
+            max-width: 90vw;
+            width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        #view-all-modal::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+        
+        #view-all-modal .modal-body {
+            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1634,16 +1765,7 @@
             
             // Rain drop properties
             const raindrops = [];
-            
-            // Adjust number of raindrops based on screen size for better performance
-            function getMaxDrops() {
-                const width = window.innerWidth;
-                if (width <= 480) return 80; // Mobile phones
-                if (width <= 768) return 120; // Tablets
-                return 200; // Desktop
-            }
-            
-            let maxDrops = getMaxDrops();
+            const maxDrops = 200; // Reduced for better performance
             
             // Wind properties
             let windForce = 0; // Current wind force
@@ -1652,9 +1774,6 @@
             
             // Create initial raindrops
             function createRaindrops() {
-                raindrops.length = 0; // Clear existing raindrops
-                maxDrops = getMaxDrops(); // Update max drops based on current screen size
-                
                 for (let i = 0; i < maxDrops; i++) {
                     raindrops.push({
                         x: Math.random() * canvas.width,
@@ -1728,11 +1847,6 @@
             
             // Initialize raindrops
             createRaindrops();
-            
-            // Handle window resize - recreate raindrops with appropriate count
-            window.addEventListener('resize', () => {
-                createRaindrops();
-            });
             
             // Animation loop
             function animate() {

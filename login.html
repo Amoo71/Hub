@@ -224,7 +224,7 @@
     </div>
 
     <script type="module">
-        import { userAccounts, setLoggedInUser, registerSessionWithServer, getLoggedInUser } from './db.js';
+        import { setLoggedInUser, registerSessionWithServer, getLoggedInUser, authenticateUser } from './db.js';
 
         document.addEventListener('DOMContentLoaded', () => {
             const securityIdInput = document.getElementById('security-id-input');
@@ -253,32 +253,23 @@
             securityIdInput.addEventListener('input', () => {
                 securityIdInput.classList.remove('correct', 'wrong');
                 clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
+                debounceTimer = setTimeout(async () => {
                     const enteredId = securityIdInput.value;
                     if (enteredId.length === 0) {
                         return;
                     }
 
-                    const account = userAccounts[enteredId];
+                    // Use server-side authentication instead of client-side validation
+                    const userData = await authenticateUser(enteredId);
 
-                    if (account) {
-                        setLoggedInUser({
-                            securityId: enteredId,
-                            username: account.idName, // Using idName as username for consistent data
-                            idName: account.idName,
-                            designType: account.designType
-                        }); // Store logged-in user with timestamp
+                    if (userData) {
+                        setLoggedInUser(userData); // Store logged-in user with timestamp
                         securityIdInput.classList.add('correct');
                         setTimeout(() => {
                             loginScreen.style.opacity = '0';
                             loginScreen.addEventListener('transitionend', () => {
                                 // Register session with the server
-                                registerSessionWithServer({
-                                    securityId: enteredId,
-                                    username: account.idName, // Using idName as username for consistent data
-                                    idName: account.idName,
-                                    designType: account.designType
-                                }).then(() => {
+                                registerSessionWithServer(userData).then(() => {
                                     window.location.href = 'index.html';
                                 });
                             }, { once: true });

@@ -178,6 +178,27 @@ socket.on('albumItemsChanged', () => {
     if (albumItemUpdateCallback) albumItemUpdateCallback();
 });
 
+// User authentication function
+export async function authenticateUser(securityId) {
+    try {
+        const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ securityId })
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const userData = await response.json();
+        return userData;
+    } catch (error) {
+        console.error('Authentication error:', error);
+        return null;
+    }
+}
+
 export async function getRequests() {
     try {
         const response = await fetch('/api/requests');

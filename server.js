@@ -154,6 +154,50 @@ const checkAuth = (req, res, next) => {
 // Use JSON parsing middleware
 app.use(express.json()); // For parsing application/json
 
+// User accounts with security IDs - moved from client to server for security
+const userAccounts = {
+    // Admin-Benutzer
+    '1357': { 
+        idName: 'Amo',
+        designType: 'owner'
+    },
+    
+    // Standard-Benutzer
+    'test01': { 
+        idName: 'Test-Member 1', 
+        designType: 'green-member' 
+    },
+    
+    // Premium Benutzer
+    'testPremium': { 
+        idName: 'Test-Premium 1', 
+        designType: 'prem-gold-pulse' 
+    }
+};
+
+// Authentication endpoint
+app.post('/api/auth', (req, res) => {
+    const { securityId } = req.body;
+    
+    if (!securityId) {
+        return res.status(400).json({ error: 'Security ID is required' });
+    }
+    
+    const user = userAccounts[securityId];
+    
+    if (!user) {
+        // Return 401 to avoid exposing which IDs exist
+        return res.status(401).json({ error: 'Authentication failed' });
+    }
+    
+    // Return user data without exposing the security ID itself in the response
+    return res.status(200).json({
+        securityId, // Client already knows this value since they sent it
+        idName: user.idName,
+        designType: user.designType
+    });
+});
+
 // API Endpoints for MongoDB
 // GET /api/requests - Get all requests
 app.get('/api/requests', async (req, res) => {
@@ -442,160 +486,4 @@ io.on('connection', (socket) => {
                 delete socketIdToSecurityId[oldSocketId];
                 
                 // Create anti-tamper log for suspicious activity (multiple logins)
-                const notificationMessage = `Multiple login attempt: ${idName}`;
-                const logId = Date.now().toString();
-                
-                // Create log in MongoDB
-                const log = new AntiTamperLog({
-                    id: logId,
-                    timestamp: Date.now(),
-                    message: notificationMessage
-                });
-                log.save().catch(err => console.error('Error saving anti-tamper log:', err));
-
-                console.log('Log created');
-                
-                // Notify all admin users about the suspicious activity
-                activeSessions.forEach((session, key) => {
-                    if (session.designType === 'owner' || session.idName === 'Amo') {
-                        try {
-                            io.to(session.socketId).emit('anti_tamper_notification', { 
-                                id: logId,
-                                timestamp: Date.now(),
-                                message: notificationMessage
-                            });
-                            console.log('Admin notified');
-                        } catch (err) {
-                            // Ignore errors sending to potentially disconnected sockets
-                        }
-                    }
-                });
-            }
-        }
-
-        // Register the new session
-        activeSessions.set(securityId, { socketId: socket.id, username, idName, designType });
-        socketIdToSecurityId[socket.id] = securityId;
-        
-        console.log('Session registered');
-    });
-
-    // Handle disconnection
-    socket.on('disconnect', () => {
-        console.log('Disconnected');
-        
-        // Clean up session data
-        const securityId = socketIdToSecurityId[socket.id];
-        if (securityId) {
-            activeSessions.delete(securityId);
-            delete socketIdToSecurityId[socket.id];
-            console.log('Session removed');
-        }
-    });
-});
-
-// Helper function to broadcast album updates
-function broadcastAlbumUpdate() {
-    io.emit('albumItemsChanged');
-}
-
-// Special maintenance endpoints
-app.get('/api/maintenance/fix-album-ids', checkAuth, async (req, res) => {
-    try {
-        console.log('Running album ID fix from maintenance endpoint...');
-        const albums = await AlbumItem.find();
-        let updatedCount = 0;
-        
-        // Update albums with new IDs
-        for (const album of albums) {
-            const newId = Date.now() + '-' + album._id.toString();
-            await AlbumItem.updateOne({ _id: album._id }, { id: newId });
-            console.log(`Set ID for album "${album.name}" to ${newId}`);
-            updatedCount++;
-        }
-        
-        // Broadcast update to all clients
-        broadcastAlbumUpdate();
-        
-        const updatedAlbums = await AlbumItem.find().sort({ timestamp: -1 });
-        res.json({ 
-            success: true, 
-            message: `Album IDs fixed: ${updatedCount} albums updated.`,
-            albums: updatedAlbums
-        });
-    } catch (error) {
-        console.error('Error fixing album IDs:', error);
-        res.status(500).json({ error: 'Error fixing album IDs: ' + error.message });
-    }
-});
-
-// API Endpoint for reporting albums
-app.post('/api/report-album', async (req, res) => {
-    try {
-        const { albumId, albumName, reportedBy, message } = req.body;
-        
-        if (!albumId || !albumName || !reportedBy) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-        
-        // Create a unique ID for the report
-        const logId = Date.now().toString();
-        const reportMessage = message || `Album reported: "${albumName}" by ${reportedBy}`;
-        
-        // Create anti-tamper log entry for the report
-        const log = new AntiTamperLog({
-            id: logId,
-            timestamp: Date.now(),
-            message: reportMessage
-        });
-        await log.save();
-        
-        console.log('Report created');
-        
-        // Notify all admin users about the report
-        activeSessions.forEach((session, key) => {
-            if (session.designType === 'owner' || session.idName === 'Amo') {
-                try {
-                    io.to(session.socketId).emit('anti_tamper_notification', { 
-                        id: logId,
-                        timestamp: Date.now(),
-                        message: reportMessage
-                    });
-                    console.log('Admin notified');
-                } catch (err) {
-                    // Ignore errors sending to potentially disconnected sockets
-                }
-            }
-        });
-        
-        return res.status(201).json({ success: true, message: 'Album reported successfully' });
-    } catch (error) {
-        console.error('Report error:', error);
-        return res.status(500).json({ error: 'Failed to report album' });
-    }
-});
-
-// Route for the login page - MUST BE BEFORE express.static to take precedence for '/' 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
-});
-
-// Serve static files from the current directory for all other paths
-app.use(express.static(path.join(__dirname)));
-
-// Start the server
-server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
-
-// Ensure database connection is closed on application exit
-process.on('SIGINT', () => {
-    console.log('Server is shutting down. Closing database connection...');
-    mongoose.connection.close();
-    process.exit(0);
-});
-
-process.on('exit', (code) => {
-    console.log(`About to exit with code: ${code}. Ensuring database is closed.`);
-    mongoose.connection.close();
-});
+                const notificationMessage = `Multiple login attempt: ${idName}`

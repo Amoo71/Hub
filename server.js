@@ -471,16 +471,21 @@ io.on('connection', (socket) => {
             // Check if it's a reconnection from the same user and IP
             const oldSocket = io.sockets.sockets.get(oldSocketId);
             
-            // Skip alert if the old socket is already disconnected or inactive
-            // This prevents false alarms on server restarts or client reconnections
-            if (!oldSocket || (oldSocket && !oldSocket.connected)) {
-                console.log('Old socket already disconnected, treating as normal reconnection');
+            // Add a grace period to prevent false alarms on page refreshes or navigation
+            // This checks if the old socket was just disconnected recently (within 10 seconds)
+            const now = Date.now();
+            const disconnectTime = oldSocket ? Infinity : (oldSessionInfo.disconnectedAt || 0);
+            const isRecentDisconnect = (now - disconnectTime) < 10000; // 10 seconds grace period
+            
+            // Skip alert if the old socket is already disconnected or inactive or it's a recent disconnect
+            if (!oldSocket || (oldSocket && !oldSocket.connected) || isRecentDisconnect) {
+                console.log('Old socket already disconnected or recent reconnect, treating as normal reconnection');
                 // Clean up the old socket mapping without triggering alerts
                 delete socketIdToSecurityId[oldSocketId];
             } else {
                 // This is a genuine multiple login attempt as the old session is still active
                 console.log('Invalidating old');
-                io.to(oldSocketId).emit('session_invalidated', { message: 'Your session has been logged in elsewhere' });
+                io.to(oldSocketId).emit('sessionInvalidated', { message: 'Your session has been logged in elsewhere' });
                 
                 // Clean up the old socket mapping
                 delete socketIdToSecurityId[oldSocketId];
@@ -518,7 +523,14 @@ io.on('connection', (socket) => {
         }
 
         // Register the new session
-        activeSessions.set(securityId, { socketId: socket.id, username, idName, designType });
+        activeSessions.set(securityId, { 
+            socketId: socket.id, 
+            username, 
+            idName, 
+            designType,
+            lastActive: Date.now(),
+            disconnectedAt: null
+        });
         socketIdToSecurityId[socket.id] = securityId;
         
         console.log('Session registered');
@@ -528,12 +540,33 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('Disconnected');
         
-        // Clean up session data
+        // Clean up session data but record disconnection time
         const securityId = socketIdToSecurityId[socket.id];
         if (securityId) {
-            activeSessions.delete(securityId);
+            const sessionInfo = activeSessions.get(securityId);
+            if (sessionInfo) {
+                // Instead of deleting the session right away, mark its disconnect time
+                // and keep it for a grace period to handle page navigation/refresh
+                activeSessions.set(securityId, {
+                    ...sessionInfo,
+                    disconnectedAt: Date.now()
+                });
+                
+                // Set up a delayed cleanup for the session after the grace period
+                setTimeout(() => {
+                    // Check if this session has been reconnected
+                    const currentSession = activeSessions.get(securityId);
+                    if (currentSession && currentSession.disconnectedAt === sessionInfo.disconnectedAt) {
+                        // Session wasn't reconnected, clean it up
+                        activeSessions.delete(securityId);
+                        console.log('Session removed after grace period');
+                    }
+                }, 30000); // 30-second grace period
+            }
+            
+            // Always clean up the socket ID mapping immediately
             delete socketIdToSecurityId[socket.id];
-            console.log('Session removed');
+            console.log('Socket mapping removed');
         }
     });
 });

@@ -2,7 +2,13 @@ import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
 
 let loggedInUser = null;
 
-===================================================================
+// =====================================================================
+// SICHERHEITSHINWEIS
+// =====================================================================
+// Die Benutzerkonten werden jetzt sicher auf dem Server gespeichert
+// und nicht mehr im Frontend-Code, um die Sicherheit zu erhöhen.
+// Neue Benutzer müssen über den Server konfiguriert werden.
+// =====================================================================
 
 // Function to get the current session token (security ID) for authentication
 function getSessionToken() {
@@ -10,7 +16,7 @@ function getSessionToken() {
     return user ? user.securityId : null;
 }
 
-// Callbacks 
+// Callbacks für Echtzeit-Updates
 let albumItemUpdateCallback = () => {};
 let requestUpdateCallback = () => {};
 let antiTamperNotificationCallback = () => {};
@@ -73,12 +79,12 @@ socket.on('requestDeleted', (deletedRequestId) => {
     if (requestUpdateCallback) requestUpdateCallback();
 });
 
-socket.on('sessionInvalidated', () => {
-    console.log('Session invalid');
+socket.on('sessionInvalidated', (data) => {
+    console.log('Session invalid:', data?.message || 'Your session was invalidated');
     // Force logout by clearing the user data
-    localStorage.removeItem('loggedInUser');
+    logoutUser();
     if (window.location.pathname !== '/login.html') {
-    window.location.href = 'login.html';
+        window.location.href = 'login.html';
     }
 });
 
@@ -175,12 +181,32 @@ export async function registerSessionWithServer(user) {
     try {
         console.log('Registering');
         
-        // Emit the register session event to the server - use correct event name
-        socket.emit('register_session', user);
-        
-        return true;
+        // Only register if we have a valid session
+        if (user && user.securityId) {
+            // Add a small random delay (0-500ms) to prevent potential race conditions
+            // when rapidly navigating between pages or refreshing
+            const randomDelay = Math.floor(Math.random() * 500);
+            await new Promise(resolve => setTimeout(resolve, randomDelay));
+            
+            // Emit the register session event to the server - use correct event name
+            socket.emit('register_session', user);
+            
+            // Set up automatic re-registration if the socket reconnects
+            socket.on('reconnect', () => {
+                console.log('Socket reconnected, re-registering session');
+                const currentUser = getLoggedInUser();
+                if (currentUser && currentUser.securityId) {
+                    socket.emit('register_session', currentUser);
+                }
+            });
+            
+            return true;
+        } else {
+            console.warn('Cannot register session: Missing user data or securityId');
+            return false;
+        }
     } catch (error) {
-        console.error('Register error');
+        console.error('Register error', error);
         return false;
     }
 }

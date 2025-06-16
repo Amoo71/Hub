@@ -11,7 +11,7 @@
          */
         :root {
             /* Grundfarben */
-            --background-color: #080808;
+            --background-color: #0a0a0a;
             --text-color: #f0f0f0;
             --subtle-text-color: #a0a0a0;
             
@@ -34,12 +34,67 @@
             --owner-glow-colors: 0 0 4px 1px #388aa8, 0 0 6px 1px #610728, 0 0 3px 1px #610873;
             --request-glow-colors: 0 0 6px 1px #850000, 0 0 10px 2px #850000, 0 0 8px 1px #ffffff, 0 0 6px 1px #850000;
             
-            /* Liquid Background Farben */
-            --liquid-color-1: #0f0f13;
-            --liquid-color-2: #1a1a24;
-            --liquid-color-3: #16161e;
-            --liquid-color-4: #1e1e2a;
+            /* Lava-Hintergrund-Farben */
+            --lava-color-1: #0a0a0a;
+            --lava-color-2: #131313;
+            --lava-color-3: #1c1c1c;
+            --lava-color-4: #252525;
+            --lava-color-5: #1a1a1a;
+            --lava-color-glow: rgba(40, 40, 40, 0.4);
         }
+
+        /* Lava-Hintergrund Styles */
+        #lava-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: var(--background-color);
+            overflow: hidden;
+        }
+        
+        .lava-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.4;
+            background: var(--lava-color-2);
+            animation: float-around 30s infinite ease-in-out;
+        }
+        
+        .lava-blob.color-shift {
+            animation: float-around 30s infinite ease-in-out, color-shift 20s infinite alternate;
+        }
+        
+        @keyframes float-around {
+            0% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(5%, 10%) scale(1.1); }
+            50% { transform: translate(10%, -5%) scale(0.9); }
+            75% { transform: translate(-8%, 8%) scale(1.2); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        
+        @keyframes color-shift {
+            0% { background: var(--lava-color-2); }
+            25% { background: var(--lava-color-3); }
+            50% { background: var(--lava-color-4); }
+            75% { background: var(--lava-color-5); }
+            100% { background: var(--lava-color-2); }
+        }
+        
+        #rain-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(0.6px);
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -126,31 +181,6 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             position: relative;
-        }
-        
-        #rain-canvas {
-            display: none; /* Hide the rain canvas as we'll replace it with liquid background */
-        }
-        
-        /* Liquid Background */
-        .liquid-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-        
-        .liquid-blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(40px);
-            opacity: 0.4;
-            background: var(--liquid-color-1);
-            mix-blend-mode: multiply;
-            transition: all 15s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .screen {
@@ -1011,6 +1041,7 @@
                 padding-top: 5vh;
                 overflow-y: auto;
                 overflow-x: hidden;
+                padding-bottom: 80px; /* Mehr Platz unten */
             }
             #main-screen .search-bar {
                 width: min(450px, 80vw);
@@ -1022,12 +1053,10 @@
                 margin-bottom: 30px;
             }
             .gallery-container {
-                gap: 15px;
+                gap: 25px;
                 width: 100vw;
                 padding: 25px 0;
-                margin-bottom: 50px;
-                overflow-x: auto; /* Enable horizontal scrolling on mobile */
-                -webkit-overflow-scrolling: touch;
+                margin-bottom: 30px; /* Reduzierter Abstand */
             }
             
             .album-item-wrapper {
@@ -1041,25 +1070,26 @@
             }
             
             .main-title-container {
-                margin-top: 60px;
+                margin-top: 40px; /* Reduzierter Abstand */
             }
 
             .placeholder-image {
-                min-width: 180px; /* Slightly smaller on mobile */
-                width: 180px;
-                height: 252px; /* Keep aspect ratio */
+                min-width: 200px;
+                width: 200px;
+                height: 280px;
+                font-size: 1.1rem;
             }
             .request-section {
-                padding: 30px;
-                width: min(800px, 80vw);
-                min-height: 400px;
+                padding: 25px 20px; /* Reduzierter Innenabstand */
+                width: min(800px, 90vw);
+                min-height: 350px;
+                margin-bottom: 60px; /* Mehr Platz unten */
             }
             .input-form {
                 display: flex;
                 align-items: center;
                 gap: 15px;
-                margin-bottom: 40px;
-                transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+                margin-bottom: 30px; /* Reduzierter Abstand */
                 min-height: 60px;
                 justify-content: center;
             }
@@ -1090,6 +1120,11 @@
             .request-time {
                 margin-left: 15px;
             }
+            
+            /* Optimierte Höhe für die Requests-Liste */
+            .requests-list.scrollable {
+                max-height: 250px;
+            }
         }
         @media (max-width: 480px) {
             #main-screen .main-title {
@@ -1098,7 +1133,7 @@
             }
             
             .main-title-container {
-                margin-top: 40px;
+                margin-top: 30px; /* Noch weniger Abstand oben */
             }
             
             .view-all-button {
@@ -1108,22 +1143,23 @@
             
             .gallery-container {
                 padding: 15px 0;
-                margin-bottom: 30px;
+                margin-bottom: 20px; /* Reduzierter Abstand */
             }
             
             .album-item-wrapper {
-                padding: 10px 5px;
+                padding: 8px 5px;
                 margin: 5px 0;
             }
             
             .placeholder-image {
-                min-width: 140px; /* Even smaller on very small screens */
-                width: 140px;
-                height: 196px; /* Keep aspect ratio */
+                min-width: 150px;
+                width: 150px;
+                height: 210px;
+                font-size: 1rem;
             }
             .gallery-content {
-                padding-left: 15px;
-                gap: 15px; /* Smaller gap on very small screens */
+                padding-left: calc(50vw - 162.5px);
+                padding-right: calc(50vw - 162.5px);
             }
             .glassy-input {
                 font-size: 1rem;
@@ -1131,10 +1167,30 @@
             }
             .request-section {
                 padding: 20px;
-                min-height: 350px;
+                min-height: 300px;
+                margin-bottom: 80px; /* Mehr Platz unten */
+                width: min(800px, 92vw); /* Etwas breiter für kleine Bildschirme */
             }
             .input-wrapper.primary {
-                width: 300px;
+                width: 280px; /* Schmaler für kleine Bildschirme */
+            }
+            
+            /* Optimierte Höhe für die Requests-Liste */
+            .requests-list.scrollable {
+                max-height: 200px;
+            }
+            
+            /* Kleinere Schrift für Request-Items */
+            .request-text {
+                font-size: 0.9rem;
+            }
+            
+            .request-time {
+                font-size: 0.8rem;
+            }
+            
+            #main-screen {
+                padding-bottom: 100px; /* Noch mehr Platz unten */
             }
         }
         /* Style for the ID Name Tooltip */
@@ -1604,99 +1660,11 @@
             transition: opacity 0.3s ease;
             animation: fadeIn 0.2s ease-in-out;
         }
-
-        /* Mobile-specific styles for album display */
-        @media (max-width: 768px) {
-            /* View All Albums Modal */
-            #view-all-modal {
-                max-width: 95vw;
-                width: 95vw;
-                max-height: 85vh;
-                padding: 15px;
-            }
-            
-            .albums-grid {
-                grid-template-columns: repeat(3, 1fr); /* 3 columns on tablet */
-                gap: 12px;
-            }
-            
-            .grid-album-image {
-                width: 100%;
-                height: 0;
-                padding-bottom: 140%; /* Maintain aspect ratio */
-                position: relative;
-            }
-            
-            .grid-album-image > div {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            /* Improve gallery display on mobile */
-            .gallery-container {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scroll-snap-type: x mandatory;
-                padding: 20px 0;
-            }
-            
-            .album-item-wrapper {
-                scroll-snap-align: center;
-                min-width: 140px; /* Ensure minimum size */
-            }
-            
-            /* Make sure albums are visible on mobile */
-            .album-item-wrapper:not(:has(.placeholder-image.active)):not(:has(.placeholder-image.left1)):not(:has(.placeholder-image.right1)):not(:has(.placeholder-image.left2)):not(:has(.placeholder-image.right2)) {
-                display: flex; /* Override the display: none on mobile */
-                opacity: 0.5; /* Make non-active items semi-transparent */
-            }
-            
-            /* Improve modal display on mobile */
-            .modal-content {
-                padding: 20px;
-            }
-            
-            .modal-image-placeholder {
-                width: 200px;
-                height: 280px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            /* Even smaller screens */
-            .albums-grid {
-                grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
-                gap: 10px;
-            }
-            
-            .grid-album-image {
-                padding-bottom: 130%; /* Slightly shorter aspect ratio */
-            }
-            
-            .modal-image-placeholder {
-                width: 160px;
-                height: 224px;
-            }
-            
-            /* Ensure albums are visible in carousel */
-            .gallery-content {
-                padding-left: 15px;
-                padding-right: 15px;
-                justify-content: flex-start;
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- Replace rain canvas with liquid background -->
-    <div class="liquid-background" id="liquid-background"></div>
-
+    <div id="lava-background"></div>
+    <canvas id="rain-canvas"></canvas>
     <div id="main-screen" class="screen">
         <div class="search-wrapper" style="position: relative; width: min(450px, 80vw); margin: 0 auto;">
         <input type="search" class="glassy-input search-bar" placeholder="Search...">
@@ -1858,75 +1826,189 @@
     <script type="module">
         import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const liquidBackground = document.getElementById('liquid-background');
+        // Lava-Hintergrund-Animation
+        function createLavaBackground() {
+            const lavaContainer = document.getElementById('lava-background');
+            const colors = [
+                'var(--lava-color-1)',
+                'var(--lava-color-2)',
+                'var(--lava-color-3)',
+                'var(--lava-color-4)'
+            ];
             
-            // Create liquid blobs
-            function createLiquidBackground() {
-                // Clear existing blobs
-                liquidBackground.innerHTML = '';
+            // Erstelle 8-12 Blobs für den Lava-Effekt
+            const blobCount = Math.floor(Math.random() * 5) + 8;
+            
+            for (let i = 0; i < blobCount; i++) {
+                const blob = document.createElement('div');
+                blob.classList.add('lava-blob');
                 
-                // Number of blobs based on screen size
-                const screenWidth = window.innerWidth;
-                const screenHeight = window.innerHeight;
-                const blobCount = Math.min(Math.floor((screenWidth * screenHeight) / 50000), 12);
+                // Zufällige Größe zwischen 20% und 50% der Bildschirmbreite
+                const size = Math.floor(Math.random() * 30) + 20;
+                blob.style.width = `${size}vw`;
+                blob.style.height = `${size}vw`;
                 
-                // Create blobs
-                for (let i = 0; i < blobCount; i++) {
-                    const blob = document.createElement('div');
-                    blob.className = 'liquid-blob';
-                    
-                    // Random initial position
-                    const size = Math.random() * 300 + 200; // 200-500px
-                    blob.style.width = `${size}px`;
-                    blob.style.height = `${size}px`;
-                    blob.style.left = `${Math.random() * 100}%`;
-                    blob.style.top = `${Math.random() * 100}%`;
-                    
-                    // Random color from our color variables
-                    const colorIndex = Math.floor(Math.random() * 4) + 1;
-                    blob.style.background = `var(--liquid-color-${colorIndex})`;
-                    
-                    // Random opacity
-                    blob.style.opacity = (Math.random() * 0.3 + 0.2).toString();
-                    
-                    liquidBackground.appendChild(blob);
+                // Zufällige Position
+                blob.style.left = `${Math.random() * 100}%`;
+                blob.style.top = `${Math.random() * 100}%`;
+                
+                // Zufällige Farbe aus der Palette
+                blob.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Zufällige Animationsverzögerung
+                blob.style.animationDelay = `${Math.random() * 10}s`;
+                
+                // Zufällige Animationsdauer zwischen 20 und 40 Sekunden
+                const duration = Math.random() * 20 + 20;
+                blob.style.animationDuration = `${duration}s`;
+                
+                // Etwa 60% der Blobs bekommen den Farbwechsel
+                if (Math.random() > 0.4) {
+                    blob.classList.add('color-shift');
+                    // Unterschiedliche Farbwechsel-Geschwindigkeiten
+                    const colorShiftDuration = Math.random() * 15 + 15;
+                    blob.style.animationDuration = `${duration}s, ${colorShiftDuration}s`;
+                }
+                
+                lavaContainer.appendChild(blob);
+            }
+            
+            // Füge einige größere, dunklere Blobs für mehr Tiefe hinzu
+            for (let i = 0; i < 3; i++) {
+                const bigBlob = document.createElement('div');
+                bigBlob.classList.add('lava-blob');
+                
+                // Größere Blobs
+                const size = Math.floor(Math.random() * 20) + 40; // 40-60% der Bildschirmbreite
+                bigBlob.style.width = `${size}vw`;
+                bigBlob.style.height = `${size}vw`;
+                
+                // Zufällige Position
+                bigBlob.style.left = `${Math.random() * 100}%`;
+                bigBlob.style.top = `${Math.random() * 100}%`;
+                
+                // Dunklere Farbe und niedrigere Deckkraft
+                bigBlob.style.background = 'var(--lava-color-1)';
+                bigBlob.style.opacity = '0.3';
+                
+                // Langsamere Animation
+                bigBlob.style.animationDuration = `${Math.random() * 10 + 40}s`;
+                bigBlob.style.animationDelay = `${Math.random() * 5}s`;
+                
+                lavaContainer.appendChild(bigBlob);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createLavaBackground();
+            
+            // Rest des bestehenden DOMContentLoaded-Codes...
+            const canvas = document.getElementById('rain-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size to match window
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            // Initialize canvas size and handle resize
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Rain drop properties
+            const raindrops = [];
+            const maxDrops = 200; // Reduced for better performance
+            
+            // Wind properties
+            let windForce = 0; // Current wind force
+            let targetWindForce = 0; // Target wind force to animate to
+            let windChangeTimer = 0; // Timer for wind changes
+            
+            // Create initial raindrops
+            function createRaindrops() {
+                for (let i = 0; i < maxDrops; i++) {
+                    raindrops.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        length: Math.random() * 20 + 5, // Increased variation in length
+                        speed: Math.random() * 20 + 10, // Increased speed range for more dynamic rain
+                        thickness: Math.random() * 2 + 0.5, // Added minimum thickness
+                        opacity: Math.random() * 0.5 + 0.2, // Adjusted opacity range
+                        depth: Math.random() * 3 // Depth factor for parallax effect
+                    });
                 }
             }
             
-            // Animate blobs
-            function animateBlobs() {
-                const blobs = document.querySelectorAll('.liquid-blob');
+            // Update wind force
+            function updateWind() {
+                windChangeTimer--;
                 
-                blobs.forEach(blob => {
-                    // Random new position
-                    blob.style.left = `${Math.random() * 100}%`;
-                    blob.style.top = `${Math.random() * 100}%`;
-                    
-                    // Random new size
-                    const newSize = Math.random() * 300 + 200;
-                    blob.style.width = `${newSize}px`;
-                    blob.style.height = `${newSize}px`;
-                    
-                    // Random new color
-                    const colorIndex = Math.floor(Math.random() * 4) + 1;
-                    blob.style.background = `var(--liquid-color-${colorIndex})`;
-                });
+                if (windChangeTimer <= 0) {
+                    // Set a new target wind force
+                    targetWindForce = Math.random() * 12 - 6; // Increased range: -6 to 6
+                    windChangeTimer = Math.floor(Math.random() * 100) + 50; // 50 to 150 frames until next change
+                }
                 
-                // Schedule next animation
-                setTimeout(animateBlobs, 10000); // Every 10 seconds
+                // Gradually change current wind force to approach target
+                windForce += (targetWindForce - windForce) * 0.02; // Slightly faster wind change
             }
             
-            // Initialize liquid background
-            createLiquidBackground();
+            // Update rain animation
+            function updateRain() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update wind
+                updateWind();
+                
+                // Draw and update each raindrop
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.lineCap = 'round';
+                
+                for (let i = 0; i < raindrops.length; i++) {
+                    const drop = raindrops[i];
+                    
+                    // Begin drawing raindrop
+                    ctx.beginPath();
+                    ctx.lineWidth = drop.thickness;
+                    ctx.globalAlpha = drop.opacity;
+                    
+                    // Calculate wind effect based on depth (parallax)
+                    const depthWindEffect = windForce * (drop.depth * 0.3);
+                    
+                    // Draw line from current position to calculated end position
+                    ctx.moveTo(drop.x, drop.y);
+                    ctx.lineTo(drop.x + depthWindEffect, drop.y + drop.length);
+                    ctx.stroke();
+                    
+                    // Update position for next frame
+                    drop.y += drop.speed * (drop.depth * 0.4 + 0.6); // Depth affects speed
+                    drop.x += depthWindEffect * 0.6; // Apply wind effect with depth
+                    
+                    // Reset raindrop if it goes off screen
+                    if (drop.y > canvas.height) {
+                        drop.y = -drop.length * 2;
+                        drop.x = Math.random() * canvas.width;
+                    }
+                    
+                    // Reset raindrop if it goes off sides
+                    if (drop.x < -50) drop.x = canvas.width + 50;
+                    if (drop.x > canvas.width + 50) drop.x = -50;
+                }
+            }
             
-            // Start animation after a short delay
-            setTimeout(animateBlobs, 2000);
+            // Initialize raindrops
+            createRaindrops();
             
-            // Recreate background on resize
-            window.addEventListener('resize', () => {
-                createLiquidBackground();
-            });
+            // Animation loop
+            function animate() {
+                updateRain();
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            animate();
             
             const mainScreen = document.getElementById('main-screen');
             const requestInput = document.getElementById('request-input');
@@ -2193,7 +2275,7 @@
             let albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
             let current = 2; // Start with Album 5 (Index 4)
             let albumItems = []; // Store album items from database
-
+            
             // Drag scrolling variables
             const galleryContainer = document.querySelector('.gallery-container');
             let isDragging = false;
@@ -2205,10 +2287,7 @@
             let dragAnimationFrame = null;
             let dragThreshold = 80; // Verbesserte Empfindlichkeit
             let endDragThreshold = 50; // Verbesserte Empfindlichkeit
-
-            // Check if we're on mobile
-            const isMobile = window.innerWidth <= 768;
-
+            
             // Add drag scroll functionality
             galleryContainer.addEventListener('mousedown', (e) => {
                 isDragging = true;
@@ -2230,24 +2309,6 @@
                 // Prevent default text selection behavior
                 e.preventDefault();
             });
-
-            // Add touch support for mobile
-            galleryContainer.addEventListener('touchstart', (e) => {
-                isDragging = true;
-                startX = e.touches[0].pageX;
-                startY = e.touches[0].pageY;
-                dragStartTime = Date.now();
-                lastDragX = startX;
-                dragDistance = 0;
-                
-                // Add dragging class
-                galleryContainer.classList.add('dragging');
-                
-                // Clear any existing animations
-                if (dragAnimationFrame) {
-                    cancelAnimationFrame(dragAnimationFrame);
-                }
-            }, { passive: true });
             
             galleryContainer.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
@@ -2668,10 +2729,6 @@
                     wrapper.classList.remove('is-visible');
                 });
                 
-                // For mobile, make more albums visible at once
-                const isMobile = window.innerWidth <= 768;
-                const visibleRange = isMobile ? 4 : 2; // Show more on mobile
-                
                 // Apply new classes with calculated indexes to ensure proper display
                 albumWrappers.forEach((wrapper, i) => {
                     const albumImage = wrapper.querySelector('.placeholder-image');
@@ -2692,11 +2749,7 @@
                     } else if (i === current + 2) {
                         albumImage.classList.add('right2');
                         shouldBeVisible = true;
-                    } else if (isMobile && (i >= current - visibleRange && i <= current + visibleRange)) {
-                        // On mobile, make additional albums visible without special classes
-                        shouldBeVisible = true;
                     }
-                    
                     if (shouldBeVisible) {
                         wrapper.classList.add('is-visible');
                     }
@@ -2705,7 +2758,7 @@
                 // Apply transform animation to center the current album
                 centerCurrentAlbum();
             }
-
+            
             function centerCurrentAlbum() {
                 const activeWrapper = albumWrappers[current];
                 if (!activeWrapper) return;
@@ -2720,14 +2773,6 @@
                 
                 // Calculate the exact position needed for perfect centering
                 let targetPosition = wrapperLeft - centerOffset;
-                
-                // On mobile, adjust scrolling behavior
-                const isMobile = window.innerWidth <= 768;
-                if (isMobile) {
-                    // For mobile, we want to ensure good visibility with less precise centering
-                    // This allows for more natural scrolling on touch devices
-                    targetPosition = Math.max(0, wrapperLeft - 20); // Just offset a bit from the left edge
-                }
                 
                 // Ensure we don't go beyond bounds
                 const maxScroll = galleryContent.scrollWidth - containerWidth;
@@ -3273,12 +3318,8 @@
                     // Clear the grid
                     albumsGrid.innerHTML = '';
                     
-                    // Determine grid layout based on screen size
-                    const isMobile = window.innerWidth <= 480;
-                    const isTablet = window.innerWidth <= 768 && window.innerWidth > 480;
-                    
-                    // Limit total slots based on device
-                    const totalSlots = isMobile ? 50 : (isTablet ? 75 : 100);
+                    // Create 10x10 grid (100 slots max)
+                    const totalSlots = 100;
                     
                     // Fill the grid with existing albums first
                     for (let i = 0; i < totalSlots; i++) {
@@ -3348,16 +3389,6 @@
                         gridItem.appendChild(gridName);
                         albumsGrid.appendChild(gridItem);
                     }
-                    
-                    // Update grid columns based on screen size
-                    if (isMobile) {
-                        albumsGrid.style.gridTemplateColumns = 'repeat(2, 1fr)'; // 2 columns on mobile
-                    } else if (isTablet) {
-                        albumsGrid.style.gridTemplateColumns = 'repeat(3, 1fr)'; // 3 columns on tablet
-                    } else {
-                        albumsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))'; // Default
-                    }
-                    
                 } catch (error) {
                     console.error('Error rendering all albums:', error);
                 }

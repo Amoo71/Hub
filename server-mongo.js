@@ -9,7 +9,14 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    },
+    transports: ['websocket', 'polling'],
+    allowEIO3: true
+  });
 
 // Store active sessions: { securityId: { socketId: string, username: string, idName: string, designType: string } }
 const activeSessions = new Map();

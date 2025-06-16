@@ -28,15 +28,30 @@ export function setAlbumItemUpdateCallback(callback) {
 export function getLoggedInUser() {
     const storedSession = sessionStorage.getItem('loggedInSession');
     if (storedSession) {
-        const { user, timestamp } = JSON.parse(storedSession);
+        const { user, timestamp, lastActivityTime } = JSON.parse(storedSession);
         const now = Date.now();
         const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
-
-        if (now - timestamp < threeMinutes) {
-            setLoggedInUser(user); // This will update the timestamp
+        
+        // Use lastActivityTime if available, otherwise fall back to timestamp
+        const lastActive = lastActivityTime || timestamp;
+        
+        if (now - lastActive < threeMinutes) {
+            // Only update timestamp if this is a genuine user activity check
+            // not just a background check
+            const callerIsUserActivity = new Error().stack.includes('trackUserActivity');
+            
+            if (callerIsUserActivity) {
+                // Update the last activity time while preserving the original login timestamp
+                const sessionData = JSON.parse(sessionStorage.getItem('loggedInSession'));
+                sessionData.lastActivityTime = now;
+                sessionStorage.setItem('loggedInSession', JSON.stringify(sessionData));
+                console.log('Session activity time updated');
+            }
+            
             loggedInUser = user;
             return loggedInUser;
         } else {
+            console.log('Session expired due to inactivity');
             logoutUser();
             return null;
         }
@@ -48,7 +63,11 @@ export function getLoggedInUser() {
 export function setLoggedInUser(user) {
     loggedInUser = user;
     const timestamp = Date.now();
-    sessionStorage.setItem('loggedInSession', JSON.stringify({ user, timestamp }));
+    sessionStorage.setItem('loggedInSession', JSON.stringify({ 
+        user, 
+        timestamp,  // Original login time
+        lastActivityTime: timestamp  // Last activity time (initially same as login time)
+    }));
 }
 
 export function logoutUser() {

@@ -33,11 +33,7 @@ export function getLoggedInUser() {
         const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
 
         if (now - timestamp < threeMinutes) {
-            // Update timestamp only if user is active (not just checking session)
-            const isActiveCheck = new Error().stack.includes('trackUserActivity');
-            if (isActiveCheck) {
-                setLoggedInUser(user); // This will update the timestamp only on actual activity
-            }
+            setLoggedInUser(user); // This will update the timestamp
             loggedInUser = user;
             return loggedInUser;
         } else {

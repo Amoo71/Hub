@@ -21,9 +21,18 @@ const PORT = process.env.PORT || 3000;
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/trntapp';
 
-mongoose.connect(MONGODB_URI)
+// Improved MongoDB connection with error handling
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of 30s
+})
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    // Continue running the app even if MongoDB connection fails
+    // This allows the static files to be served
+  });
 
 // Define MongoDB Schemas and Models
 const requestSchema = new mongoose.Schema({
@@ -51,9 +60,15 @@ const albumItemSchema = new mongoose.Schema({
   timestamp: { type: Number, required: true }
 });
 
-const Request = mongoose.model('Request', requestSchema);
-const AntiTamperLog = mongoose.model('AntiTamperLog', antiTamperLogSchema);
-const AlbumItem = mongoose.model('AlbumItem', albumItemSchema);
+// Only create models if mongoose connection is established
+let Request, AntiTamperLog, AlbumItem;
+if (mongoose.connection.readyState === 1) {
+  Request = mongoose.model('Request', requestSchema);
+  AntiTamperLog = mongoose.model('AntiTamperLog', antiTamperLogSchema);
+  AlbumItem = mongoose.model('AlbumItem', albumItemSchema);
+} else {
+  console.log('MongoDB models not created due to connection issues');
+}
 
 // Middleware to check authentication for admin routes
 const checkAuth = (req, res, next) => {
@@ -101,6 +116,12 @@ const checkAuth = (req, res, next) => {
 // Initialize database with default data
 async function initializeDb() {
     try {
+        // Skip if mongoose connection isn't established
+        if (mongoose.connection.readyState !== 1) {
+            console.log('Skipping DB initialization due to connection issues');
+            return;
+        }
+        
         // Check if there are any requests
         const requestCount = await Request.countDocuments();
         console.log(`Current request count: ${requestCount}`);
@@ -124,7 +145,7 @@ async function initializeDb() {
             
             await initialAmoRequest.save();
             console.log('Added initial Amo request');
-}
+        }
 
         // Check if there are any album items
         const albumCount = await AlbumItem.countDocuments();
@@ -153,29 +174,42 @@ async function initializeDb() {
 }
 
 // Initialize database
-initializeDb();
+setTimeout(initializeDb, 3000); // Delay initialization to ensure connection is established
 
 // Handle serving static files
-app.use(express.static('.'));
-app.use(express.json());
+app.use(express.static(path.join(__dirname)));
+app.use(bodyParser.json());
+
+// Middleware to handle MongoDB connection errors
+const handleDbErrors = (req, res, next) => {
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(500).json({ error: 'Database connection error' });
+    }
+    next();
+};
 
 // API endpoints for requests
-app.get('/api/requests', async (req, res) => {
+app.get('/api/requests', handleDbErrors, async (req, res) => {
     try {
         const requests = await Request.find().sort({ timestamp: -1 });
         res.json(requests);
-} catch (error) {
+    } catch (error) {
         console.error('Error fetching requests:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-app.post('/api/requests', async (req, res) => {
+app.post('/api/requests', handleDbErrors, async (req, res) => {
     try {
-        const { username, text, designType, idName, time } = req.body;
+        const { username, text, designType, idName } = req.body;
+        
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const time = `${hours}:${minutes}`;
         
         const newRequest = new Request({
-        id: Date.now().toString(),
+            id: Date.now().toString(),
             username,
             text,
             designType,
@@ -196,7 +230,8 @@ app.post('/api/requests', async (req, res) => {
     }
 });
 
-app.delete('/api/requests/:id', async (req, res) => {
+// Rest of the API endpoints with handleDbErrors middleware
+app.delete('/api/requests/:id', handleDbErrors, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -217,7 +252,7 @@ app.delete('/api/requests/:id', async (req, res) => {
 });
 
 // API endpoints for anti-tamper logs
-app.get('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+app.get('/api/anti-tamper-logs', checkAuth, handleDbErrors, async (req, res) => {
     try {
         const logs = await AntiTamperLog.find().sort({ timestamp: -1 });
         res.json(logs);
@@ -227,7 +262,7 @@ app.get('/api/anti-tamper-logs', checkAuth, async (req, res) => {
     }
 });
 
-app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
+app.delete('/api/anti-tamper-logs', checkAuth, handleDbErrors, async (req, res) => {
     try {
         await AntiTamperLog.deleteMany({});
             
@@ -241,7 +276,7 @@ app.delete('/api/anti-tamper-logs', checkAuth, async (req, res) => {
     }
 });
 
-app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
+app.delete('/api/anti-tamper-logs/:id', checkAuth, handleDbErrors, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -259,7 +294,7 @@ app.delete('/api/anti-tamper-logs/:id', checkAuth, async (req, res) => {
 });
 
 // API endpoints for album items
-app.get('/api/album-items', async (req, res) => {
+app.get('/api/album-items', handleDbErrors, async (req, res) => {
     try {
         const albumItems = await AlbumItem.find().sort({ timestamp: -1 });
         res.json(albumItems);
@@ -269,7 +304,7 @@ app.get('/api/album-items', async (req, res) => {
     }
 });
 
-app.post('/api/album-items', async (req, res) => {
+app.post('/api/album-items', handleDbErrors, async (req, res) => {
     try {
         const { name, imageUrl, acc, pw } = req.body;
         
@@ -294,7 +329,7 @@ app.post('/api/album-items', async (req, res) => {
     }
 });
 
-app.put('/api/album-items/:id', async (req, res) => {
+app.put('/api/album-items/:id', handleDbErrors, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, imageUrl, acc, pw } = req.body;
@@ -326,7 +361,7 @@ app.put('/api/album-items/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/album-items/:id', async (req, res) => {
+app.delete('/api/album-items/:id', handleDbErrors, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -334,7 +369,7 @@ app.delete('/api/album-items/:id', async (req, res) => {
         
         if (!result) {
             return res.status(404).json({ error: 'Album item not found' });
-            }
+        }
         
         // Broadcast to all clients
         io.emit('albumItemsChanged');

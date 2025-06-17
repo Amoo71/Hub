@@ -4085,7 +4085,7 @@
         // Set up chat message update callback
         setChatMessageUpdateCallback(() => {
             console.log('Live update: Chat messages changed');
-            if (!chatModalOverlay.classList.contains('hidden')) {
+            if (chatModalOverlay.classList.contains('visible')) {
                 renderChatMessages(); // Only re-render if the chat modal is open
             }
         });

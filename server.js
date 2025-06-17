@@ -184,7 +184,7 @@ const userAccounts = {
       designType: 'green-member'
     },
     
-    // Premium Benutzer
+    // Premium Benutze
     'testPremium': { 
         idName: 'Test-Premium 1', 
         designType: 'prem-gold-pulse' 

@@ -21,8 +21,8 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://amo:<db_password>@
 
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI.replace('<db_password>', process.env.DB_PASSWORD || '<db_password>'))
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => {})
+  .catch(err => {});
 
 // Create MongoDB Schemas and Models
 const requestSchema = new mongoose.Schema({
@@ -41,6 +41,18 @@ const antiTamperLogSchema = new mongoose.Schema({
   message: { type: String, required: true }
 });
 
+// New schema for chat messages with expiration
+const chatMessageSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  username: { type: String, required: true },
+  text: { type: String, required: true },
+  designType: { type: String, required: true },
+  idName: { type: String, required: true },
+  time: { type: String, required: true },
+  timestamp: { type: Number, required: true },
+  expiresAt: { type: Number, required: true } // Timestamp when the message expires (24 hours after creation)
+});
+
 const albumItemSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -50,21 +62,26 @@ const albumItemSchema = new mongoose.Schema({
   timestamp: { type: Number, required: true }
 });
 
-const chatMessageSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  username: { type: String, required: true },
-  text: { type: String, required: true },
-  designType: { type: String, required: true },
-  idName: { type: String, required: true },
-  time: { type: String, required: true },
-  timestamp: { type: Number, required: true },
-  expiresAt: { type: Number, required: true } // Timestamp when message should expire (24 hours)
-});
-
 const Request = mongoose.model('Request', requestSchema);
 const AntiTamperLog = mongoose.model('AntiTamperLog', antiTamperLogSchema);
 const AlbumItem = mongoose.model('AlbumItem', albumItemSchema);
-const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
+const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema); // New model for chat messages
+
+// Check and remove expired chat messages
+async function cleanupExpiredChatMessages() {
+  try {
+    const now = Date.now();
+    const result = await ChatMessage.deleteMany({ expiresAt: { $lte: now } });
+    if (result.deletedCount > 0) {
+      io.emit('chatMessagesChanged'); // Notify clients about deleted messages
+    }
+  } catch (error) {
+    // Error handling silently to avoid console logs
+  }
+}
+
+// Run expired message cleanup every minute
+setInterval(cleanupExpiredChatMessages, 60 * 1000);
 
 // Create initial data if collections are empty
 async function checkAndCreateInitialData() {
@@ -73,7 +90,6 @@ async function checkAndCreateInitialData() {
     const requestCount = await Request.countDocuments();
     
     if (requestCount === 0) {
-      console.log('Creating initial request for new database...');
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -90,14 +106,12 @@ async function checkAndCreateInitialData() {
       });
       
       await initialRequest.save();
-      console.log('Initial request created');
     }
     
     // Check if album items collection is empty
     const albumCount = await AlbumItem.countDocuments();
     
     if (albumCount === 0) {
-      console.log('Creating sample album for new database...');
       const now = Date.now();
       
       const sampleAlbum = new AlbumItem({
@@ -110,10 +124,32 @@ async function checkAndCreateInitialData() {
       });
       
       await sampleAlbum.save();
-      console.log('Sample album created');
+    }
+    
+    // Check if chat messages collection is empty
+    const chatCount = await ChatMessage.countDocuments();
+    
+    if (chatCount === 0) {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const time = `${hours}:${minutes}`;
+      
+      const initialMessage = new ChatMessage({
+        id: Date.now().toString(),
+        username: 'Amo',
+        text: 'Welcome to the chat! Messages here will automatically delete after 24 hours.',
+        designType: 'owner',
+        idName: 'Amo',
+        time: time,
+        timestamp: now.getTime(),
+        expiresAt: now.getTime() + (24 * 60 * 60 * 1000) // 24 hours from now
+      });
+      
+      await initialMessage.save();
     }
   } catch (error) {
-    console.error('Error checking/creating initial data:', error);
+    // Error handling silently to avoid console logs
   }
 }
 
@@ -124,10 +160,8 @@ checkAndCreateInitialData();
 const checkAuth = (req, res, next) => {
     try {
         const sessionToken = req.headers['x-session-token'];
-        console.log('Auth check');
         
         if (!sessionToken) {
-            console.log('No session');
             return res.status(401).json({ error: 'Authentication required' });
         }
         
@@ -135,30 +169,23 @@ const checkAuth = (req, res, next) => {
         let isAdmin = false;
         let sessionFound = false;
         
-        // Log the current state of active sessions for debugging
-        console.log('Sessions active');
-        
         // The sessionToken is actually the securityId in our implementation
         const session = activeSessions.get(sessionToken);
         if (session) {
             sessionFound = true;
             isAdmin = session.designType === 'owner' || session.idName === 'Amo';
-            console.log('Session valid');
         }
         
         if (!sessionFound) {
-            console.log('Invalid session');
             return res.status(403).json({ error: 'Invalid session' });
         }
         
         if (!isAdmin) {
-            console.log('Not admin');
             return res.status(403).json({ error: 'Admin privileges required' });
         }
         
         next();
     } catch (error) {
-        console.error('Auth error');
         return res.status(500).json({ error: 'Internal server error during authentication' });
     }
 };
@@ -298,7 +325,6 @@ app.delete('/api/anti-tamper-logs/:id', async (req, res) => {
 
 // API Endpoints for Album Items
 app.get('/api/album-items', (req, res) => {
-    console.log('GET /api/album-items: Redirecting to /api/albums');
     // Forward to the new endpoint
     req.url = '/api/albums';
     app.handle(req, res);
@@ -409,71 +435,6 @@ app.delete('/api/requests/:id', async (req, res) => {
     }
 });
 
-// GET /api/chat-messages - Get all chat messages
-app.get('/api/chat-messages', async (req, res) => {
-    try {
-        // Get current time to filter out expired messages
-        const now = Date.now();
-        
-        // Fetch all messages that haven't expired yet
-        const messages = await ChatMessage.find({ expiresAt: { $gt: now } }).sort({ timestamp: -1 });
-        res.json(messages);
-    } catch (error) {
-        console.error('Error fetching chat messages:', error);
-        res.status(500).json({ error: 'Database error: ' + error.message });
-    }
-});
-
-// POST /api/chat-messages - Create a new chat message
-app.post('/api/chat-messages', async (req, res) => {
-    const { username, text, designType, idName } = req.body;
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const time = `${hours}:${minutes}`;
-    const currentTimestamp = now.getTime();
-    
-    // Set expiration time to 24 hours from now
-    const expiresAt = currentTimestamp + (24 * 60 * 60 * 1000);
-    
-    const newMessage = {
-        id: currentTimestamp.toString(),
-        username, text, designType, idName, time,
-        timestamp: currentTimestamp,
-        expiresAt
-    };
-
-    // Insert the chat message into the database
-    try {
-        const chatMessage = new ChatMessage(newMessage);
-        await chatMessage.save();
-        io.emit('chatMessageAdded', newMessage); // Broadcast new message to all clients
-        res.status(201).json(newMessage);
-    } catch (error) {
-        console.error('Error adding chat message:', error);
-        res.status(500).json({ error: 'Database error: ' + error.message });
-    }
-});
-
-// DELETE /api/chat-messages/:id - Delete a chat message
-app.delete('/api/chat-messages/:id', async (req, res) => {
-    const { id } = req.params;
-    
-    try {
-        const result = await ChatMessage.deleteOne({ id: id });
-        
-        if (result.deletedCount > 0) {
-            io.emit('chatMessageDeleted', id); // Broadcast deleted message ID
-            res.status(200).json({ message: 'Chat message deleted successfully' });
-        } else {
-            res.status(404).json({ message: 'Chat message not found' });
-        }
-    } catch (error) {
-        console.error('Error deleting chat message:', error);
-        res.status(500).json({ error: 'Database error: ' + error.message });
-    }
-});
-
 // GET /api/albums - Get all album items
 app.get('/api/albums', async (req, res) => {
     try {
@@ -557,11 +518,64 @@ app.delete('/api/albums/:id', checkAuth, async (req, res) => {
     }
 });
 
+// API Endpoints for Chat Messages
+// GET /api/chat-messages - Get all chat messages
+app.get('/api/chat-messages', async (req, res) => {
+  try {
+    const messages = await ChatMessage.find().sort({ timestamp: -1 });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: 'Database error: ' + error.message });
+  }
+});
+
+// POST /api/chat-messages - Create a new chat message
+app.post('/api/chat-messages', async (req, res) => {
+  const { username, text, designType, idName } = req.body;
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const time = `${hours}:${minutes}`;
+  
+  const expiresAt = now.getTime() + (24 * 60 * 60 * 1000); // 24 hours from now
+  
+  const newMessage = {
+    id: Date.now().toString(),
+    username, text, designType, idName, time,
+    timestamp: now.getTime(),
+    expiresAt: expiresAt
+  };
+
+  try {
+    const message = new ChatMessage(newMessage);
+    await message.save();
+    io.emit('chatMessagesChanged'); // Broadcast to all clients
+    res.status(201).json(newMessage);
+  } catch (error) {
+    res.status(500).json({ error: 'Database error: ' + error.message });
+  }
+});
+
+// DELETE /api/chat-messages/:id - Delete a chat message
+app.delete('/api/chat-messages/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const result = await ChatMessage.deleteOne({ id: id });
+    
+    if (result.deletedCount > 0) {
+      io.emit('chatMessagesChanged'); // Broadcast delete to all clients
+      res.status(200).json({ message: 'Chat message deleted successfully' });
+    } else {
+      res.status(404).json({ message: 'Chat message not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Database error: ' + error.message });
+  }
+});
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-    console.log('New socket connection established');
-    
-    // Track if this socket has been registered to a session
     let isRegisteredSocket = false;
 
     // Handle session registration
@@ -570,16 +584,12 @@ io.on('connection', (socket) => {
         
         // Ignore if no valid security ID provided
         if (!securityId) {
-            console.log('Registration attempt rejected: No security ID provided');
             return;
         }
-        
-        console.log(`Session registration attempt for: ${idName} (ID: ${securityId.substring(0, 2)}***)`);
         
         // If this socket is already registered to this security ID, it's just a heartbeat/check
         // Don't treat it as a new login attempt
         if (isRegisteredSocket && socketIdToSecurityId[socket.id] === securityId) {
-            console.log(`Heartbeat received from existing session: ${idName}`);
             
             // Update last active timestamp
             const existingSession = activeSessions.get(securityId);
@@ -599,7 +609,6 @@ io.on('connection', (socket) => {
             
             // If it's the same socket ID, it's just a re-registration (shouldn't happen with our logic)
             if (oldSocketId === socket.id) {
-                console.log(`Re-registration from same socket ID, updating session data for: ${idName}`);
                 activeSessions.set(securityId, { 
                     socketId: socket.id, 
                     username, 
@@ -609,8 +618,6 @@ io.on('connection', (socket) => {
                 });
                 return;
             }
-            
-            console.log(`Multiple login detected! Security ID already in use by another session`);
             
             // This is a multiple login attempt as the securityId is already in use by another socket
             // Notify the existing session that it's being invalidated
@@ -628,9 +635,7 @@ io.on('connection', (socket) => {
                 timestamp: Date.now(),
                 message: notificationMessage
             });
-            log.save().catch(err => console.error('Error saving anti-tamper log:', err));
-
-            console.log('Anti-tamper log created for multiple login attempt');
+            log.save();
             
             // Notify all admin users about the suspicious activity
             activeSessions.forEach((session, key) => {
@@ -641,9 +646,8 @@ io.on('connection', (socket) => {
                             timestamp: Date.now(),
                             message: notificationMessage
                         });
-                        console.log('Admin notified of multiple login attempt');
                     } catch (err) {
-                        console.error('Error notifying admin:', err);
+                        // Silent error handling
                     }
                 }
             });
@@ -662,8 +666,6 @@ io.on('connection', (socket) => {
         });
         socketIdToSecurityId[socket.id] = securityId;
         isRegisteredSocket = true;
-        
-        console.log(`Session successfully registered for: ${idName}`);
     });
 
     // Handle ping/heartbeat to keep session alive
@@ -674,7 +676,6 @@ io.on('connection', (socket) => {
         
         // Verify this socket owns this session
         if (socketIdToSecurityId[socket.id] !== securityId) {
-            console.log(`Invalid heartbeat: Socket does not own session ${securityId.substring(0, 2)}***`);
             return;
         }
         
@@ -698,7 +699,6 @@ io.on('connection', (socket) => {
             // Immediately remove the session when socket disconnects
             activeSessions.delete(securityId);
             delete socketIdToSecurityId[socket.id];
-            console.log(`Session removed for securityId: ${securityId.substring(0, 2)}***`);
         }
     });
 });
@@ -711,7 +711,6 @@ function broadcastAlbumUpdate() {
 // Special maintenance endpoints
 app.get('/api/maintenance/fix-album-ids', checkAuth, async (req, res) => {
     try {
-        console.log('Running album ID fix from maintenance endpoint...');
         const albums = await AlbumItem.find();
         let updatedCount = 0;
         
@@ -719,7 +718,6 @@ app.get('/api/maintenance/fix-album-ids', checkAuth, async (req, res) => {
         for (const album of albums) {
             const newId = Date.now() + '-' + album._id.toString();
             await AlbumItem.updateOne({ _id: album._id }, { id: newId });
-            console.log(`Set ID for album "${album.name}" to ${newId}`);
             updatedCount++;
         }
         
@@ -733,7 +731,6 @@ app.get('/api/maintenance/fix-album-ids', checkAuth, async (req, res) => {
             albums: updatedAlbums
         });
     } catch (error) {
-        console.error('Error fixing album IDs:', error);
         res.status(500).json({ error: 'Error fixing album IDs: ' + error.message });
     }
 });
@@ -797,35 +794,17 @@ app.get('/', (req, res) => {
 // Serve static files from the current directory for all other paths
 app.use(express.static(path.join(__dirname)));
 
-// Background job to clean up expired chat messages every minute
-const cleanupInterval = setInterval(async () => {
-    try {
-        const now = Date.now();
-        const result = await ChatMessage.deleteMany({ expiresAt: { $lte: now } });
-        if (result.deletedCount > 0) {
-            console.log(`Cleaned up ${result.deletedCount} expired chat messages`);
-            io.emit('chatMessagesExpired'); // Notify clients to refresh their chat list
-        }
-    } catch (error) {
-        console.error('Error cleaning up expired chat messages:', error);
-    }
-}, 60000); // Run every minute
+// Start the server - Update to explicitly listen on all interfaces (0.0.0.0)
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
+});
 
-// Ensure cleanup job is stopped on application exit
+// Ensure database connection is closed on application exit
 process.on('SIGINT', () => {
-    clearInterval(cleanupInterval);
-    console.log('Server is shutting down. Closing database connection...');
     mongoose.connection.close();
     process.exit(0);
 });
 
 process.on('exit', (code) => {
-    console.log(`About to exit with code: ${code}. Ensuring database is closed.`);
     mongoose.connection.close();
-});
-
-// Start the server - Update to explicitly listen on all interfaces (0.0.0.0)
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on http://0.0.0.0:${PORT}`);
-    console.log(`PORT environment variable is set to: ${process.env.PORT}`);
 });

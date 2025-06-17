@@ -163,9 +163,25 @@ const userAccounts = {
     },
     
     // Standard-Benutzer
-    'test01': { 
-        idName: 'Test-Member 1', 
+    '1256': { 
+        idName: 'Member', 
         designType: 'green-member' 
+    },
+    '3478': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
+    '8745': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
+    '9375': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
+    '5294': {
+      idName: 'Member',
+      designType: 'green-member'
     },
     
     // Premium Benutzer

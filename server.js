@@ -695,6 +695,11 @@ app.post('/api/report-album', async (req, res) => {
     }
 });
 
+// Add ping endpoint to prevent Render from spinning down
+app.get('/api/ping', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: Date.now() });
+});
+
 // Route for the login page - MUST BE BEFORE express.static to take precedence for '/' 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));

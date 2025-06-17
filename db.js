@@ -20,16 +20,11 @@ function getSessionToken() {
 let albumItemUpdateCallback = () => {};
 let requestUpdateCallback = () => {};
 let antiTamperNotificationCallback = () => {};
+let chatMessageUpdateCallback = () => {};
 
 export function setAlbumItemUpdateCallback(callback) {
     albumItemUpdateCallback = callback;
 }
-
-// Socket.IO client setup
-const socket = io();
-
-// Heartbeat interval to keep session alive (every 30 seconds)
-let heartbeatInterval = null;
 
 export function setRequestUpdateCallback(callback) {
     requestUpdateCallback = callback;
@@ -38,6 +33,16 @@ export function setRequestUpdateCallback(callback) {
 export function setAntiTamperNotificationCallback(callback) {
     antiTamperNotificationCallback = callback;
 }
+
+export function setChatMessageUpdateCallback(callback) {
+    chatMessageUpdateCallback = callback;
+}
+
+// Socket.IO client setup
+const socket = io();
+
+// Heartbeat interval to keep session alive (every 30 seconds)
+let heartbeatInterval = null;
 
 // Listen for real-time events from server
 socket.on('requestAdded', (newRequest) => {
@@ -75,6 +80,21 @@ socket.on('anti_tamper_logs_cleared', () => {
 socket.on('albumItemsChanged', () => {
     console.log('Album items update notification received');
     if (albumItemUpdateCallback) albumItemUpdateCallback();
+});
+
+socket.on('chatMessageAdded', (message) => {
+    console.log('New chat message received');
+    if (chatMessageUpdateCallback) chatMessageUpdateCallback();
+});
+
+socket.on('chatMessageDeleted', (deletedMessageId) => {
+    console.log('Chat message deletion notification received');
+    if (chatMessageUpdateCallback) chatMessageUpdateCallback();
+});
+
+socket.on('chatMessagesExpired', () => {
+    console.log('Chat messages expired notification received');
+    if (chatMessageUpdateCallback) chatMessageUpdateCallback();
 });
 
 // Start sending heartbeats to keep the session alive
@@ -365,30 +385,107 @@ export async function updateAlbumItem(id, albumItem) {
 
 export async function deleteAlbumItem(id) {
     try {
-        console.log('Deleting album');
+        const sessionToken = getSessionToken();
         
-        // Ensure ID is properly formatted for the request
-        const idString = id.toString();
-        console.log('ID formatted');
+        if (!sessionToken) {
+            console.error('Authentication required for album deletion');
+            return { error: 'Authentication required' };
+        }
         
-        const response = await fetch(`/api/albums/${idString}`, {
+        const response = await fetch(`/api/albums/${id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Session-Token': getLoggedInUser()?.securityId || ''
+                'X-Session-Token': sessionToken
             }
         });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to delete album');
+
+        if (response.status === 401 || response.status === 403) {
+            alert('You are not authorized to delete albums');
+            return { error: 'Authentication required' };
         }
-        
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error deleting album:', error);
+        return { error: error.message };
+    }
+}
+
+export async function getChatMessages() {
+    try {
+        const response = await fetch('/api/chat-messages');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Delete error');
-        throw error;
+        console.error('Error fetching chat messages:', error);
+        return [];
+    }
+}
+
+export async function addChatMessage(message) {
+    try {
+        const user = getLoggedInUser();
+        
+        if (!user) {
+            return { error: 'Authentication required' };
+        }
+        
+        const { username, text } = message;
+        
+        if (!text || text.trim() === '') {
+            return { error: 'Message text cannot be empty' };
+        }
+        
+        const messageData = {
+            username: username || user.idName,
+            text: text.trim(),
+            designType: user.designType,
+            idName: user.idName
+        };
+
+        const response = await fetch('/api/chat-messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(messageData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error adding chat message:', error);
+        return { error: error.message };
+    }
+}
+
+export async function deleteChatMessage(id) {
+    try {
+        const response = await fetch(`/api/chat-messages/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error deleting chat message:', error);
+        return { error: error.message };
     }
 }
 
@@ -402,34 +499,33 @@ export async function authenticateUser(securityId) {
         });
 
         if (!response.ok) {
-            return null;
+            return { error: 'Authentication failed' };
         }
 
-        const userData = await response.json();
-        return userData;
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Authentication error:', error);
-        return null;
+        return { error: 'Authentication service unavailable' };
     }
 }
 
-// Funktion zum Überprüfen der Inaktivität und automatischen Ausloggen
+// Function to check for inactivity and logout if needed
 export function checkInactivity() {
     const storedSession = sessionStorage.getItem('loggedInSession');
     if (storedSession) {
         try {
-            const { user, timestamp } = JSON.parse(storedSession);
+            const { timestamp } = JSON.parse(storedSession);
             const now = Date.now();
             const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
 
             if (now - timestamp >= threeMinutes) {
-                console.log('Forced logout due to inactivity timeout');
+                console.log('User inactive for 3 minutes, logging out');
                 logoutUser();
-                window.location.href = 'login.html?reason=inactivity_timeout';
-                return true; // Benutzer wurde ausgeloggt
+                return true; // Benutzer wurde aufgrund Inaktivität ausgeloggt
             }
         } catch (error) {
-            console.error('Error checking inactivity:', error);
+            console.error('Error processing stored session:', error);
         }
     }
     return false; // Benutzer ist noch aktiv oder nicht eingeloggt

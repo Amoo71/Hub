@@ -50,9 +50,21 @@ const albumItemSchema = new mongoose.Schema({
   timestamp: { type: Number, required: true }
 });
 
+const chatMessageSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  username: { type: String, required: true },
+  text: { type: String, required: true },
+  designType: { type: String, required: true },
+  idName: { type: String, required: true },
+  time: { type: String, required: true },
+  timestamp: { type: Number, required: true },
+  expiresAt: { type: Number, required: true } // Timestamp when message should expire (24 hours)
+});
+
 const Request = mongoose.model('Request', requestSchema);
 const AntiTamperLog = mongoose.model('AntiTamperLog', antiTamperLogSchema);
 const AlbumItem = mongoose.model('AlbumItem', albumItemSchema);
+const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
 
 // Create initial data if collections are empty
 async function checkAndCreateInitialData() {
@@ -397,6 +409,71 @@ app.delete('/api/requests/:id', async (req, res) => {
     }
 });
 
+// GET /api/chat-messages - Get all chat messages
+app.get('/api/chat-messages', async (req, res) => {
+    try {
+        // Get current time to filter out expired messages
+        const now = Date.now();
+        
+        // Fetch all messages that haven't expired yet
+        const messages = await ChatMessage.find({ expiresAt: { $gt: now } }).sort({ timestamp: -1 });
+        res.json(messages);
+    } catch (error) {
+        console.error('Error fetching chat messages:', error);
+        res.status(500).json({ error: 'Database error: ' + error.message });
+    }
+});
+
+// POST /api/chat-messages - Create a new chat message
+app.post('/api/chat-messages', async (req, res) => {
+    const { username, text, designType, idName } = req.body;
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const time = `${hours}:${minutes}`;
+    const currentTimestamp = now.getTime();
+    
+    // Set expiration time to 24 hours from now
+    const expiresAt = currentTimestamp + (24 * 60 * 60 * 1000);
+    
+    const newMessage = {
+        id: currentTimestamp.toString(),
+        username, text, designType, idName, time,
+        timestamp: currentTimestamp,
+        expiresAt
+    };
+
+    // Insert the chat message into the database
+    try {
+        const chatMessage = new ChatMessage(newMessage);
+        await chatMessage.save();
+        io.emit('chatMessageAdded', newMessage); // Broadcast new message to all clients
+        res.status(201).json(newMessage);
+    } catch (error) {
+        console.error('Error adding chat message:', error);
+        res.status(500).json({ error: 'Database error: ' + error.message });
+    }
+});
+
+// DELETE /api/chat-messages/:id - Delete a chat message
+app.delete('/api/chat-messages/:id', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const result = await ChatMessage.deleteOne({ id: id });
+        
+        if (result.deletedCount > 0) {
+            io.emit('chatMessageDeleted', id); // Broadcast deleted message ID
+            res.status(200).json({ message: 'Chat message deleted successfully' });
+        } else {
+            res.status(404).json({ message: 'Chat message not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting chat message:', error);
+        res.status(500).json({ error: 'Database error: ' + error.message });
+    }
+});
+
 // GET /api/albums - Get all album items
 app.get('/api/albums', async (req, res) => {
     try {
@@ -720,14 +797,23 @@ app.get('/', (req, res) => {
 // Serve static files from the current directory for all other paths
 app.use(express.static(path.join(__dirname)));
 
-// Start the server - Update to explicitly listen on all interfaces (0.0.0.0)
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on http://0.0.0.0:${PORT}`);
-    console.log(`PORT environment variable is set to: ${process.env.PORT}`);
-});
+// Background job to clean up expired chat messages every minute
+const cleanupInterval = setInterval(async () => {
+    try {
+        const now = Date.now();
+        const result = await ChatMessage.deleteMany({ expiresAt: { $lte: now } });
+        if (result.deletedCount > 0) {
+            console.log(`Cleaned up ${result.deletedCount} expired chat messages`);
+            io.emit('chatMessagesExpired'); // Notify clients to refresh their chat list
+        }
+    } catch (error) {
+        console.error('Error cleaning up expired chat messages:', error);
+    }
+}, 60000); // Run every minute
 
-// Ensure database connection is closed on application exit
+// Ensure cleanup job is stopped on application exit
 process.on('SIGINT', () => {
+    clearInterval(cleanupInterval);
     console.log('Server is shutting down. Closing database connection...');
     mongoose.connection.close();
     process.exit(0);
@@ -736,4 +822,10 @@ process.on('SIGINT', () => {
 process.on('exit', (code) => {
     console.log(`About to exit with code: ${code}. Ensuring database is closed.`);
     mongoose.connection.close();
+});
+
+// Start the server - Update to explicitly listen on all interfaces (0.0.0.0)
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
+    console.log(`PORT environment variable is set to: ${process.env.PORT}`);
 });

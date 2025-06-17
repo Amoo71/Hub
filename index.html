@@ -2058,16 +2058,16 @@
                     clearTimeout(userActivityTimeout);
                 }
                 
-                // Debounce the activity reset to once every 10 seconds at most
+                // Reset inactivity timer immediately to prevent timeout issues
+                resetInactivityTimer();
+                
+                // Debounce the activity timestamp update to once every 10 seconds at most
                 userActivityTimeout = setTimeout(() => {
                     const loggedInUser = getLoggedInUser();
                     if (loggedInUser) {
-                        // Only update timestamp if more than 10 seconds have passed since last update
+                        // Only update timestamp if user is logged in
                         setLoggedInUser(loggedInUser);
                         console.log("User activity detected, session timeout reset");
-                        
-                        // Reset inactivity timer
-                        resetInactivityTimer();
                     }
                 }, 10000); // Debounce for 10 seconds
             }
@@ -2161,6 +2161,15 @@
                 }
             }, { passive: true });
             document.addEventListener('touchstart', trackUserActivity, { passive: true });
+
+            // Add more interaction events to ensure all user activity is captured
+            document.addEventListener('keydown', trackUserActivity, { passive: true });
+            document.addEventListener('mousedown', trackUserActivity, { passive: true });
+            document.addEventListener('touchmove', function() {
+                if (Date.now() - lastActivityTime > 2000) {
+                    trackUserActivity();
+                }
+            }, { passive: true });
 
             // Admin button click to toggle anti-tamper panel
             adminToggleButton.addEventListener('click', () => {
@@ -3740,6 +3749,40 @@
                 
                 // Show the modal
                 albumDetailModalOverlay.classList.add('visible');
+            }
+        });
+
+        document.addEventListener('touchmove', function() {
+            if (Date.now() - lastActivityTime > 2000) {
+                trackUserActivity();
+            }
+        }, { passive: true });
+
+        // Add explicit event listeners for important interactive elements
+        const interactiveElements = [
+            requestInput, 
+            usernameInput, 
+            sendButton, 
+            searchBar,
+            document.querySelector('.gallery-container'),
+            document.querySelector('.view-all-button'),
+            document.querySelector('.requests-list')
+        ];
+
+        // Add interaction listeners to each interactive element
+        interactiveElements.forEach(element => {
+            if (element) {
+                element.addEventListener('click', trackUserActivity, { passive: true });
+                element.addEventListener('touchstart', trackUserActivity, { passive: true });
+                element.addEventListener('focus', trackUserActivity, { passive: true });
+            }
+        });
+
+        // Also track modal interactions that might not bubble up properly
+        document.querySelectorAll('.modal-content, .modal-body, .glassy-button').forEach(element => {
+            if (element) {
+                element.addEventListener('click', trackUserActivity, { passive: true });
+                element.addEventListener('touchstart', trackUserActivity, { passive: true });
             }
         });
     </script>

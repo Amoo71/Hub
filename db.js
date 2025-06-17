@@ -87,6 +87,8 @@ function startHeartbeat(securityId) {
         const user = getLoggedInUser();
         if (user && user.securityId) {
             // Send heartbeat to server
+            // WICHTIG: Wir senden nur den Heartbeat, aktualisieren aber NICHT den Timestamp
+            // Dadurch wird die Inaktivitätserkennung nicht zurückgesetzt
             socket.emit('heartbeat', user.securityId);
         } else {
             // If no user is logged in, stop the heartbeat
@@ -113,7 +115,6 @@ export function getLoggedInUser() {
 
             if (now - timestamp < threeMinutes) {
                 // Update the timestamp to extend the session
-                setLoggedInUser(user); // This will update the timestamp
                 loggedInUser = user;
                 return loggedInUser;
             } else {
@@ -410,4 +411,26 @@ export async function authenticateUser(securityId) {
         console.error('Authentication error:', error);
         return null;
     }
+}
+
+// Funktion zum Überprüfen der Inaktivität und automatischen Ausloggen
+export function checkInactivity() {
+    const storedSession = sessionStorage.getItem('loggedInSession');
+    if (storedSession) {
+        try {
+            const { user, timestamp } = JSON.parse(storedSession);
+            const now = Date.now();
+            const threeMinutes = 3 * 60 * 1000; // 3 minutes in milliseconds
+
+            if (now - timestamp >= threeMinutes) {
+                console.log('Forced logout due to inactivity timeout');
+                logoutUser();
+                window.location.href = 'login.html?reason=inactivity_timeout';
+                return true; // Benutzer wurde ausgeloggt
+            }
+        } catch (error) {
+            console.error('Error checking inactivity:', error);
+        }
+    }
+    return false; // Benutzer ist noch aktiv oder nicht eingeloggt
 } 

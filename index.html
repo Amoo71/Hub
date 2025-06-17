@@ -1746,7 +1746,7 @@
     </div>
 
     <script type="module">
-        import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback } from './db.js';
+        import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback, checkInactivity } from './db.js';
 
         // Rain animation with wind effect
         document.addEventListener('DOMContentLoaded', () => {
@@ -1949,6 +1949,12 @@
 
             // --- SESSION MANAGEMENT ---
             async function checkSessionAndRedirect() {
+                // Überprüfen Sie zuerst auf Inaktivität
+                const wasLoggedOut = checkInactivity();
+                if (wasLoggedOut) {
+                    return; // Wenn der Benutzer wegen Inaktivität ausgeloggt wurde, nichts weiter tun
+                }
+                
                 const loggedInUser = getLoggedInUser();
                 if (!loggedInUser) {
                     window.location.href = 'login.html';
@@ -1968,6 +1974,8 @@
                     } else {
                         adminToggleButton.classList.add('hidden');
                     }
+                    
+                    // Nur die Socket-Registrierung durchführen, NICHT den Timestamp aktualisieren
                     registerSessionWithServer({
                         securityId: loggedInUser.securityId || 'unknown',
                         username: loggedInUser.username || loggedInUser.idName,
@@ -1983,12 +1991,24 @@
             // Set up a periodic session check (e.g., every minute)
             sessionCheckInterval = setInterval(checkSessionAndRedirect, 60 * 1000); // Check every 1 minute
             
+            // Set up a strict inactivity check every 10 seconds
+            const inactivityCheckInterval = setInterval(() => {
+                // Import checkInactivity from db.js
+                const wasLoggedOut = checkInactivity();
+                if (wasLoggedOut) {
+                    // If the user was logged out, clear all intervals
+                    clearInterval(sessionCheckInterval);
+                    clearInterval(inactivityCheckInterval);
+                }
+            }, 10 * 1000); // Check every 10 seconds
+            
             // User activity tracking to reset session timeout
             function trackUserActivity() {
                 const loggedInUser = getLoggedInUser();
                 if (loggedInUser) {
-                    // Just calling getLoggedInUser will refresh the timestamp if user is logged in
-                    setLoggedInUser(loggedInUser); // Explicitly reset the timestamp
+                    // Explizit den Timestamp aktualisieren, um die Inaktivitätszeit zurückzusetzen
+                    setLoggedInUser(loggedInUser);
+                    console.log("User activity detected, session timeout reset");
                     
                     // Reset inactivity timer
                     resetInactivityTimer();

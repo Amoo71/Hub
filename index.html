@@ -575,7 +575,7 @@
         /* Chat Pill Button */
         .chat-pill {
             position: absolute;
-            right: -70px;
+            right: -100px;
             top: 15px;
             background: var(--glass-background);
             color: var(--text-color);
@@ -693,6 +693,7 @@
             border: 1px solid var(--glass-border);
             animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             position: relative;
+            text-align: left;
         }
         
         .chat-message-header {
@@ -720,7 +721,7 @@
         .chat-message-expiry {
             position: absolute;
             right: 15px;
-            top: 12px;
+            bottom: 12px;
             font-size: 0.75rem;
             color: var(--subtle-red-color);
         }
@@ -1834,7 +1835,8 @@
     <div id="chat-modal-overlay" class="modal-overlay hidden">
         <div id="chat-modal" class="modal-content glassy-input">
             <div class="modal-header">
-                <h3>Chat</h3>
+                <div style="width: 20px;"></div>
+                <h3 style="flex-grow: 1; text-align: center; margin: 0;">Chat</h3>
                 <button class="close-button">&times;</button>
             </div>
             <div class="chat-messages" id="chat-messages">

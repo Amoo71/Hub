@@ -50,22 +50,9 @@ const albumItemSchema = new mongoose.Schema({
   timestamp: { type: Number, required: true }
 });
 
-// Chat message schema
-const chatMessageSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  username: { type: String, required: true },
-  text: { type: String, required: true },
-  designType: { type: String, required: true },
-  idName: { type: String, required: true },
-  time: { type: String, required: true },
-  expiresAt: { type: Number, required: true }, // Timestamp when message expires (24 hours from creation)
-  timestamp: { type: Number, required: true }
-});
-
 const Request = mongoose.model('Request', requestSchema);
 const AntiTamperLog = mongoose.model('AntiTamperLog', antiTamperLogSchema);
 const AlbumItem = mongoose.model('AlbumItem', albumItemSchema);
-const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
 
 // Create initial data if collections are empty
 async function checkAndCreateInitialData() {
@@ -493,84 +480,6 @@ app.delete('/api/albums/:id', checkAuth, async (req, res) => {
     }
 });
 
-// API Endpoints for Chat
-// GET /api/chat-messages - Get all unexpired chat messages
-app.get('/api/chat-messages', async (req, res) => {
-  try {
-    const now = Date.now();
-    // Only return messages that haven't expired
-    const messages = await ChatMessage.find({ expiresAt: { $gt: now } }).sort({ timestamp: -1 });
-    res.json(messages);
-  } catch (error) {
-    console.error('Error fetching chat messages:', error);
-    res.status(500).json({ error: 'Database error: ' + error.message });
-  }
-});
-
-// POST /api/chat-messages - Create a new chat message
-app.post('/api/chat-messages', async (req, res) => {
-  const { username, text, designType, idName } = req.body;
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const time = `${hours}:${minutes}`;
-  
-  // Calculate expiration time (24 hours from now)
-  const expiresAt = now.getTime() + (24 * 60 * 60 * 1000);
-  
-  const newMessage = {
-    id: Date.now().toString(),
-    username, text, designType, idName, time,
-    expiresAt,
-    timestamp: now.getTime()
-  };
-
-  // Insert the message into the database
-  try {
-    const message = new ChatMessage(newMessage);
-    await message.save();
-    io.emit('chatMessageAdded', newMessage); // Broadcast new message to all clients
-    res.status(201).json(newMessage);
-  } catch (error) {
-    console.error('Error adding chat message:', error);
-    res.status(500).json({ error: 'Database error: ' + error.message });
-  }
-});
-
-// DELETE /api/chat-messages/:id - Delete a chat message
-app.delete('/api/chat-messages/:id', async (req, res) => {
-  const { id } = req.params;
-  
-  try {
-    const result = await ChatMessage.deleteOne({ id: id });
-    
-    if (result.deletedCount > 0) {
-      io.emit('chatMessageDeleted', id); // Broadcast deleted message ID
-      res.status(200).json({ message: 'Chat message deleted successfully' });
-    } else {
-      res.status(404).json({ message: 'Chat message not found' });
-    }
-  } catch (error) {
-    console.error('Error deleting chat message:', error);
-    res.status(500).json({ error: 'Database error: ' + error.message });
-  }
-});
-
-// Scheduled task to clean up expired messages
-setInterval(async () => {
-  try {
-    const now = Date.now();
-    const result = await ChatMessage.deleteMany({ expiresAt: { $lte: now } });
-    
-    if (result.deletedCount > 0) {
-      console.log(`Cleaned up ${result.deletedCount} expired chat messages`);
-      io.emit('chatMessagesExpired'); // Notify clients that messages were expired
-    }
-  } catch (error) {
-    console.error('Error cleaning up expired chat messages:', error);
-  }
-}, 5 * 60 * 1000); // Run every 5 minutes
-
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('New socket connection established');
@@ -714,51 +623,6 @@ io.on('connection', (socket) => {
             delete socketIdToSecurityId[socket.id];
             console.log(`Session removed for securityId: ${securityId.substring(0, 2)}***`);
         }
-    });
-
-    // Handle chat message events
-    socket.on('chat_message', async (message) => {
-      try {
-        // Verify the message has required fields
-        if (!message || !message.text || !message.securityId) {
-          return;
-        }
-        
-        // Check if the user is authenticated
-        const securityId = message.securityId;
-        if (!activeSessions.has(securityId)) {
-          return; // User not authenticated
-        }
-        
-        const session = activeSessions.get(securityId);
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const time = `${hours}:${minutes}`;
-        
-        // Calculate expiration time (24 hours from now)
-        const expiresAt = now.getTime() + (24 * 60 * 60 * 1000);
-        
-        const chatMessage = {
-          id: Date.now().toString(),
-          username: session.username,
-          text: message.text,
-          designType: session.designType,
-          idName: session.idName,
-          time: time,
-          expiresAt: expiresAt,
-          timestamp: now.getTime()
-        };
-        
-        // Save to database
-        const newMessage = new ChatMessage(chatMessage);
-        await newMessage.save();
-        
-        // Broadcast to all clients
-        io.emit('chatMessageAdded', chatMessage);
-      } catch (error) {
-        console.error('Error processing chat message:', error);
-      }
     });
 });
 

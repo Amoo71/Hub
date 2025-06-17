@@ -723,10 +723,13 @@
         }
 
         .requests-list h4 {
-            color: var(--text-color);
+            margin: 0;
+            padding: 10px 0 15px;
             font-size: 1.2rem;
-            margin-bottom: 20px;                               
-            margin-top: 0;
+            font-weight: 600;
+            color: var(--text-color);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
         }
         .request-item {
             display: flex;
@@ -1583,6 +1586,231 @@
             transition: opacity 0.3s ease;
             animation: fadeIn 0.2s ease-in-out;
         }
+
+        /* Chat functionality styles */
+        .section-pills {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 10px 0;
+        }
+
+        .section-pill {
+            padding: 8px 20px;
+            background: rgba(45, 45, 45, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .section-pill.active {
+            background: rgba(70, 70, 70, 0.8);
+            border-color: var(--glow-green);
+            box-shadow: 0 0 10px rgba(0, 255, 127, 0.3);
+        }
+
+        .section-pill:hover:not(.active) {
+            transform: translateY(-2px);
+            background: rgba(60, 60, 60, 0.7);
+        }
+
+        .chat-section {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vw;
+            max-width: 750px;
+            height: 80vh;
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .chat-section.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .close-chat:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-message-item {
+            position: relative;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-message-item .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+
+        .chat-message-item .message-sender {
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .chat-message-item .message-time-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chat-message-item .message-time {
+            color: var(--subtle-text-color);
+            flex-shrink: 0;
+        }
+
+        .chat-message-item .message-timer {
+            color: var(--subtle-text-color);
+            font-size: 0.8rem;
+        }
+
+        .chat-message-item .message-text {
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .chat-message-item.owner {
+            background: rgba(108, 0, 74, 0.3);
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        .chat-message-item.green-member {
+            background: rgba(0, 128, 0, 0.2);
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        .chat-message-item.prem-gold-pulse {
+            background: rgba(218, 165, 32, 0.2);
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        .chat-message-item.self {
+            background: rgba(70, 70, 70, 0.5);
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(70, 70, 70, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .send-message-btn {
+            background: rgba(0, 128, 0, 0.5);
+            color: var(--text-color);
+            border: 1px solid rgba(0, 255, 127, 0.3);
+            border-radius: 8px;
+            padding: 0 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .send-message-btn:hover {
+            background: rgba(0, 128, 0, 0.7);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .chat-section {
+                width: 92vw;
+                height: 90vh;
+            }
+
+            .section-pill {
+                padding: 6px 16px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1645,6 +1873,10 @@
             </div>
         </div>
         <div class="request-section">
+            <div class="section-pills">
+                <div class="section-pill active" id="requests-pill">Requests</div>
+                <div class="section-pill" id="chat-pill">Chat</div>
+            </div>
             <div class="input-form" id="input-form">
                 <div class="input-wrapper primary" id="primary-wrapper">
                     <input type="text" id="request-input" class="glassy-input" placeholder="Make a request">
@@ -1652,13 +1884,36 @@
                 <div class="input-wrapper secondary" id="secondary-wrapper">
                     <input type="text" id="username-input" class="glassy-input" placeholder="Username">
                 </div>
-                 <button id="send-button" class="send-button">Send</button>
+                <button id="send-button" class="send-button">Send</button>
             </div>
             <div class="requests-list">
                 <h4>Requests:</h4>
                 <div id="initial-request-placeholder" class="request-item">
                     //
                 </div>
+                <!-- Requests will be dynamically added here -->
+            </div>
+        </div>
+        <!-- Chat section (modal/overlay) -->
+        <div class="chat-section" id="chat-section">
+            <div class="chat-header">
+                <h2>Chat (24h)</h2>
+                <button class="close-chat" id="close-chat">&times;</button>
+            </div>
+            <div class="chat-messages-container">
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Chat messages will be added here -->
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chat-input" 
+                    placeholder="Type your message..."
+                    maxlength="500"
+                >
+                <button class="send-message-btn" id="send-message-btn">Send</button>
             </div>
         </div>
         <!-- Admin Toggle Button -->
@@ -1746,7 +2001,7 @@
     </div>
 
     <script type="module">
-        import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback, checkInactivity } from './db.js';
+        import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback, checkInactivity, getChatMessages, addChatMessage, deleteChatMessage, sendChatMessage, setChatMessageUpdateCallback } from './db.js';
 
         // Rain animation with wind effect
         document.addEventListener('DOMContentLoaded', () => {
@@ -3783,6 +4038,182 @@
             if (element) {
                 element.addEventListener('click', trackUserActivity, { passive: true });
                 element.addEventListener('touchstart', trackUserActivity, { passive: true });
+            }
+        });
+
+        // UI elements for chat
+        const chatPill = document.getElementById('chat-pill');
+        const requestsPill = document.getElementById('requests-pill');
+        const chatSection = document.getElementById('chat-section');
+        const closeChatBtn = document.getElementById('close-chat');
+        const chatInput = document.getElementById('chat-input');
+        const sendMessageBtn = document.getElementById('send-message-btn');
+        const chatMessagesContainer = document.getElementById('chat-messages');
+
+        // Chat functionality
+        chatPill.addEventListener('click', () => {
+            chatSection.classList.add('visible');
+            renderChatMessages();
+        });
+
+        closeChatBtn.addEventListener('click', () => {
+            chatSection.classList.remove('visible');
+        });
+
+        // Also close chat when clicking outside
+        chatSection.addEventListener('click', (e) => {
+            if (e.target === chatSection) {
+                chatSection.classList.remove('visible');
+            }
+        });
+
+        // Send chat message on button click
+        sendMessageBtn.addEventListener('click', sendMessage);
+
+        // Send chat message on Enter key
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Function to send a message
+        async function sendMessage() {
+            const messageText = chatInput.value.trim();
+            if (!messageText) return;
+            
+            const user = getLoggedInUser();
+            if (!user) {
+                showToast('You must be logged in to send messages', 'error');
+                return;
+            }
+            
+            try {
+                // Send the message using the socket for real-time delivery
+                sendChatMessage(messageText);
+                
+                // Clear the input
+                chatInput.value = '';
+                chatInput.focus();
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showToast('Failed to send message', 'error');
+            }
+        }
+
+        // Format the remaining time for chat messages
+        function formatRemainingTime(expiresAt) {
+            const now = Date.now();
+            let remainingMs = expiresAt - now;
+            
+            if (remainingMs <= 0) {
+                return "Expired";
+            }
+            
+            const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+            remainingMs -= hours * 1000 * 60 * 60;
+            
+            const minutes = Math.floor(remainingMs / (1000 * 60));
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+
+        // Render chat messages
+        async function renderChatMessages() {
+            try {
+                const messages = await getChatMessages();
+                chatMessagesContainer.innerHTML = ''; // Clear existing messages
+                
+                if (messages.length === 0) {
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.classList.add('empty-chat-message');
+                    emptyMessage.textContent = 'No messages yet. Be the first to send one!';
+                    chatMessagesContainer.appendChild(emptyMessage);
+                    return;
+                }
+                
+                const currentUser = getLoggedInUser();
+                const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp); // Oldest first
+                
+                sortedMessages.forEach(message => {
+                    const isSelf = currentUser && currentUser.securityId && 
+                                   message.username === currentUser.username && 
+                                   message.idName === currentUser.idName;
+                    
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('chat-message-item');
+                    messageDiv.classList.add(message.designType); // Add design type class
+                    if (isSelf) {
+                        messageDiv.classList.add('self');
+                    }
+                    messageDiv.dataset.id = message.id;
+                    
+                    const metaDiv = document.createElement('div');
+                    metaDiv.classList.add('message-meta');
+                    
+                    const senderSpan = document.createElement('span');
+                    senderSpan.classList.add('message-sender');
+                    senderSpan.textContent = message.idName;
+                    
+                    const timeContainer = document.createElement('div');
+                    timeContainer.classList.add('message-time-container');
+                    
+                    const timeSpan = document.createElement('span');
+                    timeSpan.classList.add('message-time');
+                    timeSpan.textContent = message.time;
+                    
+                    const timerSpan = document.createElement('span');
+                    timerSpan.classList.add('message-timer');
+                    timerSpan.textContent = formatRemainingTime(message.expiresAt);
+                    timerSpan.dataset.expiresAt = message.expiresAt;
+                    
+                    timeContainer.appendChild(timeSpan);
+                    timeContainer.appendChild(timerSpan);
+                    
+                    metaDiv.appendChild(senderSpan);
+                    metaDiv.appendChild(timeContainer);
+                    
+                    const textDiv = document.createElement('div');
+                    textDiv.classList.add('message-text');
+                    textDiv.textContent = message.text;
+                    
+                    messageDiv.appendChild(metaDiv);
+                    messageDiv.appendChild(textDiv);
+                    
+                    chatMessagesContainer.appendChild(messageDiv);
+                });
+                
+                // Start timer updates
+                updateChatTimers();
+            } catch (error) {
+                console.error('Error rendering chat messages:', error);
+            }
+        }
+
+        // Update timers for chat messages
+        function updateChatTimers() {
+            const timerElements = document.querySelectorAll('.message-timer');
+            
+            timerElements.forEach(timer => {
+                const expiresAt = parseInt(timer.dataset.expiresAt);
+                timer.textContent = formatRemainingTime(expiresAt);
+            });
+        }
+
+        // Update chat timers every minute
+        setInterval(updateChatTimers, 60 * 1000);
+
+        // Set up chat message update callback
+        setChatMessageUpdateCallback(() => {
+            console.log('Live update: Chat messages changed');
+            
+            // Only re-render if chat is visible
+            if (chatSection.classList.contains('visible')) {
+                renderChatMessages();
             }
         });
     </script>

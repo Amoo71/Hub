@@ -20,6 +20,7 @@ function getSessionToken() {
 let albumItemUpdateCallback = () => {};
 let requestUpdateCallback = () => {};
 let antiTamperNotificationCallback = () => {};
+let chatMessageUpdateCallback = () => {};
 
 export function setAlbumItemUpdateCallback(callback) {
     albumItemUpdateCallback = callback;
@@ -37,6 +38,10 @@ export function setRequestUpdateCallback(callback) {
 
 export function setAntiTamperNotificationCallback(callback) {
     antiTamperNotificationCallback = callback;
+}
+
+export function setChatMessageUpdateCallback(callback) {
+    chatMessageUpdateCallback = callback;
 }
 
 // Listen for real-time events from server
@@ -75,6 +80,21 @@ socket.on('anti_tamper_logs_cleared', () => {
 socket.on('albumItemsChanged', () => {
     console.log('Album items update notification received');
     if (albumItemUpdateCallback) albumItemUpdateCallback();
+});
+
+socket.on('chatMessageAdded', (newMessage) => {
+    console.log('New chat message received');
+    if (chatMessageUpdateCallback) chatMessageUpdateCallback();
+});
+
+socket.on('chatMessageDeleted', (deletedMessageId) => {
+    console.log('Chat message deletion notification received');
+    if (chatMessageUpdateCallback) chatMessageUpdateCallback();
+});
+
+socket.on('chatMessagesExpired', () => {
+    console.log('Chat messages expired notification received');
+    if (chatMessageUpdateCallback) chatMessageUpdateCallback();
 });
 
 // Start sending heartbeats to keep the session alive
@@ -433,4 +453,74 @@ export function checkInactivity() {
         }
     }
     return false; // Benutzer ist noch aktiv oder nicht eingeloggt
+}
+
+// Chat message functions
+export async function getChatMessages() {
+    try {
+        const response = await fetch('/api/chat-messages');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching chat messages:', error);
+        return [];
+    }
+}
+
+export async function addChatMessage(message) {
+    try {
+        const response = await fetch('/api/chat-messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Token': getLoggedInUser()?.securityId || ''
+            },
+            body: JSON.stringify(message)
+        });
+        
+        const data = await response.json();
+        console.log('Chat message added');
+        return data;
+    } catch (error) {
+        console.error('Add chat message error');
+        throw error;
+    }
+}
+
+export async function deleteChatMessage(id) {
+    try {
+        const response = await fetch(`/api/chat-messages/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Token': getLoggedInUser()?.securityId || ''
+            }
+        });
+        
+        const data = await response.json();
+        console.log('Chat message deleted');
+        return data;
+    } catch (error) {
+        console.error('Delete chat message error');
+        throw error;
+    }
+}
+
+export function sendChatMessage(text) {
+    const user = getLoggedInUser();
+    if (!user || !user.securityId) {
+        console.error('Cannot send chat message: User not logged in');
+        return false;
+    }
+    
+    // Send message via socket for realtime processing
+    socket.emit('chat_message', {
+        text: text,
+        securityId: user.securityId
+    });
+    
+    return true;
 } 

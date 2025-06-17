@@ -3923,6 +3923,7 @@
         
         // Open chat modal when clicking the chat pill button
         chatPillButton.addEventListener('click', () => {
+            chatModalOverlay.classList.remove('hidden');
             chatModalOverlay.classList.add('visible');
             chatInput.focus();
             renderChatMessages();
@@ -3931,12 +3932,14 @@
         // Close chat modal when clicking the close button
         closeChatButton.addEventListener('click', () => {
             chatModalOverlay.classList.remove('visible');
+            chatModalOverlay.classList.add('hidden');
         });
         
         // Close chat modal when clicking outside the modal
         chatModalOverlay.addEventListener('click', (e) => {
             if (e.target === chatModalOverlay) {
                 chatModalOverlay.classList.remove('visible');
+                chatModalOverlay.classList.add('hidden');
             }
         });
         

@@ -1869,6 +1869,8 @@
             let currentStage = 1;
             let inactivityTimer;
             let sessionCheckInterval; // Declare session check interval
+            let userActivityTimeout; // For debouncing activity tracking
+            let lastActivityTime = Date.now(); // Track the last activity time
 
             const adminToggleButton = document.getElementById('admin-toggle-button');
             const requestSection = document.querySelector('.request-section');
@@ -1883,6 +1885,46 @@
             let antiTamperPanelVisible = false; // Tracks the panel's open/closed state
             let notificationGlowActive = false; // Tracks if the admin button should glow
             let adminQuickButton; // Define adminQuickButton variable to prevent reference errors
+
+            // Server ping to prevent Render from spinning down the app
+            let keepAliveInterval;
+
+            function startKeepAliveInterval() {
+                // Clear any existing interval
+                if (keepAliveInterval) {
+                    clearInterval(keepAliveInterval);
+                }
+                
+                // Send a ping to the server every 5 minutes
+                keepAliveInterval = setInterval(async () => {
+                    try {
+                        // Simple ping request to keep the server active
+                        const response = await fetch('/api/ping', {
+                            method: 'GET',
+                            headers: {
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache'
+                            }
+                        });
+                        
+                        console.log('Server ping sent to prevent idle shutdown');
+                        
+                        // If we can't reach the server, try to reload the page
+                        if (!response.ok) {
+                            console.warn('Server ping failed, attempting to reload in 30 seconds');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 30000);
+                        }
+                    } catch (error) {
+                        console.warn('Failed to ping server:', error);
+                        // If error, try to reload the page after 30 seconds
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 30000);
+                    }
+                }, 5 * 60 * 1000); // Every 5 minutes
+            }
 
             async function renderAntiTamperPanelMessages() {
                 antiTamperNotificationPanel.innerHTML = ''; // Clear existing content
@@ -1991,6 +2033,9 @@
             // Set up a periodic session check (e.g., every minute)
             sessionCheckInterval = setInterval(checkSessionAndRedirect, 60 * 1000); // Check every 1 minute
             
+            // Start keep alive interval to prevent Render from spinning down the app
+            startKeepAliveInterval();
+            
             // Set up a strict inactivity check every 10 seconds
             const inactivityCheckInterval = setInterval(() => {
                 // Import checkInactivity from db.js
@@ -1999,20 +2044,32 @@
                     // If the user was logged out, clear all intervals
                     clearInterval(sessionCheckInterval);
                     clearInterval(inactivityCheckInterval);
+                    clearInterval(keepAliveInterval);
                 }
             }, 10 * 1000); // Check every 10 seconds
             
-            // User activity tracking to reset session timeout
+            // Debounced user activity tracking to reduce performance impact
             function trackUserActivity() {
-                const loggedInUser = getLoggedInUser();
-                if (loggedInUser) {
-                    // Explizit den Timestamp aktualisieren, um die Inaktivitätszeit zurückzusetzen
-                    setLoggedInUser(loggedInUser);
-                    console.log("User activity detected, session timeout reset");
-                    
-                    // Reset inactivity timer
-                    resetInactivityTimer();
+                // Update the last activity time
+                lastActivityTime = Date.now();
+                
+                // Clear any existing timeout
+                if (userActivityTimeout) {
+                    clearTimeout(userActivityTimeout);
                 }
+                
+                // Debounce the activity reset to once every 10 seconds at most
+                userActivityTimeout = setTimeout(() => {
+                    const loggedInUser = getLoggedInUser();
+                    if (loggedInUser) {
+                        // Only update timestamp if more than 10 seconds have passed since last update
+                        setLoggedInUser(loggedInUser);
+                        console.log("User activity detected, session timeout reset");
+                        
+                        // Reset inactivity timer
+                        resetInactivityTimer();
+                    }
+                }, 10000); // Debounce for 10 seconds
             }
             
             // Inactivity timer for auto logout
@@ -2085,12 +2142,25 @@
                 resetInactivityTimer();
             }
             
-            // Track various user interactions to keep session alive
-            document.addEventListener('mousemove', trackUserActivity);
-            document.addEventListener('keypress', trackUserActivity);
-            document.addEventListener('click', trackUserActivity);
-            document.addEventListener('scroll', trackUserActivity);
-            document.addEventListener('touchstart', trackUserActivity);
+            // Add event listeners with throttling for better performance
+            // Use passive event listeners where possible for better performance
+            document.addEventListener('mousemove', function() {
+                // Only track activity if more than 2 seconds have passed since the last track
+                if (Date.now() - lastActivityTime > 2000) {
+                    trackUserActivity();
+                }
+            }, { passive: true });
+            
+            // These events are less frequent, so we can track them every time
+            document.addEventListener('keypress', trackUserActivity, { passive: true });
+            document.addEventListener('click', trackUserActivity, { passive: true });
+            document.addEventListener('scroll', function() {
+                // Only track activity if more than 2 seconds have passed since the last track
+                if (Date.now() - lastActivityTime > 2000) {
+                    trackUserActivity();
+                }
+            }, { passive: true });
+            document.addEventListener('touchstart', trackUserActivity, { passive: true });
 
             // Admin button click to toggle anti-tamper panel
             adminToggleButton.addEventListener('click', () => {

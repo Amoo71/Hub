@@ -658,6 +658,23 @@
         .chat-input-area {
             display: flex;
             gap: 10px;
+            align-items: center;
+        }
+        
+        .chat-inputs-container {
+            display: flex;
+            flex-grow: 1;
+            gap: 10px;
+        }
+        
+        #chat-username-input {
+            width: 30%;
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: var(--text-color);
+            font-size: 1rem;
         }
         
         #chat-input {
@@ -1843,7 +1860,10 @@
                 <!-- Chat messages will appear here -->
             </div>
             <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="Type a message...">
+                <div class="chat-inputs-container">
+                    <input type="text" id="chat-username-input" placeholder="Username">
+                    <input type="text" id="chat-input" placeholder="Type a message...">
+                </div>
                 <button id="chat-send-button">Send</button>
             </div>
         </div>
@@ -3981,7 +4001,14 @@
             // Function to send chat message
             async function sendChatMessage() {
                 const text = chatInput.value.trim();
+                const usernameInput = document.getElementById('chat-username-input');
+                const username = usernameInput.value.trim();
+                
                 if (!text) return;
+                if (!username) {
+                    alert("Please enter a username");
+                    return;
+                }
                 
                 const user = getLoggedInUser();
                 if (!user) {
@@ -3991,7 +4018,7 @@
                 
                 try {
                     const messageData = {
-                        username: user.username || user.idName,
+                        username: username,
                         text: text,
                         designType: user.designType,
                         idName: user.idName
@@ -3999,6 +4026,7 @@
                     
                     await addChatMessage(messageData);
                     chatInput.value = '';
+                    // Keep the username filled
                     chatInput.focus();
                     
                     // No need to manually render; the socket event will trigger a re-render

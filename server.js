@@ -246,6 +246,18 @@ const userAccounts = {
       idName: 'Member',
       designType: 'green-member'
     },
+    '7634': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
+    '7422': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
+    '7754': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
     
     // Premium Benutze
     'testPremium': { 

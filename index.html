@@ -924,13 +924,285 @@
         }
 
         .requests-list h4 {
-            color: var(--text-color);
-            font-size: 1.2rem;
-            margin-bottom: 20px;                               
-            margin-top: 0;
+            opacity: 0;
         }
         #initial-request-placeholder {
             box-shadow: none !important;
+            animation: none !important;
+            justify-content: flex-start;
+            padding: 15px 20px;
+            color: var(--subtle-text-color);
+            font-style: normal;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-background);
+            display: flex;
+            align-items: center;
+        }
+
+        .admin-toggle-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: transparent; /* No background */
+            border: 1px solid transparent; /* Subtle border that can glow */
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem; /* Make it a bit larger to ensure visibility */
+            font-weight: bold;
+            color: white !important; /* Force white color */
+            cursor: pointer;
+            z-index: 9999; /* Higher z-index */
+            box-shadow: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: auto !important;
+            line-height: 0.8; /* Adjust line-height to center the dash */
+        }
+
+        .admin-toggle-button:hover {
+            background: rgba(255, 255, 255, 0.1); /* Subtle hover background */
+            color: white !important;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); /* Subtle hover shadow */
+            transform: translateY(-2px);
+        }
+
+        .admin-toggle-button:active {
+            transform: translateY(0);
+        }
+
+        .admin-toggle-button.notification-active {
+            animation: glow-red 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate; /* Keep glow for active notification */
+            color: var(--glow-red) !important;
+            border-color: var(--glow-red);
+            box-shadow: 0 0 15px 5px rgba(255, 77, 77, 0.5), 0 0 30px 10px rgba(255, 77, 77, 0.3); /* Enhanced glow */
+        }
+
+        .request-section.admin-mode .request-item {
+            padding-right: 50px;
+            position: relative;
+        }
+
+        .delete-request-button {
+            background: var(--glow-red);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, background-color 0.3s ease;
+        }
+
+        .request-section.admin-mode .delete-request-button {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .delete-request-button:hover {
+            background: #ff6666;
+        }
+
+        .delete-request-button:active {
+            background: #cc3333;
+        }
+        /* Anti-tamper notification panel */
+        .anti-tamper-notification-panel {
+            position: fixed;
+            bottom: 65px; /* Position above the admin button (button height + some margin) */
+            right: 20px;
+            background: var(--glass-background); /* Glassy background */
+            border: 1px solid var(--glass-border); /* Glassy border */
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); /* Subtle shadow */
+            padding: 15px;
+            width: 280px; /* Fixed width */
+            max-height: 200px; /* Max height to allow scrolling */
+            overflow-y: auto; /* Enable scrolling for multiple messages */
+            color: var(--text-color);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            z-index: 9998; /* Below admin button's z-index */
+            opacity: 0;
+            visibility: hidden;
+            /* Animation from slightly below its final position, moving up */
+            transform: translateY(20px); /* Start 20px below its final `bottom: 65px` */
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; /* Use flex for internal content */
+            flex-direction: column;
+            gap: 10px; /* Space between messages */
+        }
+
+        .anti-tamper-notification-panel.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0); /* End at its `bottom: 65px` position */
+        }
+
+        .anti-tamper-notification-panel .message-item {
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            word-break: break-word;
+            display: flex; /* Make it a flex container */
+            justify-content: space-between; /* Space out content and button */
+            align-items: center;
+        }
+
+        .anti-tamper-notification-panel .delete-anti-tamper-log-button {
+            background: var(--subtle-red-color); /* Subtle red background */
+            color: white; /* White 'x' */
+            border: none;
+            border-radius: 50%; /* Circular button */
+            width: 20px; /* Small size */
+            height: 20px;
+            font-size: 0.8rem; /* Small font size for 'x' */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0; /* Prevent button from shrinking */
+            margin-left: 10px; /* Space from message text */
+            transition: background-color 0.2s ease;
+        }
+
+        .anti-tamper-notification-panel .delete-anti-tamper-log-button:hover {
+            background: #ff4d4d; /* Brighter red on hover */
+        }
+
+        .anti-tamper-notification-panel .clear-button {
+            background: var(--subtle-red-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            align-self: flex-end; /* Align to the right */
+            transition: background-color 0.2s ease;
+        }
+
+        @media (max-width: 480px) {
+            .admin-toggle-button {
+                width: 30px;
+                height: 30px;
+                font-size: 1.2rem; /* Adjusted for smaller screens */
+            }
+            .anti-tamper-notification-panel {
+                width: calc(100vw - 40px); /* Full width minus margin */
+                right: 20px;
+                left: 20px; /* Center for mobile */
+                transform: translateY(20px); /* Keep consistent animation */
+            }
+            .anti-tamper-notification-panel.visible {
+                transform: translateY(0);
+            }
+        }
+        
+        /* Albums Grid Styles */
+        .albums-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            width: 100%;
+            padding: 10px 10px 30px 10px;
+            justify-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        
+        .grid-album-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .grid-album-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .grid-album-image {
+            width: 150px;
+            height: 210px;
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .grid-album-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .albums-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 15px;
+            }
+            
+            .grid-album-image {
+                width: 130px;
+                height: 180px;
+            }
+        }
+        
+        .album-item-wrapper:not(:has(.placeholder-image.active)):not(:has(.placeholder-image.left1)):not(:has(.placeholder-image.right1)):not(:has(.placeholder-image.left2)):not(:has(.placeholder-image.right2)) {
+            display: none;
+            opacity: 0;
+        }
+        /* View All Albums Modal */
+        #view-all-modal {
+            max-width: 90vw;
+            width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        #view-all-modal::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+        
+        #view-all-modal .modal-body {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0 20px 0;
+        }
+        
+        #view-all-modal h3 {
+            width: 100%;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
         }
 
         .report-album-button {

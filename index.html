@@ -11,7 +11,7 @@
          */
         :root {
             /* Grundfarben */
-            --background-color: #000000;
+            --background-color: #111111;
             --text-color: #f0f0f0;
             --subtle-text-color: #a0a0a0;
             
@@ -576,7 +576,7 @@
         .chat-pill {
             position: absolute;
             right: auto;
-            left: 47%;
+            left: 50%;
             transform: translateX(-50%);
             top: -40px;
             background: var(--glass-background);
@@ -586,11 +586,13 @@
             padding: 8px 20px;
             font-size: 0.95rem;
             cursor: pointer;
+            transition: all 0.3s ease;
             z-index: 2;
         }
         
         .chat-pill:hover {
             background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
@@ -897,10 +899,23 @@
             margin: 0 -10px; /* Negative margin to compensate for padding */
         }
 
-        /* Enable scrolling when there are more than 4 requests */
+        /* Enable scrolling when there are more than 3 requests */
         .requests-list.scrollable {
             overflow-y: auto; /* Enable vertical scrolling */
             max-height: 400px; /* Set max height to enable scrolling */
+        }
+
+        /* Füge eine dynamische max-height für optimales Scrollverhalten hinzu */
+        @media (max-height: 800px) {
+            .requests-list.scrollable {
+                max-height: 300px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .requests-list.scrollable {
+                max-height: 200px;
+            }
         }
 
         /* Hide scrollbar in WebKit browsers (Chrome, Safari) */
@@ -914,831 +929,8 @@
             margin-bottom: 20px;                               
             margin-top: 0;
         }
-        .request-item {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid #1a1a2e;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 6px 1px #1a1a2e, 0 0 10px 2px #0f3460, 0 0 8px 1px #533483, 0 0 6px 1px #2d0036;
-            animation: request-glow 3s linear infinite;
-            position: relative; /* Ensure glow effect is positioned relative to the item */
-            z-index: 1; /* Ensure items appear above each other */
-        }
-
-        /* Add extra space to the last request item to ensure it's not cut off when scrolling */
-        .requests-list.scrollable .request-item:last-child {
-            margin-bottom: 20px;
-        }
-        @keyframes request-glow {
-            0% {
-                box-shadow: 0 0 6px 1px #1a1a2e, 0 0 10px 2px #0f3460, 0 0 8px 1px #533483, 0 0 6px 1px #2d0036;
-                border-color: #1a1a2e;
-            }
-            25% {
-                box-shadow: 0 0 8px 2px #0f3460, 0 0 12px 3px #533483, 0 0 6px 1px #2d0036, 0 0 10px 2px #1a1a2e;
-                border-color: #0f3460;
-            }
-            50% {
-                box-shadow: 0 0 12px 3px #533483, 0 0 6px 1px #2d0036, 0 0 8px 2px #1a1a2e, 0 0 10px 2px #0f3460;
-                border-color: #533483;
-            }
-            75% {
-                box-shadow: 0 0 6px 1px #2d0036, 0 0 10px 2px #1a1a2e, 0 0 8px 1px #0f3460, 0 0 12px 3px #533483;
-                border-color: #2d0036;
-            }
-            100% {
-                box-shadow: 0 0 6px 1px #1a1a2e, 0 0 10px 2px #0f3460, 0 0 8px 1px #533483, 0 0 6px 1px #2d0036;
-                border-color: #1a1a2e;
-            }
-        }
-        .request-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .album-container .album {
-            box-shadow: none !important;
-            filter: none !important;
-            position: relative !important;
-        }
-        .album-container .album:nth-child(6) {
-            box-shadow: none !important;
-            filter: none !important;
-            position: relative !important;
-        }
-        .request-username {
-            font-weight: 600;
-            color: var(--glow-green);
-            min-width: 60px;
-            margin-right: 8px;
-        }
-        
-        /* =====================================================================
-         * BENUTZERTYP-STYLES - EINFACH ZU BEARBEITEN
-         * =====================================================================
-         * 
-         * Um einen neuen Benutzertyp hinzuzufügen:
-         * 1. Füge eine neue CSS-Klasse für .request-username.[designType] hinzu
-         * 2. Optional: Füge eine CSS-Klasse für .request-item.[designType] hinzu
-         * 3. Füge den neuen designType auf dem Server in der userAccounts-Liste hinzu
-         *    (in der server.js-Datei, nicht mehr in db.js)
-         * 
-         * Beispiel für einen neuen Benutzertyp:
-         * .request-username.vip-user {
-         *     font-weight: 600;
-         *     color: gold;
-         *     border-radius: 6px;
-         *     padding: 2px 10px;
-         * }
-         * 
-         * .request-item.vip-user {
-         *     box-shadow: 0 0 10px gold;
-         *     animation: vip-glow 3s linear infinite;
-         * }
-         */
-        
-        /* =====================================================================
-         * ANIMATION TEMPLATES - READY TO USE
-         * =====================================================================
-         */
-        
-        /* 1. Standard Member Style (already existing) */
-        .request-username.green-member {
-            font-weight: 600;
-            color: var(--glow-green);
-            border-radius: 6px;
-            padding: 2px 10px;
-        }
-        
-        .request-item.green-member {
-            box-shadow: none;
-            animation: none;
-            border-color: rgba(119, 119, 119, 0.1); /* A subtle border for non-glowing items */
-        }
-        
-        /* 2. LeftRightGrad - Gradient animation with glow (based on owner style) */
-        @keyframes leftright-gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        @keyframes leftright-glow {
-            0% {
-                box-shadow: 0 0 4px 1px var(--leftright-color1), 0 0 6px 1px var(--leftright-color2), 0 0 4px 1px var(--leftright-color3);
-                border-color: var(--leftright-color1);
-            }
-            25% {
-                box-shadow: 0 0 5px 1px var(--leftright-color2), 0 0 7px 2px var(--leftright-color3), 0 0 4px 1px var(--leftright-color4);
-                border-color: var(--leftright-color2);
-            }
-            50% {
-                box-shadow: 0 0 6px 2px var(--leftright-color3), 0 0 4px 1px var(--leftright-color4), 0 0 5px 1px var(--leftright-color1);
-                border-color: var(--leftright-color3);
-            }
-            75% {
-                box-shadow: 0 0 4px 1px var(--leftright-color4), 0 0 6px 1px var(--leftright-color1), 0 0 5px 1px var(--leftright-color2);
-                border-color: var(--leftright-color4);
-            }
-            100% {
-                box-shadow: 0 0 4px 1px var(--leftright-color1), 0 0 6px 1px var(--leftright-color2), 0 0 4px 1px var(--leftright-color3);
-                border-color: var(--leftright-color1);
-            }
-        }
-        
-        .request-username.leftright-grad {
-            font-weight: 600;
-            background: var(--leftright-gradient);
-            background-size: 400% 400%;
-            animation: leftright-gradient 3s linear infinite, leftright-glow 3s ease-in-out infinite;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            border-radius: 6px;
-            padding: 2px 10px;
-            box-shadow: var(--leftright-text-glow);
-        }
-        
-        .request-item.leftright-grad {
-            box-shadow: 0 0 4px 1px var(--leftright-color1), 0 0 6px 1px var(--leftright-color2), 0 0 4px 1px var(--leftright-color3);
-            animation: leftright-glow 3s linear infinite;
-            border-color: var(--leftright-color1);
-        }
-        
-        /* Example: Amo's style using the LeftRightGrad template */
-        .request-username.owner {
-            --leftright-gradient: linear-gradient(135deg, #6c004a, #2665b1, #7e39de, #77008f, #ca0b0b5e, #5e0370);
-            --leftright-color1: #388aa8;
-            --leftright-color2: #610728;
-            --leftright-color3: #610873;
-            --leftright-color4: #7e39de;
-            --leftright-text-glow: 0 0 4px 1px #388aa8, 0 0 6px 1px #610728, 0 0 3px 1px #610873;
-            font-weight: 600;
-            background: var(--leftright-gradient);
-            background-size: 400% 400%;
-            animation: leftright-gradient 3s linear infinite, leftright-glow 3s ease-in-out infinite;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            border-radius: 6px;
-            padding: 2px 10px;
-            box-shadow: var(--leftright-text-glow);
-        }
-        
-        /* 3. SingleColorPulse - Pulsing glow with configurable single color */
-        @keyframes pulse-glow {
-            0% {
-                box-shadow: 0 0 3px 1px var(--pulse-color);
-                border-color: var(--pulse-color);
-                filter: brightness(0.9);
-            }
-            50% {
-                box-shadow: 0 0 8px 2px var(--pulse-color), 0 0 12px 3px var(--pulse-color-transparent);
-                border-color: var(--pulse-color);
-                filter: brightness(1.1);
-            }
-            100% {
-                box-shadow: 0 0 3px 1px var(--pulse-color);
-                border-color: var(--pulse-color);
-                filter: brightness(0.9);
-            }
-        }
-        
-        .request-username.single-color-pulse {
-            font-weight: 600;
-            color: var(--pulse-color);
-            border-radius: 6px;
-            padding: 2px 10px;
-            text-shadow: 0 0 5px var(--pulse-color-transparent);
-            animation: pulse-glow 3s ease-in-out infinite;
-        }
-        
-        .request-item.single-color-pulse {
-            box-shadow: 0 0 3px 1px var(--pulse-color);
-            border-color: var(--pulse-color);
-            animation: pulse-glow 3s ease-in-out infinite;
-        }
-        
-        /* Example: Blue pulsing style */
-        .request-username.prem-gold-pulse {
-            --pulse-color: #fff47e;
-            --pulse-color-transparent: rgba(238, 255, 0, 0.656);
-            font-weight: 600;
-            color: var(--pulse-color);
-            border-radius: 6px;
-            padding: 2px 10px;
-            text-shadow: 0 0 5px var(--pulse-color-transparent);
-            animation: pulse-glow 3s ease-in-out infinite;
-        }
-        
-        .request-item.prem-gold-pulse {
-            --pulse-color: #fff47e;
-            --pulse-color-transparent: rgba(238, 255, 0, 0.656);
-            box-shadow: 0 0 5px 1px var(--pulse-color);
-            border-color: var(--pulse-color);
-            animation: pulse-glow 3s ease-in-out infinite;
-        }
-
-     
-        /*....................................................................*/
-        /* Request-Item Styles nach Benutzertyp */
-        .request-item.green-member {
-            box-shadow: none;
-            animation: none;
-            border-color: rgba(119, 119, 119, 0.1); /* A subtle border for non-glowing items */
-        }
-
-
-
-        .request-separator {
-            margin: 0 15px;
-            color: var(--subtle-text-color);
-        }
-        .request-text {
-            flex-grow: 1;
-            color: var(--text-color);
-        }
-        .request-time {
-            color: var(--subtle-text-color);
-            font-size: 0.9rem;
-            margin-left: 15px;
-        }
-        @media (max-width: 768px) {
-            .screen {
-                height: 100vh;
-                padding: 0;
-            }
-            #main-screen {
-                padding-top: 5vh;
-                overflow-y: auto;
-                overflow-x: hidden;
-            }
-            #main-screen .search-bar {
-                width: min(450px, 80vw);
-                margin-bottom: 8vh;
-            }
-            #main-screen .main-title {
-                font-size: 2.2rem;
-                margin-top: 5px;
-                margin-bottom: 30px;
-            }
-            .gallery-container {
-                gap: 25px;
-                width: 100vw;
-                padding: 25px 0;
-                margin-bottom: 50px;
-            }
-            
-            .album-item-wrapper {
-                padding: 12px 5px;
-                margin: 8px 0;
-            }
-            
-            .view-all-button {
-                font-size: 0.85rem;
-                padding: 6px 16px;
-            }
-            
-            .main-title-container {
-                margin-top: 60px;
-            }
-
-            .placeholder-image {
-                min-width: 200px;
-                width: 200px;
-                height: 280px;
-                font-size: 1.1rem;
-            }
-            .request-section {
-                padding: 30px;
-                width: min(800px, 80vw);
-                min-height: 400px;
-            }
-            .input-form {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                margin-bottom: 40px;
-                transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-                min-height: 60px;
-                justify-content: center;
-            }
-            .input-wrapper.primary {
-                width: 350px;
-                flex-shrink: 0;
-            }
-            .input-wrapper.primary input {
-                text-align: center;
-            }
-            .input-wrapper.primary.shifted input {
-                text-align: left;
-            }
-            .send-button.visible {
-                width: 80px;
-                min-width: 80px;
-            }
-            .request-item {
-                display: flex;
-                align-items: center;
-                flex-direction: row;
-                gap: 0;
-            }
-            .request-separator {
-                display: inline;
-                margin: 0 15px;
-            }
-            .request-time {
-                margin-left: 15px;
-            }
-        }
-        @media (max-width: 480px) {
-            #main-screen .main-title {
-                font-size: 1.8rem;
-                margin-top: 5px;
-            }
-            
-            .main-title-container {
-                margin-top: 40px;
-            }
-            
-            .view-all-button {
-                font-size: 0.8rem;
-                padding: 5px 14px;
-            }
-            
-            .gallery-container {
-                padding: 20px 0;
-                margin-bottom: 40px;
-            }
-            
-            .album-item-wrapper {
-                padding: 10px 5px;
-                margin: 5px 0;
-            }
-            
-            .placeholder-image {
-                min-width: 150px;
-                width: 150px;
-                height: 210px;
-                font-size: 1rem;
-            }
-            .gallery-content {
-                padding-left: calc(50vw - 162.5px);
-                padding-right: calc(50vw - 162.5px);
-            }
-            .glassy-input {
-                font-size: 1rem;
-                padding: 12px 16px;
-            }
-            .request-section {
-                padding: 20px;
-                min-height: 350px;
-            }
-            .input-wrapper.primary {
-                width: 300px;
-            }
-        }
-        /* Style for the ID Name Tooltip */
-        #id-name-tooltip {
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            white-space: nowrap;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: all;
-        }
-        /* Modal Content */
-        .modal-content {
-            background: var(--glass-background);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-            width: min(500px, 95vw);
-            max-height: 80vh;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            position: relative;
-            transform: scale(0.7);
-            opacity: 0;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto;
-            pointer-events: auto;
-        }
-        .modal-overlay.visible .modal-content {
-            transform: scale(1);
-            opacity: 1;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: flex-end;
-        }
-        .close-button {
-            background: none;
-            border: none;
-            color: var(--subtle-text-color);
-            font-size: 1.8rem;
-            cursor: pointer;
-            padding: 0 5px;
-            transition: color 0.2s ease;
-        }
-        .close-button:hover {
-            color: var(--text-color);
-        }
-        .modal-body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 20px;
-        }
-        .modal-image-placeholder {
-            width: 250px;
-            height: 350px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--subtle-text-color);
-            font-size: 0.9em;
-        }
-        .modal-album-name {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--text-color);
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        .modal-buttons {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-        }
-        .glassy-button {
-            background: var(--glass-background);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 12px 25px;
-            color: var(--text-color);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .glassy-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            transform: translateY(-2px);
-        }
-        .glassy-button:active {
-            transform: translateY(0);
-        }
-        .glassy-button.gradient-animated {
-            background: linear-gradient(135deg, #a00050, #0000A0, #7300a0);
-            background-size: 200% 200%;
-            animation: owner-gradient 3s ease-in-out infinite;
-            color: white;
-            border: none;
-        }
-        .glassy-button.gradient-animated:hover {
-            box-shadow: 0 8px 25px rgba(143, 2, 91, 0.344);
-        }
-        .glassy-button.is-empty {
-            opacity: 0.6;
-            cursor: not-allowed !important;
-            background: var(--glass-background) !important;
-            color: var(--subtle-text-color) !important;
-            border: 1px solid var(--glass-border) !important;
-            box-shadow: none !important;
-            animation: none !important;
-        }
-        .glassy-button.copied {
-            background: #00FF7F !important;
-            color: black !important;
-            box-shadow: 0 0 15px 5px rgba(0, 255, 127, 0.6), 0 0 30px 10px rgba(0, 255, 127, 0.4) !important;
-            animation: none !important;
-        }
-        .album-item-wrapper:not(:has(.placeholder-image.active)):not(:has(.placeholder-image.left1)):not(:has(.placeholder-image.right1)):not(:has(.placeholder-image.left2)):not(:has(.placeholder-image.right2)) {
-            display: none;
-            opacity: 0;
-        }
         #initial-request-placeholder {
             box-shadow: none !important;
-            animation: none !important;
-            justify-content: flex-start;
-            padding: 15px 20px;
-            color: var(--subtle-text-color);
-            font-style: normal;
-            border: 1px solid var(--glass-border);
-            background: var(--glass-background);
-            display: flex;
-            align-items: center;
-        }
-
-        .admin-toggle-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: transparent; /* No background */
-            border: 1px solid transparent; /* Subtle border that can glow */
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem; /* Make it a bit larger to ensure visibility */
-            font-weight: bold;
-            color: white !important; /* Force white color */
-            cursor: pointer;
-            z-index: 9999; /* Higher z-index */
-            box-shadow: none;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            pointer-events: auto !important;
-            line-height: 0.8; /* Adjust line-height to center the dash */
-        }
-
-        .admin-toggle-button:hover {
-            background: rgba(255, 255, 255, 0.1); /* Subtle hover background */
-            color: white !important;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); /* Subtle hover shadow */
-            transform: translateY(-2px);
-        }
-
-        .admin-toggle-button:active {
-            transform: translateY(0);
-        }
-
-        .admin-toggle-button.notification-active {
-            animation: glow-red 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate; /* Keep glow for active notification */
-            color: var(--glow-red) !important;
-            border-color: var(--glow-red);
-            box-shadow: 0 0 15px 5px rgba(255, 77, 77, 0.5), 0 0 30px 10px rgba(255, 77, 77, 0.3); /* Enhanced glow */
-        }
-
-        .request-section.admin-mode .request-item {
-            padding-right: 50px;
-            position: relative;
-        }
-
-        .delete-request-button {
-            background: var(--glow-red);
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1rem;
-            color: white;
-            cursor: pointer;
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease, background-color 0.3s ease;
-        }
-
-        .request-section.admin-mode .delete-request-button {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .delete-request-button:hover {
-            background: #ff6666;
-        }
-
-        .delete-request-button:active {
-            background: #cc3333;
-        }
-        /* Anti-tamper notification panel */
-        .anti-tamper-notification-panel {
-            position: fixed;
-            bottom: 65px; /* Position above the admin button (button height + some margin) */
-            right: 20px;
-            background: var(--glass-background); /* Glassy background */
-            border: 1px solid var(--glass-border); /* Glassy border */
-            border-radius: 15px; /* Rounded corners */
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); /* Subtle shadow */
-            padding: 15px;
-            width: 280px; /* Fixed width */
-            max-height: 200px; /* Max height to allow scrolling */
-            overflow-y: auto; /* Enable scrolling for multiple messages */
-            color: var(--text-color);
-            font-size: 0.95rem;
-            line-height: 1.4;
-            z-index: 9998; /* Below admin button's z-index */
-            opacity: 0;
-            visibility: hidden;
-            /* Animation from slightly below its final position, moving up */
-            transform: translateY(20px); /* Start 20px below its final `bottom: 65px` */
-            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; /* Use flex for internal content */
-            flex-direction: column;
-            gap: 10px; /* Space between messages */
-        }
-
-        .anti-tamper-notification-panel.visible {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0); /* End at its `bottom: 65px` position */
-        }
-
-        .anti-tamper-notification-panel .message-item {
-            padding: 8px 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            word-break: break-word;
-            display: flex; /* Make it a flex container */
-            justify-content: space-between; /* Space out content and button */
-            align-items: center;
-        }
-
-        .anti-tamper-notification-panel .delete-anti-tamper-log-button {
-            background: var(--subtle-red-color); /* Subtle red background */
-            color: white; /* White 'x' */
-            border: none;
-            border-radius: 50%; /* Circular button */
-            width: 20px; /* Small size */
-            height: 20px;
-            font-size: 0.8rem; /* Small font size for 'x' */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            flex-shrink: 0; /* Prevent button from shrinking */
-            margin-left: 10px; /* Space from message text */
-            transition: background-color 0.2s ease;
-        }
-
-        .anti-tamper-notification-panel .delete-anti-tamper-log-button:hover {
-            background: #ff4d4d; /* Brighter red on hover */
-        }
-
-        .anti-tamper-notification-panel .clear-button {
-            background: var(--subtle-red-color);
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-            align-self: flex-end; /* Align to the right */
-            transition: background-color 0.2s ease;
-        }
-
-        @media (max-width: 480px) {
-            .admin-toggle-button {
-                width: 30px;
-                height: 30px;
-                font-size: 1.2rem; /* Adjusted for smaller screens */
-            }
-            .anti-tamper-notification-panel {
-                width: calc(100vw - 40px); /* Full width minus margin */
-                right: 20px;
-                left: 20px; /* Center for mobile */
-                transform: translateY(20px); /* Keep consistent animation */
-            }
-            .anti-tamper-notification-panel.visible {
-                transform: translateY(0);
-            }
-        }
-        
-        /* Albums Grid Styles */
-        .albums-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            width: 100%;
-            padding: 10px 10px 30px 10px;
-            justify-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-        }
-        
-        .grid-album-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .grid-album-item:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .grid-album-image {
-            width: 150px;
-            height: 210px;
-            background: var(--glass-background);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .grid-album-name {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            text-align: center;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        @media (max-width: 768px) {
-            .albums-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 15px;
-            }
-            
-            .grid-album-image {
-                width: 130px;
-                height: 180px;
-            }
-        }
-        
-        .album-item-wrapper:not(:has(.placeholder-image.active)):not(:has(.placeholder-image.left1)):not(:has(.placeholder-image.right1)):not(:has(.placeholder-image.left2)):not(:has(.placeholder-image.right2)) {
-            display: none;
-            opacity: 0;
-        }
-        /* View All Albums Modal */
-        #view-all-modal {
-            max-width: 90vw;
-            width: 1000px;
-            max-height: 90vh;
-            overflow-y: auto;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE and Edge */
-        }
-        
-        #view-all-modal::-webkit-scrollbar {
-            display: none; /* Chrome, Safari and Opera */
-        }
-        
-        #view-all-modal .modal-body {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 0 20px 0;
-        }
-        
-        #view-all-modal h3 {
-            width: 100%;
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 20px;
         }
 
         .report-album-button {
@@ -2663,13 +1855,10 @@
             async function renderAlbums() {
                 try {
                     // Fetch album items from server
-                    console.log('Fetching');
                     albumItems = await getAlbumItems();
-                    console.log('Received');
                     
                     // Ensure albumItems is always an array
                     if (!Array.isArray(albumItems)) {
-                        console.warn('Empty');
                         albumItems = [];
                     }
                     
@@ -2686,7 +1875,6 @@
                     
                     // Get all existing album wrappers
                     const albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
-                    console.log('Loaded');
                     
                     // Update existing album elements with data from displayItems
                     albumWrappers.forEach((wrapper, i) => {
@@ -2695,7 +1883,6 @@
                             const albumNameDiv = wrapper.querySelector('.album-name');
                             
                             if (!placeholderImage || !albumNameDiv) {
-                                console.warn('Missing');
                                 return; // Skip this iteration
                             }
                             
@@ -2733,30 +1920,27 @@
                                 placeholderImage.appendChild(placeholderText);
                             }
                         } catch (itemErr) {
-                            console.error('Error');
+                            console.error('Error updating album item:', itemErr);
                         }
                     });
                     
                     // Ensure album event listeners
-                    console.log('Init');
                     initializeAlbumEventListeners();
                     
                     // Ensure carousel is set up correctly
                     current = 2; // Always start with Album 5 (index 4) as active
-                    console.log('Update');
                     updateCarousel();
-            resetCarouselTimer();
+                    resetCarouselTimer();
 
-                    console.log('Success');
                 } catch (error) {
-                    console.error('Failed');
+                    console.error('Failed to render albums:', error);
                     
                     // Ensure we have default album visuals even if everything fails
                     try {
                         const albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
                         
                         if (albumWrappers.length > 0) {
-            albumWrappers.forEach((wrapper, i) => {
+                            albumWrappers.forEach((wrapper, i) => {
                                 const placeholderImage = wrapper.querySelector('.placeholder-image');
                                 if (placeholderImage) {
                                     placeholderImage.innerHTML = '';
@@ -2770,7 +1954,7 @@
                             updateCarousel();
                         }
                     } catch (fallbackError) {
-                        console.error('Fallback');
+                        console.error('Failed to create fallback album visuals:', fallbackError);
                     }
                 }
             }
@@ -3970,6 +3154,18 @@
             const chatInput = document.getElementById('chat-input');
             const chatSendButton = document.getElementById('chat-send-button');
             const chatCloseButton = chatModal.querySelector('.close-button');
+            const chatUsername = document.getElementById('chat-username');
+            
+            // Load saved username from localStorage if available
+            if (localStorage.getItem('chatUsername')) {
+                chatUsername.value = localStorage.getItem('chatUsername');
+            } else {
+                // If no saved username, try to use the logged in user's idName
+                const loggedUser = getLoggedInUser();
+                if (loggedUser && loggedUser.idName) {
+                    chatUsername.value = loggedUser.idName;
+                }
+            }
             
             // Open chat modal when chat pill is clicked
             chatPill.addEventListener('click', () => {
@@ -4014,6 +3210,9 @@
                     alert('Please enter a username');
                     return;
                 }
+                
+                // Save username to localStorage for future use
+                localStorage.setItem('chatUsername', username);
                 
                 const user = getLoggedInUser();
                 if (!user) {

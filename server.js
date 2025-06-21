@@ -264,6 +264,11 @@ const userAccounts = {
         idName: 'Test-Premium 1', 
         designType: 'prem-gold-pulse' 
     },
+
+    'J5343': { 
+        idName: 'Moderator', 
+        designType: 'prem-gold-pulse' 
+    },
     'partners666': {
         idName: 'Partner',
         designType: 'prem-gold-pulse'

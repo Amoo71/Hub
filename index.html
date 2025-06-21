@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Access</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         /* =====================================================================
          * FARBSCHEMA UND DESIGN-VARIABLEN - EINFACH ZU BEARBEITEN
@@ -11,7 +12,7 @@
          */
         :root {
             /* Grundfarben */
-            --background-color: #000000;
+            --background-color: #111111;
             --text-color: #f0f0f0;
             --subtle-text-color: #a0a0a0;
             
@@ -576,7 +577,7 @@
         .chat-pill {
             position: absolute;
             right: auto;
-            left: 47%;
+            left: 50%;
             transform: translateX(-50%);
             top: -40px;
             background: var(--glass-background);
@@ -586,11 +587,13 @@
             padding: 8px 20px;
             font-size: 0.95rem;
             cursor: pointer;
+            transition: all 0.3s ease;
             z-index: 2;
         }
         
         .chat-pill:hover {
             background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
@@ -1771,11 +1774,11 @@
         }
     </style>
 </head>
-<body>
+<body class="dark">
     <canvas id="rain-canvas"></canvas>
-    <div id="main-screen" class="screen">
+    <div id="main-screen" class="screen main-container">
         <div class="search-wrapper" style="position: relative; width: min(450px, 80vw); margin: 0 auto;">
-        <input type="search" class="glassy-input search-bar" placeholder="Search...">
+        <input type="search" class="glassy-input search-bar input-box search" placeholder="Search" />
         <div class="search-results-container">
             <div class="search-results-list">
                     <!-- Search results will appear here -->
@@ -1783,7 +1786,7 @@
         </div>
         </div>
         <div class="main-title-container">
-            <button class="view-all-button">View All</button>
+            <button class="view-all-button pill">View All</button>
         <h2 class="main-title">Recently Added</h2>
         </div>
         <div class="gallery-container">
@@ -1831,15 +1834,15 @@
             </div>
         </div>
         <div class="request-section">
-            <button class="chat-pill">Chat</button>
+            <button class="chat-pill pill">Chat</button>
             <div class="input-form" id="input-form">
                 <div class="input-wrapper primary" id="primary-wrapper">
-                    <input type="text" id="request-input" class="glassy-input" placeholder="Make a request">
+                    <input type="text" id="request-input" class="glassy-input input-box request request-input" placeholder="Request">
                 </div>
                 <div class="input-wrapper secondary" id="secondary-wrapper">
                     <input type="text" id="username-input" class="glassy-input" placeholder="Username">
                 </div>
-                 <button id="send-button" class="send-button">Send</button>
+                 <button id="send-button" class="send-button send-btn">Send</button>
             </div>
             <div class="requests-list">
                 <h4>Requests:</h4>
@@ -2962,47 +2965,20 @@
             
             function handleRequestInput() {
                 const requestValue = requestInput.value.trim();
-                clearTimeout(requestDebounceTimer);
-                if (requestValue && currentStage === 1) {
-                    requestDebounceTimer = setTimeout(() => {
-                        currentStage = 2;
-                        inputForm.classList.add('shifted');
-                        primaryWrapper.classList.add('shifted');
-                        setTimeout(() => {
-                            secondaryWrapper.classList.add('visible');
-                        }, 400);
-                    }, 1000);
-                } else if (!requestValue && currentStage > 1) {
-                    currentStage = 1;
-                    inputForm.classList.remove('shifted');
-                    primaryWrapper.classList.remove('shifted');
-                    secondaryWrapper.classList.remove('visible');
-                    sendButton.classList.remove('visible');
-                    usernameInput.value = '';
-                    clearTimeout(usernameDebounceTimer);
-                }
-            }
-            function handleUsernameInput() {
-                const requestValue = requestInput.value.trim();
-                const usernameValue = usernameInput.value.trim();
-                clearTimeout(usernameDebounceTimer);
-                if (requestValue && usernameValue && currentStage === 2) {
-                    usernameDebounceTimer = setTimeout(() => {
-                        currentStage = 3;
-                         sendButton.classList.add('visible');
-                    }, 1000);
-                } else if ((!requestValue || !usernameValue) && currentStage === 3) {
-                    currentStage = 2;
+                if (requestValue) {
+                    sendButton.classList.add('visible');
+                } else {
                     sendButton.classList.remove('visible');
                 }
             }
+
             requestInput.addEventListener('input', handleRequestInput);
-            usernameInput.addEventListener('input', handleUsernameInput);
+            // Username-Input entfällt, daher kein Listener nötig
+
             sendButton.addEventListener('click', async () => {
                 const requestText = requestInput.value.trim();
-                const username = usernameInput.value.trim();
-
                 const loggedInUser = getLoggedInUser();
+                const username = loggedInUser ? loggedInUser.idName : '';
 
                 if (!loggedInUser) {
                     alert('Please log in with a Security ID first.');
@@ -3010,8 +2986,8 @@
                     return;
                 }
 
-                if (!requestText || !username) {
-                    alert('Please enter both a request and a username.');
+                if (!requestText) {
+                    alert('Please enter a request.');
                     sendButton.classList.remove('launching');
                     return;
                 }

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Access - Login</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --background-color: #1a1a1a;
@@ -214,11 +215,11 @@
         }
     </style>
 </head>
-<body>
-    <div id="login-screen" class="screen">
-        <h1>Hello Boss… (⌐■_■)</h1>
+<body class="dark">
+    <div id="login-screen" class="screen login-box">
+        <h1 class="login-title">Hello Boss…</h1>
         <div class="input-container">
-            <input type="password" id="security-id-input" class="glassy-input" placeholder="Security ID">
+            <input type="password" id="security-id-input" class="glassy-input input-box login-input" placeholder="Security-ID">
             <button type="button" id="toggle-password-visibility" class="toggle-password">•</button>
         </div>
     </div>

@@ -1,0 +1,131 @@
+/* --- Allgemeines Dark Theme --- */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.dark {
+  background-color: #1c1c1c;
+  color: #ccc;
+}
+
+/* --- Login Page --- */
+.login-box {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.login-box h1 {
+  font-size: 24px;
+  margin-bottom: 15px;
+  color: #c0c9cd;
+}
+
+.login-box .input-box {
+  background-color: #2a2a2a;
+  color: #bbb;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Main Page --- */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.input-box.search {
+  margin-top: 30px;
+  background-color: #3a3a3a;
+  color: #ccc;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  width: 250px;
+  text-align: center;
+}
+
+.pill {
+  background-color: #3b3b3b;
+  color: #cfd8dc;
+  padding: 6px 20px;
+  border: none;
+  border-radius: 20px;
+  margin: 10px 0 20px;
+  cursor: pointer;
+}
+
+/* --- Game Gallery --- */
+.game-gallery {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  font-size: 14px;
+}
+
+.img-placeholder {
+  background-color: #d3d3d3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 5px;
+  width: 80px;
+  height: 120px;
+}
+
+/* Size modifiers */
+.game.large .img-placeholder {
+  width: 140px;
+  height: 200px;
+}
+
+/* --- Chat Controls --- */
+.chat-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.request-input {
+  background-color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  color: #aaa;
+  width: 200px;
+}
+
+.send-btn {
+  background-color: green;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+/* --- Chat Box --- */
+.chat-box {
+  width: 85%;
+  height: 200px;
+  background-color: #2e2e2e;
+  border-radius: 15px;
+  margin-bottom: 30px;
+} 

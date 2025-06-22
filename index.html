@@ -1811,47 +1811,52 @@
         /* Ensure new carousel visible */
         .gallery-container {
             overflow-y: visible; /* allow carousel overflow */
-            min-height: 500px;
-            margin-top: 0; /* pull carousel closer to title */
+            min-height: 520px;
+            margin-top: 10px; /* closer to heading */
         }
         .carousel {
-            height: 500px; /* adjusted */
-            margin-top: -30px; /* visually move upwards */
+            height: 530px; /* tighter */
+            margin-top: 20px;
         }
-        .carousel:hover { animation-play-state: paused; }
         .carousel .card, .carousel .cardb {
-            display: grid;
-            place-items: center;
-            width: 190px;
-            height: 260px; /* accommodate bigger image + name */
-            position: absolute;
-            border-radius: 5px;
-            padding: 0;
-        }
-        /* Hide underlying platform */
-        .carousel .cardb { display: none !important; }
+             display: grid;
+             place-items: center;
+             width: 190px;
+             height: 225px;
+             position: absolute;
+             border-radius: 5px;
+             padding: 0;
+         }
+        /* Hide grey base platforms */
+        .carousel .cardb { display: none; }
         .carousel .card {
-            background-color: #333;
-            box-shadow: 0 0 20px rgba(0,0,0,.5);
-            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
+            background: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            box-shadow: 0 0 15px rgba(0,0,0,.4);
         }
         .carousel .card .img {
-            width: 180px;
-            height: 180px; /* show full image */
+            width: 190px;
+            height: 190px;
             border-radius: 5px;
-            margin-bottom: 10px;
-            filter: brightness(.85);
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            filter: none;
         }
         .carousel .card p {
-            font-size: 0.95rem;
-            margin: 5px 0 0 0;
+            margin: 8px 0 0 0;
+            font-size: 0.9rem;
             text-align: center;
             color: var(--text-color);
         }
-        .carousel .card span { display:none; }
+        .carousel .card span { display: none; }
+
+        /* Hide global scroll bar but keep scroll ability */
+        body::-webkit-scrollbar { display: none; }
+        body { scrollbar-width: none; }
         @keyframes rotate { to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); } }
         @media screen and (max-width: 992px) {
             .carousel { transform: perspective(1000px) rotateX(70deg) scale(.7); }

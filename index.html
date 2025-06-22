@@ -1771,106 +1771,48 @@
             transition: opacity 0.3s ease;
             animation: fadeIn 0.2s ease-in-out;
         }
-
-        /* =========================  NAV BAR  ========================= */
+        /* ====  added navigation bar styles ==== */
         body { padding-top: 60px; }
-        .nav-bar {
+        .navbar {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 48px; /* macOS style */
-            background: rgba(30, 30, 30, 0.45);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px) saturate(1.8);
-            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            height: 60px;
+            background: var(--glass-background);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 32px;
             z-index: 10000;
-            pointer-events: auto;
         }
-        .nav-item {
+        .nav-btn {
             background: none;
             border: none;
             color: var(--text-color);
-            font-size: 0.95rem;
-            font-weight: 600;
+            font-size: 1rem;
+            padding: 8px 20px;
+            margin: 0 8px;
             cursor: pointer;
-            padding: 6px 14px;
-            border-radius: 8px;
-            transition: background 0.25s ease, color 0.25s ease;
-            pointer-events: auto;
+            transition: color 0.3s ease;
         }
-        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .nav-item.active {
-            color: #fff;
-            background: rgba(0,0,0,0.35);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
-        }
-
-        /* =========================  3-D CAROUSEL  ========================= */
-        .gallery-container { display: none !important; } /* hide old carousel */
-        .carousel {
-            transform: perspective(1000px) rotateX(70deg);
-            transform-style: preserve-3d;
-            display: grid;
-            place-items: center;
-            animation: rotate 15s linear infinite;
-            transition: all 1s;
-            background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
-            width: 100%;
-            height: 400px;
-            margin-top: 30px;
-        }
-        .carousel:hover { animation-play-state: paused; }
-
-        .carousel .card,
-        .carousel .cardb {
-            display: grid;
-            place-items: center;
-            width: 190px;
-            height: 225px;
-            position: absolute;
-            border-radius: 5px;
-        }
-        .carousel .cardb { background-color: #1f1f1f; }
-        .carousel .card {
-            background-color: #333;
-            box-shadow: 0 0 20px rgba(0, 0, 0, .5);
-            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
-        }
-        .carousel .card .img {
-            width: 180px;
-            height: 180px;
-            border-radius: 3px;
-            margin-bottom: 8px;
-            filter: brightness(.9);
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        .carousel .card p { font-size: 16px; margin-bottom: -5px; text-align: center; }
-        .carousel .card span { font-size: 12px; text-align: center; padding: 8px; }
-
-        @keyframes rotate {
-            to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
-        }
-
-        @media screen and (max-width: 992px) {
-            .carousel { scale: .7; }
+        .nav-btn:hover { color: var(--glow-green); }
+        .nav-btn.active { color: var(--glow-green); }
+        @media (max-width: 480px) {
+            .nav-btn { font-size: 0.9rem; padding: 6px 14px; }
         }
     </style>
 </head>
 <body>
-    <canvas id="rain-canvas"></canvas>
-    <!-- =========================  NAVIGATION BAR  ========================= -->
-    <nav class="nav-bar">
-        <button class="nav-item active" data-view="search">Search</button>
-        <button class="nav-item" data-view="chat">Chat</button>
-        <button class="nav-item" data-view="request">Request</button>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <button id="nav-search" class="nav-btn active">Search</button>
+        <button id="nav-chat" class="nav-btn">Chat</button>
+        <button id="nav-request" class="nav-btn">Request</button>
     </nav>
+    <canvas id="rain-canvas"></canvas>
     <div id="main-screen" class="screen">
         <div class="search-wrapper" style="position: relative; width: min(450px, 80vw); margin: 0 auto;">
         <input type="search" class="glassy-input search-bar" placeholder="Search...">
@@ -1884,9 +1826,6 @@
             <button class="view-all-button">View All</button>
         <h2 class="main-title">Recently Added</h2>
         </div>
-        <!-- =========================  3-D CAROUSEL  ========================= -->
-        <div class="carousel"></div>
-        <!-- (old gallery hidden by CSS – see below) -->
         <div class="gallery-container">
            <div class="gallery-content">
                 <div class="album-item-wrapper">
@@ -4257,6 +4196,54 @@
             setAlbumItemUpdateCallback(() => {
                 renderAlbums(); // Automatically re-render albums when updates occur
             });
+
+            // --- NAVIGATION LOGIC ---
+            const navSearch = document.getElementById('nav-search');
+            const navChat = document.getElementById('nav-chat');
+            const navRequest = document.getElementById('nav-request');
+
+            function setActiveNav(btn) {
+                [navSearch, navChat, navRequest].forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+            function showSearchView() {
+                searchWrapper.style.display = '';
+                mainTitleContainer.style.display = '';
+                galleryContainer.style.display = '';
+                requestSection.style.display = 'none';
+                chatModalOverlay.classList.remove('visible');
+                chatModalOverlay.classList.add('hidden');
+                setActiveNav(navSearch);
+            }
+
+            function showRequestView() {
+                searchWrapper.style.display = 'none';
+                mainTitleContainer.style.display = 'none';
+                galleryContainer.style.display = 'none';
+                requestSection.style.display = '';
+                chatModalOverlay.classList.remove('visible');
+                chatModalOverlay.classList.add('hidden');
+                setActiveNav(navRequest);
+            }
+
+            function showChatView() {
+                searchWrapper.style.display = 'none';
+                mainTitleContainer.style.display = 'none';
+                galleryContainer.style.display = 'none';
+                requestSection.style.display = 'none';
+                if (!chatModalOverlay.classList.contains('visible')) {
+                    chatPill.click();
+                }
+                setActiveNav(navChat);
+            }
+
+            navSearch.addEventListener('click', showSearchView);
+            navRequest.addEventListener('click', showRequestView);
+            navChat.addEventListener('click', showChatView);
+
+            // Default view on load
+            showSearchView();
         });
 
         document.addEventListener('touchmove', function() {
@@ -4292,92 +4279,6 @@
                 element.addEventListener('touchstart', trackUserActivity, { passive: true });
             }
         });
-
-        /* =========================  NAV LOGIC  ========================= */
-        const navItems = document.querySelectorAll('.nav-item');
-        const searchWrapper = document.querySelector('.search-wrapper');
-        const mainTitleContainer = document.querySelector('.main-title-container');
-        const carousel3D = document.querySelector('.carousel');
-
-        function showSearchMode() {
-            mainScreen.style.display = 'block';
-            searchWrapper.style.display = 'block';
-            mainTitleContainer.style.display = 'flex';
-            carousel3D.style.display = 'grid';
-            requestSection.style.display = 'none';
-            chatModalOverlay.classList.add('hidden');
-            chatModalOverlay.classList.remove('visible');
-        }
-
-        function showRequestMode() {
-            mainScreen.style.display = 'block';
-            searchWrapper.style.display = 'none';
-            mainTitleContainer.style.display = 'none';
-            carousel3D.style.display = 'none';
-            requestSection.style.display = 'flex';
-            chatModalOverlay.classList.add('hidden');
-            chatModalOverlay.classList.remove('visible');
-        }
-
-        function showChatMode() {
-            mainScreen.style.display = 'none';
-            chatModalOverlay.classList.remove('hidden');
-            chatModalOverlay.classList.add('visible');
-        }
-
-        navItems.forEach(btn => {
-            btn.addEventListener('click', () => {
-                navItems.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const view = btn.getAttribute('data-view');
-                if (view === 'search') showSearchMode();
-                else if (view === 'chat') showChatMode();
-                else if (view === 'request') showRequestMode();
-            });
-        });
-
-        /* =========================  3-D CAROUSEL RENDER  ========================= */
-        function render3DCarousel() {
-            if (!carousel3D) return;
-            carousel3D.innerHTML = '';
-            const displayItems = (albumItems || []).slice(0, 10);
-            const total = 10;
-            const angleStep = 360 / total;
-            for (let i = 0; i < total; i++) {
-                const item = displayItems[i] || { name: `G ${i+1}`, imageUrl: '', desc: '' };
-
-                // FRONT CARD
-                const card = document.createElement('div');
-                card.classList.add('card');
-                const a = angleStep * (i+1);
-                card.style.transformOrigin = 'center center';
-                card.style.transform = `rotateZ(${a}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
-
-                const imgDiv = document.createElement('div');
-                imgDiv.classList.add('img');
-                if (item.imageUrl) {
-                    imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
-                } else {
-                    imgDiv.style.background = 'rgba(255,255,255,0.05)';
-                }
-                const p = document.createElement('p');
-                p.textContent = item.name;
-                const span = document.createElement('span');
-                span.textContent = item.desc || '';
-                card.appendChild(imgDiv);
-                card.appendChild(p);
-                card.appendChild(span);
-
-                // BACK CARD – simple colored backface
-                const cardb = document.createElement('div');
-                cardb.classList.add('cardb');
-                cardb.style.transformOrigin = 'center center';
-                cardb.style.transform = `rotateZ(${a}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
-
-                carousel3D.appendChild(card);
-                carousel3D.appendChild(cardb);
-            }
-        }
     </script>
 </body>
 </html>

@@ -462,6 +462,7 @@
             touch-action: pan-x; /* Enable horizontal pan gesture */
             height: 400px;
             max-height: 50vh; /* Limit height to prevent excessive scrolling */
+            contain: strict; /* Contain the layout, paint, and size to prevent affecting other elements */
         }
         
         .gallery-container::-webkit-scrollbar {
@@ -482,6 +483,8 @@
             height: 100%;
             touch-action: none; /* Prevent touch events from scrolling the page */
             overscroll-behavior: none; /* Prevent overscroll effects */
+            contain: layout size; /* Contain layout and size to prevent affecting other elements */
+            will-change: transform; /* Optimize for animation */
         }
         
         .carousel:hover {
@@ -711,6 +714,9 @@
             padding: 0 20px;
             box-sizing: border-box;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         /* Chat Pill Button */
@@ -2539,6 +2545,7 @@
                     // Fetch album items from server
                     console.log('Fetching album items');
                     albumItems = await getAlbumItems();
+                    console.log('Album items received:', albumItems);
                     
                     // Ensure albumItems is always an array
                     if (!Array.isArray(albumItems)) {
@@ -2573,6 +2580,7 @@
                                 const card = document.createElement('div');
                                 card.classList.add('card', `c${i+1}`);
                                 card.setAttribute('data-index', i);
+                                card.setAttribute('data-album-id', item.id || '');
                                 
                                 // Create image element
                                 const imgDiv = document.createElement('div');
@@ -2792,7 +2800,765 @@
                 
                 return messageElement;
             }
+
+            // --- SESSION MANAGEMENT ---
+            async function checkSessionAndRedirect() {
+                // Überprüfen Sie zuerst auf Inaktivität
+                const wasLoggedOut = checkInactivity();
+                if (wasLoggedOut) {
+                    return; // Wenn der Benutzer wegen Inaktivität ausgeloggt wurde, nichts weiter tun
+                }
+                
+                const loggedInUser = getLoggedInUser();
+                if (!loggedInUser) {
+                    window.location.href = 'login.html';
+                } else {
+                    if (loggedInUser.idName === 'Amo') { // Assuming 'Amo' is the admin
+                        adminToggleButton.classList.remove('hidden');
+                        const logs = await getAntiTamperLogs();
+                        if (logs.length > 0) {
+                            adminToggleButton.textContent = '!';
+                            adminToggleButton.classList.add('notification-active');
+                            notificationGlowActive = true;
+                        } else {
+                            adminToggleButton.textContent = '—';
+                            adminToggleButton.classList.remove('notification-active');
+                            notificationGlowActive = false;
+                        }
+                    } else {
+                        adminToggleButton.classList.add('hidden');
+                    }
+                    
+                    // Nur die Socket-Registrierung durchführen, NICHT den Timestamp aktualisieren
+                    registerSessionWithServer({
+                        securityId: loggedInUser.securityId || 'unknown',
+                        username: loggedInUser.username || loggedInUser.idName,
+                        idName: loggedInUser.idName,
+                        designType: loggedInUser.designType
+                    });
+                }
+            }
+
+            // Initial session check on page load
+            checkSessionAndRedirect();
+
+            // Set up a periodic session check (e.g., every minute)
+            sessionCheckInterval = setInterval(checkSessionAndRedirect, 60 * 1000); // Check every 1 minute
+            
+            // Start keep alive interval to prevent Render from spinning down the app
+            startKeepAliveInterval();
+            
+            // Initialize data
+            renderRequests();
+            renderAlbums();
+            clearSearchResults();
+            
+            // Set up callbacks for real-time updates
+            setRequestUpdateCallback(() => {
+                console.log('Live update: Requests changed');
+                renderRequests(); // Automatically re-render requests when updates occur
+            });
+            
+            setAlbumItemUpdateCallback(() => {
+                console.log('Live update: Albums changed');
+                renderAlbums(); // Automatically re-render albums when updates occur
+            });
+            
+            setChatMessageUpdateCallback(() => {
+                if (chatModalOverlay.classList.contains('visible')) {
+                    renderChatMessages();
+                }
+            });
         });
+
+        function getRemainingTimeString(expiresAt) {
+            const now = Date.now();
+            const remainingMs = expiresAt - now;
+            
+            if (remainingMs <= 0) {
+                return 'Expired';
+            }
+            
+            const minutes = Math.floor(remainingMs / (1000 * 60));
+            const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+            
+            return `${minutes}m ${seconds}s`;
+        }
+        
+        // Function to update expiry timers
+        function updateExpiryTimers() {
+            const expiryElements = document.querySelectorAll('.chat-message-expiry');
+            expiryElements.forEach(element => {
+                const expiresAt = parseInt(element.getAttribute('data-expires-at'));
+                element.textContent = getRemainingTimeString(expiresAt);
+            });
+        }
+        
+        // Start a timer to update expiry times every second
+        setInterval(updateExpiryTimers, 1000);
+        
+        // Function to render requests
+        async function renderRequests() {
+            try {
+                console.log('Fetching requests');
+                const requests = await getRequests();
+                console.log('Requests received:', requests);
+                
+                const requestsList = document.querySelector('.requests-list');
+                if (!requestsList) return;
+                
+                // Clear existing requests, keeping the heading
+                const heading = requestsList.querySelector('h4');
+                requestsList.innerHTML = '';
+                if (heading) requestsList.appendChild(heading);
+                
+                if (!requests || requests.length === 0) {
+                    // Show placeholder if no requests
+                    const placeholder = document.createElement('div');
+                    placeholder.id = 'initial-request-placeholder';
+                    placeholder.classList.add('request-item');
+                    placeholder.textContent = '//';
+                    requestsList.appendChild(placeholder);
+                    return;
+                }
+                
+                // Sort requests by timestamp (newest first)
+                const sortedRequests = [...requests].sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Make list scrollable if there are more than 4 requests
+                if (sortedRequests.length > 4) {
+                    requestsList.classList.add('scrollable');
+                } else {
+                    requestsList.classList.remove('scrollable');
+                }
+                
+                // Add requests to the list
+                sortedRequests.forEach(request => {
+                    const requestItem = document.createElement('div');
+                    requestItem.classList.add('request-item');
+                    
+                    // Add design type class if available
+                    if (request.designType) {
+                        requestItem.classList.add(request.designType);
+                    }
+                    
+                    // Set data attributes for request ID
+                    requestItem.setAttribute('data-request-id', request.id);
+                    
+                    const username = document.createElement('span');
+                    username.classList.add('request-username');
+                    
+                    // Add design type class to username if available
+                    if (request.designType) {
+                        username.classList.add(request.designType);
+                    }
+                    
+                    username.textContent = request.username;
+                    
+                    const separator = document.createElement('span');
+                    separator.classList.add('request-separator');
+                    separator.textContent = ':';
+                    
+                    const text = document.createElement('span');
+                    text.classList.add('request-text');
+                    text.textContent = request.text;
+                    
+                    const time = document.createElement('span');
+                    time.classList.add('request-time');
+                    
+                    // Format timestamp to readable time
+                    const date = new Date(request.timestamp);
+                    const hours = date.getHours().toString().padStart(2, '0');
+                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                    time.textContent = `${hours}:${minutes}`;
+                    
+                    // Add delete button (hidden by default, shown in admin mode)
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-request-button');
+                    deleteButton.innerHTML = '&times;';
+                    deleteButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const requestId = requestItem.getAttribute('data-request-id');
+                        if (requestId) {
+                            await deleteRequest(requestId);
+                            // The request list will be automatically updated via the callback
+                        }
+                    });
+                    
+                    requestItem.appendChild(username);
+                    requestItem.appendChild(separator);
+                    requestItem.appendChild(text);
+                    requestItem.appendChild(time);
+                    requestItem.appendChild(deleteButton);
+                    
+                    requestsList.appendChild(requestItem);
+                });
+                
+                console.log('Requests rendered successfully');
+            } catch (error) {
+                console.error('Failed to render requests:', error);
+                
+                // Show error placeholder
+                const requestsList = document.querySelector('.requests-list');
+                if (requestsList) {
+                    const heading = requestsList.querySelector('h4');
+                    requestsList.innerHTML = '';
+                    if (heading) requestsList.appendChild(heading);
+                    
+                    const errorPlaceholder = document.createElement('div');
+                    errorPlaceholder.id = 'initial-request-placeholder';
+                    errorPlaceholder.classList.add('request-item');
+                    errorPlaceholder.textContent = '// Error loading requests';
+                    requestsList.appendChild(errorPlaceholder);
+                }
+            }
+        }
+        
+        // Function to clear search results
+        function clearSearchResults() {
+            const searchResultsList = document.querySelector('.search-results-list');
+            if (searchResultsList) {
+                searchResultsList.innerHTML = '';
+            }
+            
+            const searchBar = document.querySelector('.search-bar');
+            if (searchBar) {
+                searchBar.classList.remove('has-value');
+            }
+        }
+        
+        // Function to search albums
+        function searchAlbums(query) {
+            if (!query || !albumItems) return;
+            
+            const searchResultsList = document.querySelector('.search-results-list');
+            if (!searchResultsList) return;
+            
+            // Clear previous results
+            searchResultsList.innerHTML = '';
+            
+            // Filter albums based on search query
+            const results = albumItems.filter(item => 
+                item.name && item.name.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            if (results.length === 0) {
+                // No results found
+                const noResultItem = document.createElement('div');
+                noResultItem.classList.add('search-result-item');
+                noResultItem.textContent = 'No results found';
+                searchResultsList.appendChild(noResultItem);
+            } else {
+                // Display results
+                results.forEach(item => {
+                    const resultItem = document.createElement('div');
+                    resultItem.classList.add('search-result-item', 'clickable');
+                    resultItem.textContent = item.name;
+                    
+                    // Add click event to show album details
+                    resultItem.addEventListener('click', () => {
+                        showAlbumDetails(item);
+                        
+                        // Clear search after selection
+                        const searchBar = document.querySelector('.search-bar');
+                        if (searchBar) {
+                            searchBar.value = '';
+                            searchBar.classList.remove('has-value');
+                        }
+                        clearSearchResults();
+                    });
+                    
+                    searchResultsList.appendChild(resultItem);
+                });
+            }
+        }
+        
+        // Function to show album details
+        function showAlbumDetails(album) {
+            const modalOverlay = document.getElementById('album-detail-modal-overlay');
+            const modalAlbumName = document.querySelector('.modal-album-name');
+            const modalImagePlaceholder = document.querySelector('.modal-image-placeholder');
+            const copyAccButton = document.querySelector('.copy-acc-button');
+            const copyPwButton = document.querySelector('.copy-pw-button');
+            const modalEditOptions = document.querySelector('.modal-edit-options');
+            
+            if (!modalOverlay || !modalAlbumName || !modalImagePlaceholder) return;
+            
+            // Set album details
+            modalAlbumName.textContent = album.name || 'Unnamed Game';
+            
+            // Set image if available
+            if (album.imageUrl && album.imageUrl.trim() !== '') {
+                modalImagePlaceholder.style.backgroundImage = `url(${album.imageUrl})`;
+                modalImagePlaceholder.textContent = '';
+            } else {
+                modalImagePlaceholder.style.backgroundImage = 'none';
+                modalImagePlaceholder.textContent = 'No Image Available';
+            }
+            
+            // Handle copy buttons
+            if (copyAccButton) {
+                copyAccButton.classList.remove('copied', 'is-empty');
+                copyAccButton.textContent = 'Copy ACC';
+                
+                if (!album.acc || album.acc.trim() === '') {
+                    copyAccButton.classList.add('is-empty');
+                }
+                
+                copyAccButton.onclick = () => {
+                    if (album.acc && album.acc.trim() !== '') {
+                        navigator.clipboard.writeText(album.acc)
+                            .then(() => {
+                                copyAccButton.textContent = 'Copied!';
+                                copyAccButton.classList.add('copied');
+                                setTimeout(() => {
+                                    copyAccButton.textContent = 'Copy ACC';
+                                    copyAccButton.classList.remove('copied');
+                                }, 2000);
+                            })
+                            .catch(err => {
+                                console.error('Failed to copy: ', err);
+                            });
+                    }
+                };
+            }
+            
+            if (copyPwButton) {
+                copyPwButton.classList.remove('copied', 'is-empty');
+                copyPwButton.textContent = 'Copy PW';
+                
+                if (!album.pw || album.pw.trim() === '') {
+                    copyPwButton.classList.add('is-empty');
+                }
+                
+                copyPwButton.onclick = () => {
+                    if (album.pw && album.pw.trim() !== '') {
+                        navigator.clipboard.writeText(album.pw)
+                            .then(() => {
+                                copyPwButton.textContent = 'Copied!';
+                                copyPwButton.classList.add('copied');
+                                setTimeout(() => {
+                                    copyPwButton.textContent = 'Copy PW';
+                                    copyPwButton.classList.remove('copied');
+                                }, 2000);
+                            })
+                            .catch(err => {
+                                console.error('Failed to copy: ', err);
+                            });
+                    }
+                };
+            }
+            
+            // Show edit options for admin
+            const loggedInUser = getLoggedInUser();
+            if (loggedInUser && loggedInUser.idName === 'Amo' && modalEditOptions) {
+                modalEditOptions.style.display = 'flex';
+                
+                // Set up edit button
+                const editButton = modalEditOptions.querySelector('.edit-album-button');
+                if (editButton) {
+                    editButton.onclick = () => {
+                        showAlbumEditModal(album);
+                        modalOverlay.classList.remove('visible');
+                    };
+                }
+                
+                // Set up delete button
+                const deleteButton = modalEditOptions.querySelector('.delete-album-button');
+                if (deleteButton) {
+                    deleteButton.onclick = async () => {
+                        if (confirm(`Are you sure you want to delete "${album.name}"?`)) {
+                            await deleteAlbumItem(album.id);
+                            modalOverlay.classList.remove('visible');
+                        }
+                    };
+                }
+            } else if (modalEditOptions) {
+                modalEditOptions.style.display = 'none';
+            }
+            
+            // Show the modal
+            modalOverlay.classList.add('visible');
+            
+            // Close button functionality
+            const closeButton = modalOverlay.querySelector('.close-button');
+            if (closeButton) {
+                closeButton.onclick = () => {
+                    modalOverlay.classList.remove('visible');
+                };
+            }
+            
+            // Close on overlay click
+            modalOverlay.onclick = (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.classList.remove('visible');
+                }
+            };
+        }
+        
+        // Function to keep the server alive
+        function startKeepAliveInterval() {
+            // Send a ping every 5 minutes to prevent Render from spinning down
+            keepAliveInterval = setInterval(() => {
+                fetch('/ping')
+                    .then(response => console.log('Server ping successful'))
+                    .catch(error => console.warn('Server ping failed:', error));
+            }, 5 * 60 * 1000); // 5 minutes
+        }
+        
+        // Function to show album edit modal
+        function showAlbumEditModal(album = null) {
+            const modalOverlay = document.getElementById('album-edit-modal-overlay');
+            const albumEditTitle = document.getElementById('album-edit-title');
+            const albumEditForm = document.getElementById('album-edit-form');
+            const albumIdInput = document.getElementById('edit-album-id');
+            const albumNameInput = document.getElementById('edit-album-name');
+            const albumImageUrlInput = document.getElementById('edit-album-image-url');
+            const albumAccInput = document.getElementById('edit-album-acc');
+            const albumPwInput = document.getElementById('edit-album-pw');
+            
+            if (!modalOverlay || !albumEditForm) return;
+            
+            // Set form values based on whether we're editing or adding
+            if (album) {
+                // Editing an existing album
+                albumEditTitle.textContent = 'Edit Game';
+                albumIdInput.value = album.id || '';
+                albumNameInput.value = album.name || '';
+                albumImageUrlInput.value = album.imageUrl || '';
+                albumAccInput.value = album.acc || '';
+                albumPwInput.value = album.pw || '';
+            } else {
+                // Adding a new album
+                albumEditTitle.textContent = 'Add New Game';
+                albumIdInput.value = '';
+                albumNameInput.value = '';
+                albumImageUrlInput.value = '';
+                albumAccInput.value = '';
+                albumPwInput.value = '';
+            }
+            
+            // Show the modal
+            modalOverlay.classList.add('visible');
+            
+            // Close button functionality
+            const closeButton = modalOverlay.querySelector('.close-button');
+            if (closeButton) {
+                closeButton.onclick = () => {
+                    modalOverlay.classList.remove('visible');
+                };
+            }
+            
+            // Close on overlay click
+            modalOverlay.onclick = (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.classList.remove('visible');
+                }
+            };
+            
+            // Form submission
+            albumEditForm.onsubmit = async (e) => {
+                e.preventDefault();
+                
+                const albumData = {
+                    name: albumNameInput.value.trim(),
+                    imageUrl: albumImageUrlInput.value.trim(),
+                    acc: albumAccInput.value.trim(),
+                    pw: albumPwInput.value.trim(),
+                    timestamp: Date.now()
+                };
+                
+                try {
+                    if (albumIdInput.value) {
+                        // Update existing album
+                        albumData.id = albumIdInput.value;
+                        await updateAlbumItem(albumData);
+                    } else {
+                        // Add new album
+                        await addAlbumItem(albumData);
+                    }
+                    
+                    // Close the modal
+                    modalOverlay.classList.remove('visible');
+                } catch (error) {
+                    console.error('Failed to save album:', error);
+                    alert('Failed to save album. Please try again.');
+                }
+            };
+        }
+        
+        // Add event listener for admin toggle button
+        if (adminToggleButton) {
+            adminToggleButton.addEventListener('click', function() {
+                // Toggle admin mode
+                requestSection.classList.toggle('admin-mode');
+                
+                // Toggle notification panel visibility
+                if (antiTamperPanelVisible) {
+                    antiTamperNotificationPanel.classList.remove('visible');
+                    antiTamperPanelVisible = false;
+                } else if (notificationGlowActive) {
+                    renderAntiTamperNotifications();
+                    antiTamperNotificationPanel.classList.add('visible');
+                    antiTamperPanelVisible = true;
+                    
+                    // Reset notification state
+                    adminToggleButton.textContent = '—';
+                    adminToggleButton.classList.remove('notification-active');
+                    notificationGlowActive = false;
+                }
+            });
+        }
+        
+        // Function to render anti-tamper notifications
+        async function renderAntiTamperNotifications() {
+            try {
+                // Get anti-tamper logs
+                antiTamperMessages = await getAntiTamperLogs();
+                
+                // Clear existing content
+                antiTamperNotificationPanel.innerHTML = '';
+                
+                // Add each message
+                antiTamperMessages.forEach(log => {
+                    const messageItem = document.createElement('div');
+                    messageItem.classList.add('message-item');
+                    messageItem.setAttribute('data-log-id', log.id);
+                    
+                    const messageText = document.createElement('div');
+                    messageText.textContent = log.message;
+                    messageText.style.flex = '1';
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-anti-tamper-log-button');
+                    deleteButton.textContent = '×';
+                    deleteButton.onclick = async (e) => {
+                        e.stopPropagation();
+                        await deleteAntiTamperLog(log.id);
+                        renderAntiTamperNotifications();
+                    };
+                    
+                    messageItem.appendChild(messageText);
+                    messageItem.appendChild(deleteButton);
+                    antiTamperNotificationPanel.appendChild(messageItem);
+                });
+                
+                // Add clear all button if there are messages
+                if (antiTamperMessages.length > 0) {
+                    const clearButton = document.createElement('button');
+                    clearButton.classList.add('clear-button');
+                    clearButton.textContent = 'Clear All';
+                    clearButton.onclick = async () => {
+                        await clearAntiTamperLogs();
+                        antiTamperNotificationPanel.classList.remove('visible');
+                        antiTamperPanelVisible = false;
+                        renderAntiTamperNotifications();
+                    };
+                    antiTamperNotificationPanel.appendChild(clearButton);
+                }
+            } catch (error) {
+                console.error('Failed to render anti-tamper notifications:', error);
+                
+                // Show error message
+                antiTamperNotificationPanel.innerHTML = '<div class="message-item">Error loading notifications</div>';
+            }
+        }
+        
+        // Set up anti-tamper notification callback
+        setAntiTamperNotificationCallback(() => {
+            const loggedInUser = getLoggedInUser();
+            if (loggedInUser && loggedInUser.idName === 'Amo') {
+                adminToggleButton.textContent = '!';
+                adminToggleButton.classList.add('notification-active');
+                notificationGlowActive = true;
+                
+                // Update the panel if it's already visible
+                if (antiTamperPanelVisible) {
+                    renderAntiTamperNotifications();
+                }
+            }
+        });
+        
+        // Initialize chat modal functionality
+        const chatPill = document.querySelector('.chat-pill');
+        const chatModalOverlay = document.getElementById('chat-modal-overlay');
+        const chatMessagesContainer = document.getElementById('chat-messages');
+        const chatUsernameInput = document.getElementById('chat-username');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendButton = document.getElementById('chat-send-button');
+        let chatMessages = [];
+        
+        if (chatPill && chatModalOverlay) {
+            // Open chat modal
+            chatPill.addEventListener('click', () => {
+                chatModalOverlay.classList.add('visible');
+                renderChatMessages();
+                
+                // Set username from logged in user if available
+                const loggedInUser = getLoggedInUser();
+                if (loggedInUser && !chatUsernameInput.value) {
+                    chatUsernameInput.value = loggedInUser.username || loggedInUser.idName;
+                }
+                
+                // Focus on input
+                chatInput.focus();
+            });
+            
+            // Close chat modal
+            const chatCloseButton = chatModalOverlay.querySelector('.close-button');
+            if (chatCloseButton) {
+                chatCloseButton.addEventListener('click', () => {
+                    chatModalOverlay.classList.remove('visible');
+                });
+            }
+            
+            // Close on overlay click
+            chatModalOverlay.addEventListener('click', (e) => {
+                if (e.target === chatModalOverlay) {
+                    chatModalOverlay.classList.remove('visible');
+                }
+            });
+            
+            // Send chat message
+            if (chatSendButton) {
+                chatSendButton.addEventListener('click', sendChatMessage);
+            }
+            
+            // Send on Enter key
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendChatMessage();
+                    }
+                });
+            }
+        }
+        
+        // Function to send chat message
+        async function sendChatMessage() {
+            const username = chatUsernameInput.value.trim();
+            const text = chatInput.value.trim();
+            
+            if (!username || !text) {
+                alert('Please enter both a username and a message.');
+                return;
+            }
+            
+            const loggedInUser = getLoggedInUser();
+            if (!loggedInUser) {
+                alert('You must be logged in to send messages.');
+                return;
+            }
+            
+            try {
+                // Create message object
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                
+                const message = {
+                    username,
+                    text,
+                    time: `${hours}:${minutes}`,
+                    timestamp: Date.now(),
+                    expiresAt: Date.now() + (30 * 60 * 1000), // 30 minutes expiry
+                    designType: loggedInUser.designType || 'green-member'
+                };
+                
+                // Send to server
+                await addChatMessage(message);
+                
+                // Clear input
+                chatInput.value = '';
+                chatInput.focus();
+                
+                // Render messages (should happen via callback)
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                alert('Failed to send message. Please try again.');
+            }
+        }
+        
+        // Initialize view all button functionality
+        const viewAllButton = document.querySelector('.view-all-button');
+        const viewAllModalOverlay = document.getElementById('view-all-modal-overlay');
+        
+        if (viewAllButton && viewAllModalOverlay) {
+            viewAllButton.addEventListener('click', () => {
+                renderAlbumsGrid();
+                viewAllModalOverlay.classList.add('visible');
+            });
+            
+            // Close button functionality
+            const closeButton = viewAllModalOverlay.querySelector('.close-button');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    viewAllModalOverlay.classList.remove('visible');
+                });
+            }
+            
+            // Close on overlay click
+            viewAllModalOverlay.addEventListener('click', (e) => {
+                if (e.target === viewAllModalOverlay) {
+                    viewAllModalOverlay.classList.remove('visible');
+                }
+            });
+        }
+        
+        // Function to render albums grid
+        async function renderAlbumsGrid() {
+            const albumsGrid = document.getElementById('albums-grid');
+            if (!albumsGrid) return;
+            
+            try {
+                // Clear existing content
+                albumsGrid.innerHTML = '';
+                
+                // Use the already fetched album items or fetch them if not available
+                const items = albumItems.length > 0 ? albumItems : await getAlbumItems();
+                
+                // Sort by name
+                items.sort((a, b) => {
+                    if (a.name && b.name) {
+                        return a.name.localeCompare(b.name);
+                    }
+                    return 0;
+                });
+                
+                // Create grid items
+                items.forEach(item => {
+                    const gridItem = document.createElement('div');
+                    gridItem.classList.add('grid-album-item');
+                    
+                    const imageDiv = document.createElement('div');
+                    imageDiv.classList.add('grid-album-image');
+                    
+                    // Set image if available
+                    if (item.imageUrl && item.imageUrl.trim() !== '') {
+                        imageDiv.style.backgroundImage = `url(${item.imageUrl})`;
+                    } else {
+                        imageDiv.textContent = 'No Image';
+                    }
+                    
+                    const nameDiv = document.createElement('div');
+                    nameDiv.classList.add('grid-album-name');
+                    nameDiv.textContent = item.name || 'Unnamed Game';
+                    
+                    gridItem.appendChild(imageDiv);
+                    gridItem.appendChild(nameDiv);
+                    
+                    // Add click event
+                    gridItem.addEventListener('click', () => {
+                        showAlbumDetails(item);
+                    });
+                    
+                    albumsGrid.appendChild(gridItem);
+                });
+            } catch (error) {
+                console.error('Failed to render albums grid:', error);
+                albumsGrid.innerHTML = '<div class="error-message">Failed to load games</div>';
+            }
+        }
     </script>
 </body>
 </html>

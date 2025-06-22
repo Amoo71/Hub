@@ -120,7 +120,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             position: relative;
-            padding-top: 55px;
+            padding-top: 60px;
         }
         
         #rain-canvas {
@@ -461,22 +461,7 @@
         }
         
         .gallery-content {
-            display: flex;
-            gap: 25px;
-            justify-content: center;
-            align-items: flex-start;
-            user-select: none;
-            cursor: pointer;
-            transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); /* Improved easing */
-            will-change: transform;
-            padding-left: 0; /* We'll center via JavaScript */
-            padding-right: 0;
-            margin: 15px auto; /* Add vertical margin */
-            position: relative; /* For absolute positioning of children */
-        }
-        
-        .gallery-container.dragging .gallery-content {
-            transition: none; /* Disable transition while dragging */
+            display: none !important; /* Hide old carousel */
         }
         
         .album-item-wrapper {
@@ -1340,7 +1325,6 @@
         .modal-overlay.visible {
             opacity: 1;
             visibility: visible;
-            pointer-events: all;
         }
         /* Modal Content */
         .modal-content {
@@ -1772,53 +1756,108 @@
             transition: opacity 0.3s ease;
             animation: fadeIn 0.2s ease-in-out;
         }
-        /* ====================== NAVIGATION BAR ====================== */
-        .top-nav {
+        /* Navigation Bar Styles */
+        #top-nav {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 55px;
-            background: rgba(45, 45, 45, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 10000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+            background: rgba(45, 45, 45, 0.6);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 9999;
         }
-        .top-nav ul {
+        #top-nav ul {
             list-style: none;
             margin: 0;
-            padding: 0 25px;
+            padding: 0;
             display: flex;
             gap: 40px;
-            align-items: center;
         }
-        .top-nav li {
+        #top-nav li {
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             color: var(--text-color);
-            font-weight: 600;
-            font-size: 1.05rem;
-            transition: color 0.25s ease;
+            transition: color 0.2s ease;
+            user-select: none;
         }
-        .top-nav li:hover {
-            color: #c0c0c0;
-        }
-        .top-nav li.active {
+        #top-nav li:hover {
             color: var(--glow-green);
+        }
+        #top-nav li.active {
+            color: var(--glow-green);
+        }
+        /* ------------------------------------------------------------------
+         * NEW 3D CAROUSEL STYLES
+         * ------------------------------------------------------------------ */
+        .carousel {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            display: grid;
+            place-items: center;
+            transform: perspective(1000px) rotateX(70deg);
+            transform-style: preserve-3d;
+            animation: rotate 15s linear infinite;
+            transition: all 1s;
+            background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
+        }
+        .carousel:hover { animation-play-state: paused; }
+        .carousel .card, .carousel .cardb {
+            display: grid;
+            place-items: center;
+            width: 190px;
+            height: 225px;
+            position: absolute;
+            border-radius: 5px;
+            padding: 0;
+        }
+        .carousel .cardb { background-color: #1f1f1f; }
+        .carousel .card {
+            background-color: #333;
+            box-shadow: 0 0 20px rgba(0,0,0,.5);
+            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
+        }
+        .carousel .card .img {
+            width: 180px;
+            height: 100px;
+            border-radius: 3px;
+            margin-bottom: -10px;
+            filter: brightness(.7);
+            background-size: 190px 190px;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .carousel .card p {
+            font-size: 16px;
+            margin-bottom: -5px;
+            text-align: center;
+        }
+        .carousel .card span {
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+        }
+        @keyframes rotate { to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); } }
+        @media screen and (max-width: 992px) {
+            .carousel { transform: perspective(1000px) rotateX(70deg) scale(.7); }
         }
     </style>
 </head>
 <body>
     <canvas id="rain-canvas"></canvas>
-    <!-- ========== TOP NAVIGATION BAR ========== -->
-    <nav id="top-nav" class="top-nav">
+    <!-- Navigation Bar -->
+    <nav id="top-nav">
         <ul>
-            <li id="nav-search" class="active">Search</li>
-            <li id="nav-chat">Chat</li>
-            <li id="nav-request">Request</li>
+            <li data-target="search" class="active">Search</li>
+            <li data-target="chat">Chat</li>
+            <li data-target="requests">Request</li>
         </ul>
     </nav>
     <div id="main-screen" class="screen">
@@ -4205,67 +4244,70 @@
                 renderAlbums(); // Automatically re-render albums when updates occur
             });
 
-            // Also track modal interactions that might not bubble up properly
-            document.querySelectorAll('.modal-content, .modal-body, .glassy-button').forEach(element => {
-                if (element) {
-                    element.addEventListener('click', trackUserActivity, { passive: true });
-                    element.addEventListener('touchstart', trackUserActivity, { passive: true });
-                }
+            /* ------------------------------------------------------------------
+             * NAVIGATION BAR LOGIC
+             * ------------------------------------------------------------------ */
+            const navItems = document.querySelectorAll('#top-nav li');
+            const searchWrapperEl = document.querySelector('.search-wrapper');
+            const mainTitleContainerEl = document.querySelector('.main-title-container');
+            const galleryContainerEl = document.querySelector('.gallery-container');
+
+            function setActiveNav(target) {
+                navItems.forEach(li => li.classList.toggle('active', li.dataset.target === target));
+            }
+
+            function showSearchView() {
+                // Show search related elements
+                mainScreen.style.display = '';
+                if (searchWrapperEl) searchWrapperEl.style.display = '';
+                if (mainTitleContainerEl) mainTitleContainerEl.style.display = '';
+                if (galleryContainerEl) galleryContainerEl.style.display = '';
+                // Hide request section inside main screen
+                if (requestSection) requestSection.style.display = 'none';
+                // Hide chat modal overlay
+                chatModalOverlay.classList.remove('visible');
+                chatModalOverlay.classList.add('hidden');
+                setActiveNav('search');
+            }
+
+            function showChatView() {
+                // Hide main screen completely for full chat space
+                mainScreen.style.display = 'none';
+                // Show chat modal overlay
+                chatModalOverlay.classList.add('visible');
+                chatModalOverlay.classList.remove('hidden');
+                setActiveNav('chat');
+            }
+
+            function showRequestView() {
+                // Show main screen but hide search specific elements
+                mainScreen.style.display = '';
+                if (searchWrapperEl) searchWrapperEl.style.display = 'none';
+                if (mainTitleContainerEl) mainTitleContainerEl.style.display = 'none';
+                if (galleryContainerEl) galleryContainerEl.style.display = 'none';
+                // Show request section
+                if (requestSection) requestSection.style.display = 'block';
+                // Hide chat overlay if open
+                chatModalOverlay.classList.remove('visible');
+                chatModalOverlay.classList.add('hidden');
+                setActiveNav('requests');
+            }
+
+            navItems.forEach(li => {
+                li.addEventListener('click', () => {
+                    const target = li.dataset.target;
+                    if (target === 'search') {
+                        showSearchView();
+                    } else if (target === 'chat') {
+                        showChatView();
+                    } else if (target === 'requests') {
+                        showRequestView();
+                    }
+                });
             });
 
-            /* ====================== NAVIGATION LOGIC ====================== */
-            const navSearch = document.getElementById('nav-search');
-            const navChat = document.getElementById('nav-chat');
-            const navRequest = document.getElementById('nav-request');
-
-            function setActiveNav(activeEl) {
-                [navSearch, navChat, navRequest].forEach(el => el.classList.remove('active'));
-                activeEl.classList.add('active');
-            }
-
-            function setView(view) {
-                switch (view) {
-                    case 'search':
-                        setActiveNav(navSearch);
-                        mainScreen.style.display = 'flex';
-                        // Show search & carousel
-                        if (searchWrapper) searchWrapper.style.display = 'block';
-                        if (galleryContainer) galleryContainer.style.display = 'flex';
-                        // Hide request section
-                        if (requestSection) requestSection.style.display = 'none';
-                        // Ensure chat overlay hidden
-                        chatModalOverlay.classList.remove('visible');
-                        chatModalOverlay.classList.add('hidden');
-                        break;
-                    case 'chat':
-                        setActiveNav(navChat);
-                        // Hide main screen to give chat more space
-                        mainScreen.style.display = 'none';
-                        // Show chat overlay
-                        chatModalOverlay.classList.remove('hidden');
-                        chatModalOverlay.classList.add('visible');
-                        break;
-                    case 'request':
-                        setActiveNav(navRequest);
-                        mainScreen.style.display = 'flex';
-                        // Hide search elements
-                        if (searchWrapper) searchWrapper.style.display = 'none';
-                        if (galleryContainer) galleryContainer.style.display = 'none';
-                        // Show request section
-                        if (requestSection) requestSection.style.display = 'block';
-                        // Ensure chat overlay hidden
-                        chatModalOverlay.classList.remove('visible');
-                        chatModalOverlay.classList.add('hidden');
-                        break;
-                }
-            }
-
-            // Initial default view
-            setView('search');
-
-            navSearch.addEventListener('click', () => setView('search'));
-            navChat.addEventListener('click', () => setView('chat'));
-            navRequest.addEventListener('click', () => setView('request'));
+            // Initialize with search view
+            showSearchView();
         });
 
         document.addEventListener('touchmove', function() {

@@ -1766,7 +1766,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(45, 45, 45, 0.6);
+            background: rgba(35, 35, 45, 0.3); /* more transparent */
             border-bottom: 1px solid var(--glass-border);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -1788,10 +1788,33 @@
             user-select: none;
         }
         #top-nav li:hover {
-            color: var(--glow-green);
+            color: #cccccc;
+        }
+        @keyframes nav-grad {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         #top-nav li.active {
-            color: var(--glow-green);
+            background: linear-gradient(135deg, #3d3d3d, #500a80, #2a2a2a);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: nav-grad 6s ease infinite;
+        }
+
+        /* Hide redundant chat pill */
+        .chat-pill {
+            display: none !important;
+        }
+
+        /* Ensure new carousel visible */
+        .gallery-container {
+            overflow-y: visible; /* allow carousel overflow */
+            min-height: 500px;
+        }
+        .carousel {
+            height: 550px; /* a bit taller for visibility */
         }
         /* ------------------------------------------------------------------
          * NEW 3D CAROUSEL STYLES

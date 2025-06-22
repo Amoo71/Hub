@@ -608,7 +608,7 @@
             width: 95%;
             max-width: 1000px;
             height: 90%;
-            max-height: 90vh;
+            max-height: 760px;
             display: flex;
             flex-direction: column;
             padding: 20px;
@@ -1317,7 +1317,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 10000; /* above nav bar */
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -1810,17 +1810,19 @@
 
         /* Ensure new carousel visible */
         .gallery-container {
-            overflow: visible; /* allow carousel overflow in all directions */
-            min-height: 550px;
+            overflow-y: visible; /* allow carousel overflow */
+            min-height: 500px;
         }
-        .carousel { z-index: 2; }
+        .carousel {
+            height: 550px; /* a bit taller for visibility */
+        }
         /* ------------------------------------------------------------------
          * NEW 3D CAROUSEL STYLES
          * ------------------------------------------------------------------ */
         .carousel {
             position: relative;
             width: 100%;
-            height: 600px; /* taller for visibility */
+            height: 500px;
             display: grid;
             place-items: center;
             transform: perspective(1000px) rotateX(70deg);
@@ -2845,15 +2847,12 @@
                         }
                     });
                     
-                    // Ensure album event listeners
-                    console.log('Init');
-                    initializeAlbumEventListeners();
+                    // Populate new 3D carousel with fetched albums
+                    updateAlbumCarousel(albumItems);
                     
-                    // Ensure carousel is set up correctly
-                    current = 2; // Always start with Album 5 (index 4) as active
-                    console.log('Update');
+                    // Ensure carousel is set up correctly (for old drag carousel hidden but logic kept)
+                    current = 2; // default index for old code
                     updateCarousel();
-            resetCarouselTimer();
 
                     console.log('Success');
                 } catch (error) {
@@ -4329,40 +4328,6 @@
 
             // Initialize with search view
             showSearchView();
-
-            /* ------------------- Helper to update 3D carousel -------------------- */
-            function updateCarousel3D() {
-                const carouselEl = document.getElementById('album-carousel');
-                if (!carouselEl) return;
-                for (let i = 0; i < 8; i++) {
-                    const card = carouselEl.querySelector('.c' + (i + 1));
-                    const cardb = carouselEl.querySelector('.cb' + (i + 1));
-                    if (!card || !cardb) continue;
-                    const imgDiv = card.querySelector('.img');
-                    const titleP = card.querySelector('p');
-                    const item = (albumItems && albumItems[i]) ? albumItems[i] : null;
-                    if (item) {
-                        if (imgDiv) imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
-                        if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
-                        card.onclick = () => showAlbumDetails(item);
-                    } else {
-                        if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
-                        if (titleP) titleP.textContent = `Image ${8 - i}`;
-                        card.onclick = null;
-                    }
-                    const angle = (360 / 8) * (i + 1);
-                    card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
-                    cardb.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
-                }
-            }
-
-            // Call helper initially and after each album render
-            updateCarousel3D();
-            // Wrap original setAlbumItemUpdateCallback again to ensure updates propagate
-            setAlbumItemUpdateCallback(() => {
-                renderAlbums();
-                updateCarousel3D();
-            });
         });
 
         document.addEventListener('touchmove', function() {
@@ -4398,6 +4363,32 @@
                 element.addEventListener('touchstart', trackUserActivity, { passive: true });
             }
         });
+
+        /* ------------------ helper to update new 3D carousel ------------------ */
+        function updateAlbumCarousel(items) {
+            const carouselEl = document.getElementById('album-carousel');
+            if (!carouselEl) return;
+            for (let i = 0; i < 8; i++) {
+                const card = carouselEl.querySelector('.c' + (i + 1));
+                const back = carouselEl.querySelector('.cb' + (i + 1));
+                if (!card || !back) continue;
+                const imgDiv = card.querySelector('.img');
+                const titleP = card.querySelector('p');
+                const item = items && items[i] ? items[i] : null;
+                if (item) {
+                    if (imgDiv) imgDiv.style.backgroundImage = `url(${item.imageUrl || 'https://picsum.photos/300/300.webp?random='+(i+1)})`;
+                    if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
+                    card.onclick = () => showAlbumDetails(item);
+                } else {
+                    if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
+                    if (titleP) titleP.textContent = `Image ${8 - i}`;
+                    card.onclick = null;
+                }
+                const angle = (360 / 8) * (i + 1);
+                card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
+                back.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
+            }
+        }
     </script>
 </body>
 </html>

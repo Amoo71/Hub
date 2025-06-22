@@ -11,7 +11,7 @@
          */
         :root {
             /* Grundfarben */
-            --background-color: #000000;
+            --background-color: #111111;
             --text-color: #f0f0f0;
             --subtle-text-color: #a0a0a0;
             
@@ -107,10 +107,18 @@
                 transform: scale(1); 
             }
         }
+        
+        /* New carousel animation */
+        @keyframes rotate {
+            to {
+                transform: perspective(1000px) rotateX(70deg) rotateZ(360deg);
+            }
+        }
+        
         body {
             background-color: var(--background-color);
             color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -120,6 +128,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             position: relative;
+            background-image: linear-gradient(#111, #222, #111);
         }
         
         #rain-canvas {
@@ -439,8 +448,7 @@
         .gallery-container {
             display: flex;
             width: 100vw;
-            overflow-x: hidden;
-            overflow-y: hidden;
+            overflow: visible;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -452,46 +460,162 @@
             justify-content: center;
             user-select: none; /* Prevent text selection while dragging */
             touch-action: pan-x; /* Enable horizontal pan gesture */
-            cursor: grab;
+            height: 400px;
         }
         
         .gallery-container::-webkit-scrollbar {
             display: none; /* Hide scrollbar */
         }
         
-        .gallery-content {
-            display: flex;
-            gap: 25px;
-            justify-content: center;
-            align-items: flex-start;
-            user-select: none;
-            cursor: pointer;
-            transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); /* Improved easing */
-            will-change: transform;
-            padding-left: 0; /* We'll center via JavaScript */
-            padding-right: 0;
-            margin: 15px auto; /* Add vertical margin */
-            position: relative; /* For absolute positioning of children */
+        /* New Carousel Styles */
+        .carousel {
+            transform: perspective(1000px) rotateX(70deg);
+            transform-style: preserve-3d;
+            display: grid;
+            place-items: center;
+            animation: rotate 15s linear infinite;
+            transition: all 1s;
+            background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
+            position: relative;
+            width: 100%;
+            height: 100%;
         }
         
-        .gallery-container.dragging .gallery-content {
-            transition: none; /* Disable transition while dragging */
+        .carousel:hover {
+            animation-play-state: paused;
         }
         
-        .album-item-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .cardb {
+            display: grid;
+            place-items: center;
+            width: 190px;
+            height: 225px;
+            background-color: #1f1f1f;
+            position: absolute;
+            border-radius: 5px;
+        }
+        
+        .card {
+            display: grid;
+            place-items: center;
+            width: 190px;
+            height: 225px;
+            background-color: #333;
+            position: absolute;
+            box-shadow: 0 0 20px rgba(0,0,0,.5);
+            border-radius: 5px;
+            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
             cursor: pointer;
-            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s;
-            border-radius: 15px;
-            padding: 15px 5px;
-            margin: 10px 0;
+            transition: transform 0.3s ease;
         }
-        .album-item-wrapper:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+        
+        .card:hover {
+            transform: translateZ(10px) scale(1.05);
         }
+        
+        .card .img {
+            width: 180px;
+            height: 100px;
+            border-radius: 3px;
+            margin-bottom: -10px;
+            filter: brightness(.7);
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .card p {
+            font-size: 16px;
+            margin-bottom: -5px;
+        }
+        
+        .card span {
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+            display: none; /* Hide the description by default */
+        }
+        
+        /* Position each card in the carousel */
+        .c1 {
+            transform: rotateZ(0deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c2 {
+            transform: rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c3 {
+            transform: rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c4 {
+            transform: rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c5 {
+            transform: rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c6 {
+            transform: rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c7 {
+            transform: rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c8 {
+            transform: rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c9 {
+            transform: rotateZ(360deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        .c10 {
+            transform: rotateZ(405deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        
+        /* Position each card back in the carousel */
+        .cb1 {
+            transform: rotateZ(0deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb2 {
+            transform: rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb3 {
+            transform: rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb4 {
+            transform: rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb5 {
+            transform: rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb6 {
+            transform: rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb7 {
+            transform: rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb8 {
+            transform: rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb9 {
+            transform: rotateZ(360deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        .cb10 {
+            transform: rotateZ(405deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        @media screen and (max-width: 992px) {
+            .carousel {
+                scale: 0.7;
+            }
+        }
+        
+        .album-name {
+            font-size: 0.9em;
+            color: var(--text-color);
+            margin-top: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+            max-width: 180px;
+            word-wrap: break-word;
+            font-weight: bold;
+        }
+        
         .placeholder-image {
             min-width: 200px;
             width: 200px;
@@ -530,16 +654,6 @@
             font-weight: 500;
             color: var(--text-color);
         }
-        .album-name {
-            font-size: 0.9em;
-            color: var(--subtle-text-color);
-            margin-top: 15px;
-            margin-bottom: 10px;
-            text-align: center;
-            max-width: 200px;
-            word-wrap: break-word;
-            font-weight: bold;
-        }
         .placeholder-image.left1, .placeholder-image.right1 {
             display: flex;
             opacity: 0.8;
@@ -576,7 +690,7 @@
         .chat-pill {
             position: absolute;
             right: auto;
-            left: 47%;
+            left: 50%;
             transform: translateX(-50%);
             top: -40px;
             background: var(--glass-background);
@@ -586,11 +700,13 @@
             padding: 8px 20px;
             font-size: 0.95rem;
             cursor: pointer;
+            transition: all 0.3s ease;
             z-index: 2;
         }
         
         .chat-pill:hover {
             background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
@@ -1787,47 +1903,8 @@
         <h2 class="main-title">Recently Added</h2>
         </div>
         <div class="gallery-container">
-           <div class="gallery-content">
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 1</div></div>
-                    <div class="album-name">G Name 1</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 2</div></div>
-                    <div class="album-name">G Name 2</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 3</div></div>
-                    <div class="album-name">G Name 3</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 4</div></div>
-                    <div class="album-name">G Name 4</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 5</div></div>
-                    <div class="album-name">G Name 5</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 6</div></div>
-                    <div class="album-name">G Name 6</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 7</div></div>
-                    <div class="album-name">G Name 7</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 8</div></div>
-                    <div class="album-name">G Name 8</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 9</div></div>
-                    <div class="album-name">G Name 9</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 10</div></div>
-                    <div class="album-name">G Name 10</div>
-                </div>
+            <div class="carousel">
+                <!-- Cards will be dynamically generated -->
             </div>
         </div>
         <div class="request-section">
@@ -2663,13 +2740,12 @@
             async function renderAlbums() {
                 try {
                     // Fetch album items from server
-                    console.log('Fetching');
+                    console.log('Fetching album items');
                     albumItems = await getAlbumItems();
-                    console.log('Received');
                     
                     // Ensure albumItems is always an array
                     if (!Array.isArray(albumItems)) {
-                        console.warn('Empty');
+                        console.warn('No album items found, using empty array');
                         albumItems = [];
                     }
                     
@@ -2684,263 +2760,153 @@
                     // Limit to 10 items for the carousel
                     const displayItems = albumItems.slice(0, 10);
                     
-                    // Get all existing album wrappers
-                    const albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
-                    console.log('Loaded');
+                    // Clear existing carousel content
+                    carousel.innerHTML = '';
                     
-                    // Update existing album elements with data from displayItems
-                    albumWrappers.forEach((wrapper, i) => {
+                    // Create cards for each album
+                    displayItems.forEach((item, i) => {
                         try {
-                            const placeholderImage = wrapper.querySelector('.placeholder-image');
-                            const albumNameDiv = wrapper.querySelector('.album-name');
+                            // Create card back (shadow element)
+                            const cardBack = document.createElement('div');
+                            cardBack.classList.add('cardb', `cb${i+1}`);
+                            carousel.appendChild(cardBack);
                             
-                            if (!placeholderImage || !albumNameDiv) {
-                                console.warn('Missing');
-                                return; // Skip this iteration
+                            // Create card
+                            const card = document.createElement('div');
+                            card.classList.add('card', `c${i+1}`);
+                            card.setAttribute('data-index', i);
+                            
+                            // Create image element
+                            const imgDiv = document.createElement('div');
+                            imgDiv.classList.add('img');
+                            
+                            // Set image if available
+                            if (item.imageUrl && item.imageUrl.trim() !== '') {
+                                imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
                             }
                             
-                            if (i < displayItems.length) {
-                                // We have data for this album position
-                                const item = displayItems[i];
-                                
-                                // Update album name
-                                albumNameDiv.textContent = item.name || `Album Name ${i + 1}`;
-                                
-                                // Clear any existing content in the placeholder image
-                                placeholderImage.innerHTML = '';
-                                
-                                // Update the image if available
-                                if (item.imageUrl && item.imageUrl.trim() !== '') {
-                                    placeholderImage.style.backgroundImage = `url(${item.imageUrl})`;
-                                    placeholderImage.style.backgroundSize = 'cover';
-                                    placeholderImage.style.backgroundPosition = 'center';
-                                } else {
-                                    // No image URL, show placeholder text
-                                    const placeholderText = document.createElement('div');
-                                    placeholderText.classList.add('placeholder-text');
-                                    placeholderText.textContent = `G ${i + 1}`;
-                                    placeholderImage.appendChild(placeholderText);
-                                    placeholderImage.style.backgroundImage = '';
-                                }
-                            } else {
-                                // No data for this position, set default
-                                albumNameDiv.textContent = `G Name ${i + 1}`;
-                                placeholderImage.innerHTML = '';
-                                placeholderImage.style.backgroundImage = '';
-                                const placeholderText = document.createElement('div');
-                                placeholderText.classList.add('placeholder-text');
-                                placeholderText.textContent = `G ${i + 1}`;
-                                placeholderImage.appendChild(placeholderText);
-                            }
-                        } catch (itemErr) {
-                            console.error('Error');
-                        }
-                    });
-                    
-                    // Ensure album event listeners
-                    console.log('Init');
-                    initializeAlbumEventListeners();
-                    
-                    // Ensure carousel is set up correctly
-                    current = 2; // Always start with Album 5 (index 4) as active
-                    console.log('Update');
-                    updateCarousel();
-            resetCarouselTimer();
-
-                    console.log('Success');
-                } catch (error) {
-                    console.error('Failed');
-                    
-                    // Ensure we have default album visuals even if everything fails
-                    try {
-                        const albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
-                        
-                        if (albumWrappers.length > 0) {
-            albumWrappers.forEach((wrapper, i) => {
-                                const placeholderImage = wrapper.querySelector('.placeholder-image');
-                                if (placeholderImage) {
-                                    placeholderImage.innerHTML = '';
-                                    const placeholderText = document.createElement('div');
-                                    placeholderText.classList.add('placeholder-text');
-                                    placeholderText.textContent = `G ${i + 1}`;
-                                    placeholderImage.appendChild(placeholderText);
-                                }
+                            // Create title element
+                            const titleP = document.createElement('p');
+                            titleP.textContent = item.name || `G ${i + 1}`;
+                            
+                            // Create description element (hidden by default)
+                            const descSpan = document.createElement('span');
+                            descSpan.textContent = 'Game details';
+                            
+                            // Add elements to card
+                            card.appendChild(imgDiv);
+                            card.appendChild(titleP);
+                            card.appendChild(descSpan);
+                            
+                            // Add click event
+                            card.addEventListener('click', () => {
+                                showAlbumDetails(item);
                             });
-                            current = 2;
-                            updateCarousel();
-                        }
-                    } catch (fallbackError) {
-                        console.error('Fallback');
-                    }
-                }
-            }
-            
-            function initializeAlbumEventListeners() {
-                // Update album wrappers reference after re-rendering
-                albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
-
-            albumWrappers.forEach((wrapper, i) => {
-                    // Remove existing click listeners to prevent duplicates
-                    const newWrapper = wrapper.cloneNode(true);
-                    wrapper.parentNode.replaceChild(newWrapper, wrapper);
-                    albumWrappers[i] = newWrapper;
-                    
-                    newWrapper.addEventListener('click', () => {
-                    if (i !== current) {
-                        goto(i);
-                    }
-                        
-                        const detail = i < albumItems.length ? albumItems[i] : {
-                            name: `G Name ${i+1}`,
-                            acc: 'Empty',
-                            pw: 'Empty',
-                            imageUrl: ''
-                        };
-                        
-                        modalAlbumName.textContent = detail.name;
-
-                        if (detail.acc && detail.acc !== 'Empty') {
-                            copyAccButton.textContent = `Copy ACC`;
-                            copyAccButton.setAttribute('data-clipboard-text', detail.acc);
-                            copyAccButton.classList.remove('is-empty');
-                            copyAccButton.style.cursor = 'pointer';
-                        } else {
-                            copyAccButton.textContent = `Empty`;
-                            copyAccButton.setAttribute('data-clipboard-text', 'Empty');
-                            copyAccButton.classList.add('is-empty');
-                            copyAccButton.style.cursor = 'not-allowed';
-                        }
-                        copyAccButton.classList.add('gradient-animated');
-
-                        if (detail.pw && detail.pw !== 'Empty') {
-                            copyPwButton.textContent = `Copy PW`;
-                            copyPwButton.setAttribute('data-clipboard-text', detail.pw);
-                            copyPwButton.classList.remove('is-empty');
-                            copyPwButton.style.cursor = 'pointer';
-                        } else {
-                            copyPwButton.textContent = `Empty`;
-                            copyPwButton.setAttribute('data-clipboard-text', 'Empty');
-                            copyPwButton.classList.add('is-empty');
-                            copyPwButton.style.cursor = 'not-allowed';
-                        }
-                        copyPwButton.classList.add('gradient-animated');
-
-                        // Update modal image if available
-                        const modalImage = albumDetailModal.querySelector('.modal-image-placeholder');
-                        if (detail.imageUrl && detail.imageUrl.trim() !== '') {
-                            modalImage.style.backgroundImage = `url(${detail.imageUrl})`;
-                            modalImage.style.backgroundSize = 'cover';
-                            modalImage.style.backgroundPosition = 'center';
-                            modalImage.textContent = '';
-                        } else {
-                            modalImage.style.backgroundImage = 'none';
-                            modalImage.textContent = 'No Image Available';
-                        }
-
-                        // Add edit/delete buttons for admin mode
-                        const modalEditOptions = albumDetailModal.querySelector('.modal-edit-options');
-                        if (modalEditOptions) {
-                            const isAdminMode = requestSection.classList.contains('admin-mode');
-                            modalEditOptions.style.display = isAdminMode ? 'flex' : 'none';
                             
-                            // Set data attributes for editing even for default albums
-                            modalEditOptions.setAttribute('data-album-id', detail.id || '');
-                            modalEditOptions.setAttribute('data-album-name', detail.name || `Album Name ${i+1}`);
-                            modalEditOptions.setAttribute('data-album-imageurl', detail.imageUrl || '');
-                            modalEditOptions.setAttribute('data-album-acc', detail.acc || 'Empty');
-                            modalEditOptions.setAttribute('data-album-pw', detail.pw || 'Empty');
-                }
-
-                        albumDetailModalOverlay.classList.add('visible');
+                            // Add card to carousel
+                            carousel.appendChild(card);
+                            
+                        } catch (itemErr) {
+                            console.error('Error creating card:', itemErr);
+                        }
                     });
                     
-                    // Re-establish hover effects for the carousel
-                    newWrapper.addEventListener('mouseenter', () => {
-                    hoverTarget = i;
-                    if (hoverStepTimeout) clearTimeout(hoverStepTimeout);
-                    if (hoverStepInterval) clearInterval(hoverStepInterval);
-                    if (Math.abs(i - current) > 1) {
-                        hoverStepTimeout = setTimeout(() => {
-                            stepToTarget();
-                            hoverStepInterval = setInterval(() => {
-                                stepToTarget();
-                            }, 500);
-                        }, 1000);
+                    // If we have fewer than 10 items, add empty placeholders
+                    for (let i = displayItems.length; i < 10; i++) {
+                        // Create card back (shadow element)
+                        const cardBack = document.createElement('div');
+                        cardBack.classList.add('cardb', `cb${i+1}`);
+                        carousel.appendChild(cardBack);
+                        
+                        // Create card
+                        const card = document.createElement('div');
+                        card.classList.add('card', `c${i+1}`);
+                        
+                        // Create image element
+                        const imgDiv = document.createElement('div');
+                        imgDiv.classList.add('img');
+                        
+                        // Create title element
+                        const titleP = document.createElement('p');
+                        titleP.textContent = `G ${i + 1}`;
+                        
+                        // Create description element
+                        const descSpan = document.createElement('span');
+                        descSpan.textContent = 'Empty slot';
+                        
+                        // Add elements to card
+                        card.appendChild(imgDiv);
+                        card.appendChild(titleP);
+                        card.appendChild(descSpan);
+                        
+                        // Add card to carousel
+                        carousel.appendChild(card);
                     }
-                });
                     
-                    newWrapper.addEventListener('mouseleave', () => {
-                    hoverTarget = null;
-                    if (hoverStepTimeout) clearTimeout(hoverStepTimeout);
-                    if (hoverStepInterval) clearInterval(hoverStepInterval);
-                });
-            });
+                    // Set current active item and update carousel
+                    current = 2; // Start with Album 3 as active
+                    updateCarousel();
+                    resetCarouselTimer();
+                    
+                    console.log('Albums rendered successfully');
+                } catch (error) {
+                    console.error('Failed to render albums:', error);
+                    
+                    // Fallback: create empty placeholder cards
+                    carousel.innerHTML = '';
+                    
+                    for (let i = 0; i < 10; i++) {
+                        // Create card back
+                        const cardBack = document.createElement('div');
+                        cardBack.classList.add('cardb', `cb${i+1}`);
+                        carousel.appendChild(cardBack);
+                        
+                        // Create card
+                        const card = document.createElement('div');
+                        card.classList.add('card', `c${i+1}`);
+                        
+                        // Create image element
+                        const imgDiv = document.createElement('div');
+                        imgDiv.classList.add('img');
+                        
+                        // Create title element
+                        const titleP = document.createElement('p');
+                        titleP.textContent = `G ${i + 1}`;
+                        
+                        // Add elements to card
+                        card.appendChild(imgDiv);
+                        card.appendChild(titleP);
+                        
+                        // Add card to carousel
+                        carousel.appendChild(card);
+                    }
+                    
+                    current = 2;
+                    updateCarousel();
+                }
             }
 
             function updateCarousel() {
-                // Remove all visual classes
-                albumWrappers.forEach(wrapper => {
-                    const albumImage = wrapper.querySelector('.placeholder-image');
-                    albumImage.classList.remove('active', 'left1', 'left2', 'right1', 'right2');
-                    wrapper.classList.remove('is-visible');
-                });
+                // Get all cards
+                const cards = Array.from(carousel.querySelectorAll('.card'));
                 
-                // Apply new classes with calculated indexes to ensure proper display
-                albumWrappers.forEach((wrapper, i) => {
-                    const albumImage = wrapper.querySelector('.placeholder-image');
-                    let shouldBeVisible = false;
-
+                // Update active state for all cards
+                cards.forEach((card, i) => {
                     if (i === current) {
-                        albumImage.classList.add('active');
-                        shouldBeVisible = true;
-                    } else if (i === current - 1) {
-                        albumImage.classList.add('left1');
-                        shouldBeVisible = true;
-                    } else if (i === current - 2) {
-                        albumImage.classList.add('left2');
-                        shouldBeVisible = true;
-                    } else if (i === current + 1) {
-                        albumImage.classList.add('right1');
-                        shouldBeVisible = true;
-                    } else if (i === current + 2) {
-                        albumImage.classList.add('right2');
-                        shouldBeVisible = true;
-                    }
-                    if (shouldBeVisible) {
-                        wrapper.classList.add('is-visible');
+                        card.classList.add('active');
+                    } else {
+                        card.classList.remove('active');
                     }
                 });
-                
-                // Apply transform animation to center the current album
-                centerCurrentAlbum();
-            }
-            
-            function centerCurrentAlbum() {
-                const activeWrapper = albumWrappers[current];
-                if (!activeWrapper) return;
-                
-                // Calculate transform to center the current album
-                const albumWidth = activeWrapper.offsetWidth;
-                const containerWidth = galleryContainer.offsetWidth;
-                const centerOffset = (containerWidth - albumWidth) / 2;
-                
-                // Get position of active album
-                const wrapperLeft = activeWrapper.offsetLeft;
-                
-                // Calculate the exact position needed for perfect centering
-                let targetPosition = wrapperLeft - centerOffset;
-                
-                // Ensure we don't go beyond bounds
-                const maxScroll = galleryContent.scrollWidth - containerWidth;
-                targetPosition = Math.max(0, Math.min(targetPosition, maxScroll));
-                
-                // Apply transform animation with smooth easing
-                galleryContent.style.transform = `translateX(-${targetPosition}px)`;
             }
 
             function goto(idx) {
+                // Get all cards
+                const cards = Array.from(carousel.querySelectorAll('.card'));
+                
+                // Ensure index is within bounds
                 if (idx < 0) idx = 0;
-                if (idx >= albumWrappers.length) idx = albumWrappers.length - 1;
+                if (idx >= cards.length) idx = cards.length - 1;
                 
                 // Only update if changing to a different position
                 if (current !== idx) {
@@ -2950,6 +2916,13 @@
                 
                 resetCarouselTimer();
             }
+
+            // Add keyboard navigation
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') goto(current - 1);
+                if (e.key === 'ArrowRight') goto(current + 1);
+                resetCarouselTimer();
+            });
 
             galleryContent.addEventListener('wheel', resetCarouselTimer);
             galleryContent.addEventListener('mousedown', resetCarouselTimer);

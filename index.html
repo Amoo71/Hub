@@ -444,8 +444,9 @@
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
+            -ms-overflow-style: none;
             scroll-behavior: smooth;
-            margin-top: 10px; /* closer to title */
+            margin-top: 20px;
             margin-bottom: 60px;
             padding: 30px 0;
             position: relative;
@@ -604,10 +605,10 @@
         }
         
         #chat-modal {
-            width: 95%;
-            max-width: 1000px;
-            height: 90%;
-            max-height: 760px;
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            max-height: 600px;
             display: flex;
             flex-direction: column;
             padding: 20px;
@@ -1316,7 +1317,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 10000; /* above nav bar */
+            z-index: 100;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -1765,7 +1766,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(35, 35, 45, 0.15); /* even more transparent */
+            background: linear-gradient(135deg, rgba(34, 34, 34, 0.35), rgba(68, 0, 90, 0.35));
+            background-size: 200% 200%;
+            animation: nav-gradient 6s ease infinite;
             border-bottom: 1px solid var(--glass-border);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -1787,33 +1790,10 @@
             user-select: none;
         }
         #top-nav li:hover {
-            color: #cccccc;
-        }
-        @keyframes nav-grad {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            color: var(--glow-green);
         }
         #top-nav li.active {
-            background: linear-gradient(135deg, #3d3d3d, #500a80, #2a2a2a);
-            background-size: 400% 400%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: nav-grad 6s ease infinite;
-        }
-
-        /* Hide redundant chat pill */
-        .chat-pill {
-            display: none !important;
-        }
-
-        /* Ensure new carousel visible */
-        .gallery-container {
-            overflow-y: visible; /* allow carousel overflow */
-            min-height: 500px;
-        }
-        .carousel {
-            height: 550px; /* a bit taller for visibility */
+            color: var(--glow-green);
         }
         /* ------------------------------------------------------------------
          * NEW 3D CAROUSEL STYLES
@@ -1869,6 +1849,32 @@
         @keyframes rotate { to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); } }
         @media screen and (max-width: 992px) {
             .carousel { transform: perspective(1000px) rotateX(70deg) scale(.7); }
+        }
+        /* Animated gradient keyframes for nav bar */
+        @keyframes nav-gradient {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        /* Hide obsolete chat pill */
+        .chat-pill {
+            display: none !important;
+        }
+        /* Enlarge chat modal since we have more space */
+        #chat-modal {
+            width: 90% !important;
+            max-width: 1200px !important;
+            height: 90% !important;
+            max-height: none !important;
+            border-radius: 12px;
+        }
+        /* Remove close button from chat modal */
+        #chat-modal .close-button {
+            display: none !important;
+        }
+        /* Bring overlays above nav bar */
+        .modal-overlay {
+            z-index: 10001; /* Above nav (9999) */
         }
     </style>
 </head>
@@ -1938,26 +1944,6 @@
                     <div class="album-name">G Name 10</div>
                 </div>
             </div>
-        </div>
-        <!-- New 3D Carousel for Recently Added -->
-        <div class="carousel" id="album-carousel">
-            <!-- 8 front/back pairs -->
-            <div class="card c1"><div class="img"></div><p>Image 8</p><span></span></div>
-            <div class="cardb cb1"></div>
-            <div class="card c2"><div class="img"></div><p>Image 7</p><span></span></div>
-            <div class="cardb cb2"></div>
-            <div class="card c3"><div class="img"></div><p>Image 6</p><span></span></div>
-            <div class="cardb cb3"></div>
-            <div class="card c4"><div class="img"></div><p>Image 5</p><span></span></div>
-            <div class="cardb cb4"></div>
-            <div class="card c5"><div class="img"></div><p>Image 4</p><span></span></div>
-            <div class="cardb cb5"></div>
-            <div class="card c6"><div class="img"></div><p>Image 3</p><span></span></div>
-            <div class="cardb cb6"></div>
-            <div class="card c7"><div class="img"></div><p>Image 2</p><span></span></div>
-            <div class="cardb cb7"></div>
-            <div class="card c8"><div class="img"></div><p>Image 1</p><span></span></div>
-            <div class="cardb cb8"></div>
         </div>
         <div class="request-section">
             <button class="chat-pill">Chat</button>
@@ -2866,14 +2852,20 @@
                         }
                     });
                     
-                    // Populate new 3D carousel with fetched albums
-                    updateAlbumCarousel(albumItems);
+                    // Ensure album event listeners
+                    console.log('Init');
+                    initializeAlbumEventListeners();
                     
-                    // Ensure carousel is set up correctly (for old drag carousel hidden but logic kept)
-                    current = 2; // default index for old code
+                    // Ensure carousel is set up correctly
+                    current = 2; // Always start with Album 5 (index 4) as active
+                    console.log('Update');
                     updateCarousel();
+            resetCarouselTimer();
 
                     console.log('Success');
++
++                    // --- Populate new 3D carousel ---
++                    populateCarousel();
                 } catch (error) {
                     console.error('Failed');
                     
@@ -4347,6 +4339,40 @@
 
             // Initialize with search view
             showSearchView();
+
+            /* Helper: update 3D carousel cards with album data */
+            function populateCarousel() {
+                const carouselEl = document.getElementById('album-carousel');
+                if (!carouselEl) return;
+
+                for (let i = 0; i < 8; i++) {
+                    const card = carouselEl.querySelector('.c' + (i + 1));
+                    const cardBack = carouselEl.querySelector('.cb' + (i + 1));
+                    if (!card) continue;
+                    const imgDiv = card.querySelector('.img');
+                    const titleP = card.querySelector('p');
+                    const item = albumItems[i];
+
+                    const angle = (360 / 8) * (i + 1);
+                    card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
+                    if (cardBack) {
+                        cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
+                    }
+
+                    if (item) {
+                        if (imgDiv && item.imageUrl) {
+                            imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
+                        }
+                        if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
+                        card.onclick = () => showAlbumDetails(item);
+                    } else {
+                        // Placeholder content
+                        if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
+                        if (titleP) titleP.textContent = `Image ${8 - i}`;
+                        card.onclick = null;
+                    }
+                }
+            }
         });
 
         document.addEventListener('touchmove', function() {
@@ -4382,32 +4408,6 @@
                 element.addEventListener('touchstart', trackUserActivity, { passive: true });
             }
         });
-
-        /* ------------------ helper to update new 3D carousel ------------------ */
-        function updateAlbumCarousel(items) {
-            const carouselEl = document.getElementById('album-carousel');
-            if (!carouselEl) return;
-            for (let i = 0; i < 8; i++) {
-                const card = carouselEl.querySelector('.c' + (i + 1));
-                const back = carouselEl.querySelector('.cb' + (i + 1));
-                if (!card || !back) continue;
-                const imgDiv = card.querySelector('.img');
-                const titleP = card.querySelector('p');
-                const item = items && items[i] ? items[i] : null;
-                if (item) {
-                    if (imgDiv) imgDiv.style.backgroundImage = `url(${item.imageUrl || 'https://picsum.photos/300/300.webp?random='+(i+1)})`;
-                    if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
-                    card.onclick = () => showAlbumDetails(item);
-                } else {
-                    if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
-                    if (titleP) titleP.textContent = `Image ${8 - i}`;
-                    card.onclick = null;
-                }
-                const angle = (360 / 8) * (i + 1);
-                card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
-                back.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
-            }
-        }
     </script>
 </body>
 </html>

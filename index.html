@@ -597,6 +597,7 @@
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 5px;
         }
         
         #chat-modal-overlay.visible {
@@ -605,13 +606,13 @@
         }
         
         #chat-modal {
-            width: 90%;
-            max-width: 800px;
-            height: 80%;
-            max-height: 600px;
+            width: 95%;
+            max-width: 1200px;
+            height: 95%;
+            max-height: 800px;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             animation: scaleInSmooth 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             overflow: hidden;
@@ -1316,7 +1317,8 @@
             -webkit-backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
+            padding-top: 15vh;
             z-index: 100;
             opacity: 0;
             visibility: hidden;
@@ -1766,12 +1768,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, rgba(34, 34, 34, 0.35), rgba(68, 0, 90, 0.35));
-            background-size: 200% 200%;
-            animation: nav-gradient 6s ease infinite;
-            border-bottom: 1px solid var(--glass-border);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            background: rgba(45, 45, 45, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             z-index: 9999;
         }
         #top-nav ul {
@@ -1786,14 +1786,28 @@
             font-weight: 600;
             cursor: pointer;
             color: var(--text-color);
-            transition: color 0.2s ease;
+            transition: all 0.3s ease;
             user-select: none;
+            position: relative;
         }
         #top-nav li:hover {
-            color: var(--glow-green);
+            color: rgba(180, 140, 230, 0.9);
         }
         #top-nav li.active {
-            color: var(--glow-green);
+            background: linear-gradient(90deg, rgba(100, 90, 130, 0.8), rgba(80, 70, 100, 0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        #top-nav li.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(120, 100, 180, 0.8), rgba(80, 70, 100, 0.8));
+            border-radius: 2px;
         }
         /* ------------------------------------------------------------------
          * NEW 3D CAROUSEL STYLES
@@ -1809,6 +1823,7 @@
             animation: rotate 15s linear infinite;
             transition: all 1s;
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
+            margin: 50px auto;
         }
         .carousel:hover { animation-play-state: paused; }
         .carousel .card, .carousel .cardb {
@@ -1849,32 +1864,6 @@
         @keyframes rotate { to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); } }
         @media screen and (max-width: 992px) {
             .carousel { transform: perspective(1000px) rotateX(70deg) scale(.7); }
-        }
-        /* Animated gradient keyframes for nav bar */
-        @keyframes nav-gradient {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        /* Hide obsolete chat pill */
-        .chat-pill {
-            display: none !important;
-        }
-        /* Enlarge chat modal since we have more space */
-        #chat-modal {
-            width: 90% !important;
-            max-width: 1200px !important;
-            height: 90% !important;
-            max-height: none !important;
-            border-radius: 12px;
-        }
-        /* Remove close button from chat modal */
-        #chat-modal .close-button {
-            display: none !important;
-        }
-        /* Bring overlays above nav bar */
-        .modal-overlay {
-            z-index: 10001; /* Above nav (9999) */
         }
     </style>
 </head>
@@ -1946,7 +1935,6 @@
             </div>
         </div>
         <div class="request-section">
-            <button class="chat-pill">Chat</button>
             <div class="input-form" id="input-form">
                 <div class="input-wrapper primary" id="primary-wrapper">
                     <input type="text" id="request-input" class="glassy-input" placeholder="Make a request">
@@ -2863,9 +2851,6 @@
             resetCarouselTimer();
 
                     console.log('Success');
-+
-+                    // --- Populate new 3D carousel ---
-+                    populateCarousel();
                 } catch (error) {
                     console.error('Failed');
                     
@@ -4293,6 +4278,7 @@
                 if (searchWrapperEl) searchWrapperEl.style.display = '';
                 if (mainTitleContainerEl) mainTitleContainerEl.style.display = '';
                 if (galleryContainerEl) galleryContainerEl.style.display = '';
+                if (document.getElementById('album-carousel')) document.getElementById('album-carousel').style.display = '';
                 // Hide request section inside main screen
                 if (requestSection) requestSection.style.display = 'none';
                 // Hide chat modal overlay
@@ -4307,6 +4293,8 @@
                 // Show chat modal overlay
                 chatModalOverlay.classList.add('visible');
                 chatModalOverlay.classList.remove('hidden');
+                // Hide close button
+                chatModal.querySelector('.close-button').style.display = 'none';
                 setActiveNav('chat');
             }
 
@@ -4316,6 +4304,7 @@
                 if (searchWrapperEl) searchWrapperEl.style.display = 'none';
                 if (mainTitleContainerEl) mainTitleContainerEl.style.display = 'none';
                 if (galleryContainerEl) galleryContainerEl.style.display = 'none';
+                if (document.getElementById('album-carousel')) document.getElementById('album-carousel').style.display = 'none';
                 // Show request section
                 if (requestSection) requestSection.style.display = 'block';
                 // Hide chat overlay if open
@@ -4339,40 +4328,6 @@
 
             // Initialize with search view
             showSearchView();
-
-            /* Helper: update 3D carousel cards with album data */
-            function populateCarousel() {
-                const carouselEl = document.getElementById('album-carousel');
-                if (!carouselEl) return;
-
-                for (let i = 0; i < 8; i++) {
-                    const card = carouselEl.querySelector('.c' + (i + 1));
-                    const cardBack = carouselEl.querySelector('.cb' + (i + 1));
-                    if (!card) continue;
-                    const imgDiv = card.querySelector('.img');
-                    const titleP = card.querySelector('p');
-                    const item = albumItems[i];
-
-                    const angle = (360 / 8) * (i + 1);
-                    card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
-                    if (cardBack) {
-                        cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
-                    }
-
-                    if (item) {
-                        if (imgDiv && item.imageUrl) {
-                            imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
-                        }
-                        if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
-                        card.onclick = () => showAlbumDetails(item);
-                    } else {
-                        // Placeholder content
-                        if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
-                        if (titleP) titleP.textContent = `Image ${8 - i}`;
-                        card.onclick = null;
-                    }
-                }
-            }
         });
 
         document.addEventListener('touchmove', function() {

@@ -1773,24 +1773,41 @@
         }
 
         /* =========================  NAV BAR  ========================= */
-        body { padding-top: 70px; }
+        body { padding-top: 60px; }
         .nav-bar {
-            height: 52px;
-            background: rgba(32,32,32,0.25);
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-radius: 0 0 12px 12px; /* subtle macOS rounded bottom */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 48px; /* macOS style */
+            background: rgba(30, 30, 30, 0.45);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 32px;
+            z-index: 10000;
+            pointer-events: auto;
         }
         .nav-item {
-            padding: 6px 18px;
-            border-radius: 8px;
+            background: none;
+            border: none;
+            color: var(--text-color);
             font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 8px;
+            transition: background 0.25s ease, color 0.25s ease;
+            pointer-events: auto;
         }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .nav-item.active {
-            background: rgba(255,255,255,0.15);
             color: #fff;
+            background: rgba(0,0,0,0.35);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
         }
 
         /* =========================  3-D CAROUSEL  ========================= */
@@ -1826,17 +1843,13 @@
         }
         .carousel .card .img {
             width: 180px;
-            height: 100px;
+            height: 180px;
             border-radius: 3px;
-            margin-bottom: -10px;
-            overflow: hidden;
-            display: flex;
-        }
-        .carousel .card .img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: brightness(.8);
+            margin-bottom: 8px;
+            filter: brightness(.9);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
         .carousel .card p { font-size: 16px; margin-bottom: -5px; text-align: center; }
         .carousel .card span { font-size: 12px; text-align: center; padding: 8px; }
@@ -4327,8 +4340,8 @@
         function render3DCarousel() {
             if (!carousel3D) return;
             carousel3D.innerHTML = '';
-            const displayItems = (albumItems || []).slice(0, 8);
-            const total = 8;
+            const displayItems = (albumItems || []).slice(0, 10);
+            const total = 10;
             const angleStep = 360 / total;
             for (let i = 0; i < total; i++) {
                 const item = displayItems[i] || { name: `G ${i+1}`, imageUrl: '', desc: '' };
@@ -4342,11 +4355,8 @@
 
                 const imgDiv = document.createElement('div');
                 imgDiv.classList.add('img');
-                if (item.imageUrl && item.imageUrl.trim() !== '') {
-                    const elImg = document.createElement('img');
-                    elImg.src = item.imageUrl;
-                    elImg.alt = item.name;
-                    imgDiv.appendChild(elImg);
+                if (item.imageUrl) {
+                    imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
                 } else {
                     imgDiv.style.background = 'rgba(255,255,255,0.05)';
                 }
@@ -4368,9 +4378,6 @@
                 carousel3D.appendChild(cardb);
             }
         }
-
-        /* --------- ensure default SEARCH view on load --------- */
-        showSearchMode();
     </script>
 </body>
 </html>

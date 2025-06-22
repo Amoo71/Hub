@@ -605,10 +605,10 @@
         }
         
         #chat-modal {
-            width: 90%;
-            max-width: 800px;
-            height: 80%;
-            max-height: 600px;
+            width: 95%;
+            max-width: 1000px;
+            height: 90%;
+            max-height: 90vh;
             display: flex;
             flex-direction: column;
             padding: 20px;
@@ -1766,7 +1766,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(35, 35, 45, 0.3); /* more transparent */
+            background: rgba(35, 35, 45, 0.15); /* even more transparent */
             border-bottom: 1px solid var(--glass-border);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -1810,19 +1810,17 @@
 
         /* Ensure new carousel visible */
         .gallery-container {
-            overflow-y: visible; /* allow carousel overflow */
-            min-height: 500px;
+            overflow: visible; /* allow carousel overflow in all directions */
+            min-height: 550px;
         }
-        .carousel {
-            height: 550px; /* a bit taller for visibility */
-        }
+        .carousel { z-index: 2; }
         /* ------------------------------------------------------------------
          * NEW 3D CAROUSEL STYLES
          * ------------------------------------------------------------------ */
         .carousel {
             position: relative;
             width: 100%;
-            height: 500px;
+            height: 600px; /* taller for visibility */
             display: grid;
             place-items: center;
             transform: perspective(1000px) rotateX(70deg);
@@ -4331,6 +4329,40 @@
 
             // Initialize with search view
             showSearchView();
+
+            /* ------------------- Helper to update 3D carousel -------------------- */
+            function updateCarousel3D() {
+                const carouselEl = document.getElementById('album-carousel');
+                if (!carouselEl) return;
+                for (let i = 0; i < 8; i++) {
+                    const card = carouselEl.querySelector('.c' + (i + 1));
+                    const cardb = carouselEl.querySelector('.cb' + (i + 1));
+                    if (!card || !cardb) continue;
+                    const imgDiv = card.querySelector('.img');
+                    const titleP = card.querySelector('p');
+                    const item = (albumItems && albumItems[i]) ? albumItems[i] : null;
+                    if (item) {
+                        if (imgDiv) imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
+                        if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
+                        card.onclick = () => showAlbumDetails(item);
+                    } else {
+                        if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
+                        if (titleP) titleP.textContent = `Image ${8 - i}`;
+                        card.onclick = null;
+                    }
+                    const angle = (360 / 8) * (i + 1);
+                    card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
+                    cardb.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
+                }
+            }
+
+            // Call helper initially and after each album render
+            updateCarousel3D();
+            // Wrap original setAlbumItemUpdateCallback again to ensure updates propagate
+            setAlbumItemUpdateCallback(() => {
+                renderAlbums();
+                updateCarousel3D();
+            });
         });
 
         document.addEventListener('touchmove', function() {

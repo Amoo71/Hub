@@ -120,6 +120,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             position: relative;
+            padding-top: 55px;
         }
         
         #rain-canvas {
@@ -1771,48 +1772,55 @@
             transition: opacity 0.3s ease;
             animation: fadeIn 0.2s ease-in-out;
         }
-        /* ====  added navigation bar styles ==== */
-        body { padding-top: 60px; }
-        .navbar {
+        /* ====================== NAVIGATION BAR ====================== */
+        .top-nav {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 60px;
-            background: var(--glass-background);
-            border-bottom: 1px solid var(--glass-border);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            height: 55px;
+            background: rgba(45, 45, 45, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
         }
-        .nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1rem;
-            padding: 8px 20px;
-            margin: 0 8px;
+        .top-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0 25px;
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        .top-nav li {
             cursor: pointer;
-            transition: color 0.3s ease;
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: color 0.25s ease;
         }
-        .nav-btn:hover { color: var(--glow-green); }
-        .nav-btn.active { color: var(--glow-green); }
-        @media (max-width: 480px) {
-            .nav-btn { font-size: 0.9rem; padding: 6px 14px; }
+        .top-nav li:hover {
+            color: #c0c0c0;
+        }
+        .top-nav li.active {
+            color: var(--glow-green);
         }
     </style>
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <nav class="navbar">
-        <button id="nav-search" class="nav-btn active">Search</button>
-        <button id="nav-chat" class="nav-btn">Chat</button>
-        <button id="nav-request" class="nav-btn">Request</button>
-    </nav>
     <canvas id="rain-canvas"></canvas>
+    <!-- ========== TOP NAVIGATION BAR ========== -->
+    <nav id="top-nav" class="top-nav">
+        <ul>
+            <li id="nav-search" class="active">Search</li>
+            <li id="nav-chat">Chat</li>
+            <li id="nav-request">Request</li>
+        </ul>
+    </nav>
     <div id="main-screen" class="screen">
         <div class="search-wrapper" style="position: relative; width: min(450px, 80vw); margin: 0 auto;">
         <input type="search" class="glassy-input search-bar" placeholder="Search...">
@@ -4197,53 +4205,67 @@
                 renderAlbums(); // Automatically re-render albums when updates occur
             });
 
-            // --- NAVIGATION LOGIC ---
+            // Also track modal interactions that might not bubble up properly
+            document.querySelectorAll('.modal-content, .modal-body, .glassy-button').forEach(element => {
+                if (element) {
+                    element.addEventListener('click', trackUserActivity, { passive: true });
+                    element.addEventListener('touchstart', trackUserActivity, { passive: true });
+                }
+            });
+
+            /* ====================== NAVIGATION LOGIC ====================== */
             const navSearch = document.getElementById('nav-search');
             const navChat = document.getElementById('nav-chat');
             const navRequest = document.getElementById('nav-request');
 
-            function setActiveNav(btn) {
-                [navSearch, navChat, navRequest].forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+            function setActiveNav(activeEl) {
+                [navSearch, navChat, navRequest].forEach(el => el.classList.remove('active'));
+                activeEl.classList.add('active');
             }
 
-            function showSearchView() {
-                searchWrapper.style.display = '';
-                mainTitleContainer.style.display = '';
-                galleryContainer.style.display = '';
-                requestSection.style.display = 'none';
-                chatModalOverlay.classList.remove('visible');
-                chatModalOverlay.classList.add('hidden');
-                setActiveNav(navSearch);
-            }
-
-            function showRequestView() {
-                searchWrapper.style.display = 'none';
-                mainTitleContainer.style.display = 'none';
-                galleryContainer.style.display = 'none';
-                requestSection.style.display = '';
-                chatModalOverlay.classList.remove('visible');
-                chatModalOverlay.classList.add('hidden');
-                setActiveNav(navRequest);
-            }
-
-            function showChatView() {
-                searchWrapper.style.display = 'none';
-                mainTitleContainer.style.display = 'none';
-                galleryContainer.style.display = 'none';
-                requestSection.style.display = 'none';
-                if (!chatModalOverlay.classList.contains('visible')) {
-                    chatPill.click();
+            function setView(view) {
+                switch (view) {
+                    case 'search':
+                        setActiveNav(navSearch);
+                        mainScreen.style.display = 'flex';
+                        // Show search & carousel
+                        if (searchWrapper) searchWrapper.style.display = 'block';
+                        if (galleryContainer) galleryContainer.style.display = 'flex';
+                        // Hide request section
+                        if (requestSection) requestSection.style.display = 'none';
+                        // Ensure chat overlay hidden
+                        chatModalOverlay.classList.remove('visible');
+                        chatModalOverlay.classList.add('hidden');
+                        break;
+                    case 'chat':
+                        setActiveNav(navChat);
+                        // Hide main screen to give chat more space
+                        mainScreen.style.display = 'none';
+                        // Show chat overlay
+                        chatModalOverlay.classList.remove('hidden');
+                        chatModalOverlay.classList.add('visible');
+                        break;
+                    case 'request':
+                        setActiveNav(navRequest);
+                        mainScreen.style.display = 'flex';
+                        // Hide search elements
+                        if (searchWrapper) searchWrapper.style.display = 'none';
+                        if (galleryContainer) galleryContainer.style.display = 'none';
+                        // Show request section
+                        if (requestSection) requestSection.style.display = 'block';
+                        // Ensure chat overlay hidden
+                        chatModalOverlay.classList.remove('visible');
+                        chatModalOverlay.classList.add('hidden');
+                        break;
                 }
-                setActiveNav(navChat);
             }
 
-            navSearch.addEventListener('click', showSearchView);
-            navRequest.addEventListener('click', showRequestView);
-            navChat.addEventListener('click', showChatView);
+            // Initial default view
+            setView('search');
 
-            // Default view on load
-            showSearchView();
+            navSearch.addEventListener('click', () => setView('search'));
+            navChat.addEventListener('click', () => setView('chat'));
+            navRequest.addEventListener('click', () => setView('request'));
         });
 
         document.addEventListener('touchmove', function() {

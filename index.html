@@ -617,25 +617,6 @@
             overflow: hidden;
         }
         
-        #chat-modal.full-view {
-            width: calc(100% - 40px);
-            height: calc(100% - 85px);
-            max-width: none;
-            max-height: none;
-            position: fixed;
-            top: 65px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            border-radius: 12px;
-            margin: 0;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        #chat-modal.full-view .modal-header .close-button {
-            display: none;
-        }
-        
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -1785,11 +1766,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(20, 20, 20, 0.4); /* More transparent */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(25px); /* Stronger blur */
-            -webkit-backdrop-filter: blur(25px);
-            z-index: 9999;
+            background: linear-gradient(135deg, rgba(50,50,60,0.25), rgba(70,0,80,0.25));
+            background-size: 300% 300%;
+            animation: nav-gradient 12s ease-in-out infinite;
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 4000; /* below modal overlay */
         }
         #top-nav ul {
             list-style: none;
@@ -1803,25 +1786,14 @@
             font-weight: 600;
             cursor: pointer;
             color: var(--text-color);
-            transition: color 0.2s ease, background-color 0.3s ease;
+            transition: color 0.2s ease;
             user-select: none;
-            padding: 5px 10px;
-            border-radius: 8px;
         }
         #top-nav li:hover {
-            background: rgba(255, 255, 255, 0.05);
+            color: #b58dff;
         }
         #top-nav li.active {
-            background: linear-gradient(90deg, #200020, #100018, #200020, #100018, #200020);
-            background-size: 400% 400%;
-            animation: nav-glow 4s ease-in-out infinite;
-            color: #e0c0ff;
-        }
-
-        @keyframes nav-glow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            color: var(--glow-green);
         }
         /* ------------------------------------------------------------------
          * NEW 3D CAROUSEL STYLES
@@ -1878,6 +1850,11 @@
         @media screen and (max-width: 992px) {
             .carousel { transform: perspective(1000px) rotateX(70deg) scale(.7); }
         }
+        @keyframes nav-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
     </style>
 </head>
 <body>
@@ -1905,14 +1882,50 @@
         </div>
         <div class="gallery-container">
            <div class="gallery-content">
-                <!-- This is hidden via CSS but kept for reference -->
-            </div>
-                <!-- Insert NEW 3D CAROUSEL -->
-                <div class="carousel" id="album-carousel">
-                    <!-- 8 card pairs will be populated by JS -->
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 1</div></div>
+                    <div class="album-name">G Name 1</div>
                 </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 2</div></div>
+                    <div class="album-name">G Name 2</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 3</div></div>
+                    <div class="album-name">G Name 3</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 4</div></div>
+                    <div class="album-name">G Name 4</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 5</div></div>
+                    <div class="album-name">G Name 5</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 6</div></div>
+                    <div class="album-name">G Name 6</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 7</div></div>
+                    <div class="album-name">G Name 7</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 8</div></div>
+                    <div class="album-name">G Name 8</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 9</div></div>
+                    <div class="album-name">G Name 9</div>
+                </div>
+                <div class="album-item-wrapper">
+                    <div class="placeholder-image"><div class="placeholder-text">G 10</div></div>
+                    <div class="album-name">G Name 10</div>
+                </div>
+            </div>
         </div>
         <div class="request-section">
+            <button class="chat-pill">Chat</button>
             <div class="input-form" id="input-form">
                 <div class="input-wrapper primary" id="primary-wrapper">
                     <input type="text" id="request-input" class="glassy-input" placeholder="Make a request">
@@ -2829,57 +2842,6 @@
             resetCarouselTimer();
 
                     console.log('Success');
-
-                    // --- Augment renderAlbums to update 3D carousel ---
-                    const carouselEl = document.getElementById('album-carousel');
-                    if (carouselEl) {
-                        carouselEl.innerHTML = ''; // Clear previous cards
-                        const itemsToDisplay = albumItems.slice(0, 8);
-
-                        for (let i = 0; i < 8; i++) {
-                            const item = itemsToDisplay[i];
-                            const angle = (360 / 8) * (i + 1);
-
-                            // Create card background
-                            const cardb = document.createElement('div');
-                            cardb.className = `cardb cb${i + 1}`;
-                            cardb.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
-                            carouselEl.appendChild(cardb);
-
-                            // Create card foreground
-                            const card = document.createElement('div');
-                            card.className = `card c${i + 1}`;
-                            card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
-
-                            const imgDiv = document.createElement('div');
-                            imgDiv.className = 'img';
-
-                            const titleP = document.createElement('p');
-                            const descSpan = document.createElement('span');
-                            descSpan.textContent = 'Click to view details'; // Generic description
-
-                            if (item) {
-                                if (item.imageUrl) {
-                                    imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
-                                }
-                                titleP.textContent = item.name || `Album ${i + 1}`;
-                                card.onclick = () => showAlbumDetails(item);
-                                card.style.cursor = 'pointer';
-                            } else {
-                                // Default placeholder
-                                imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i})`;
-                                titleP.textContent = 'Empty Slot';
-                                card.onclick = null;
-                                card.style.cursor = 'default';
-                            }
-
-                            card.appendChild(imgDiv);
-                            card.appendChild(titleP);
-                            card.appendChild(descSpan);
-                            carouselEl.appendChild(card);
-                        }
-                    }
-
                 } catch (error) {
                     console.error('Failed');
                     
@@ -2929,8 +2891,61 @@
                             imageUrl: ''
                         };
                         
-                        // Use the single source of truth function
-                        showAlbumDetails(detail);
+                        modalAlbumName.textContent = detail.name;
+
+                        if (detail.acc && detail.acc !== 'Empty') {
+                            copyAccButton.textContent = `Copy ACC`;
+                            copyAccButton.setAttribute('data-clipboard-text', detail.acc);
+                            copyAccButton.classList.remove('is-empty');
+                            copyAccButton.style.cursor = 'pointer';
+                        } else {
+                            copyAccButton.textContent = `Empty`;
+                            copyAccButton.setAttribute('data-clipboard-text', 'Empty');
+                            copyAccButton.classList.add('is-empty');
+                            copyAccButton.style.cursor = 'not-allowed';
+                        }
+                        copyAccButton.classList.add('gradient-animated');
+
+                        if (detail.pw && detail.pw !== 'Empty') {
+                            copyPwButton.textContent = `Copy PW`;
+                            copyPwButton.setAttribute('data-clipboard-text', detail.pw);
+                            copyPwButton.classList.remove('is-empty');
+                            copyPwButton.style.cursor = 'pointer';
+                        } else {
+                            copyPwButton.textContent = `Empty`;
+                            copyPwButton.setAttribute('data-clipboard-text', 'Empty');
+                            copyPwButton.classList.add('is-empty');
+                            copyPwButton.style.cursor = 'not-allowed';
+                        }
+                        copyPwButton.classList.add('gradient-animated');
+
+                        // Update modal image if available
+                        const modalImage = albumDetailModal.querySelector('.modal-image-placeholder');
+                        if (detail.imageUrl && detail.imageUrl.trim() !== '') {
+                            modalImage.style.backgroundImage = `url(${detail.imageUrl})`;
+                            modalImage.style.backgroundSize = 'cover';
+                            modalImage.style.backgroundPosition = 'center';
+                            modalImage.textContent = '';
+                        } else {
+                            modalImage.style.backgroundImage = 'none';
+                            modalImage.textContent = 'No Image Available';
+                        }
+
+                        // Add edit/delete buttons for admin mode
+                        const modalEditOptions = albumDetailModal.querySelector('.modal-edit-options');
+                        if (modalEditOptions) {
+                            const isAdminMode = requestSection.classList.contains('admin-mode');
+                            modalEditOptions.style.display = isAdminMode ? 'flex' : 'none';
+                            
+                            // Set data attributes for editing even for default albums
+                            modalEditOptions.setAttribute('data-album-id', detail.id || '');
+                            modalEditOptions.setAttribute('data-album-name', detail.name || `Album Name ${i+1}`);
+                            modalEditOptions.setAttribute('data-album-imageurl', detail.imageUrl || '');
+                            modalEditOptions.setAttribute('data-album-acc', detail.acc || 'Empty');
+                            modalEditOptions.setAttribute('data-album-pw', detail.pw || 'Empty');
+                }
+
+                        albumDetailModalOverlay.classList.add('visible');
                     });
                     
                     // Re-establish hover effects for the carousel
@@ -4065,14 +4080,10 @@
             chatCloseButton.addEventListener('click', () => {
                 chatModalOverlay.classList.remove('visible');
                 chatModalOverlay.classList.add('hidden');
-                chatModal.classList.remove('full-view');
-                // If user closes chat, switch back to search view
-                showSearchView();
             });
             
             chatModalOverlay.addEventListener('click', (e) => {
-                // Prevent closing by clicking overlay when in full-view mode
-                if (e.target === chatModalOverlay && !chatModal.classList.contains('full-view')) {
+                if (e.target === chatModalOverlay) {
                     chatModalOverlay.classList.remove('visible');
                     chatModalOverlay.classList.add('hidden');
                 }
@@ -4272,15 +4283,12 @@
                 // Show chat modal overlay
                 chatModalOverlay.classList.add('visible');
                 chatModalOverlay.classList.remove('hidden');
-                chatModal.classList.add('full-view'); // Add class for full-view styling
                 setActiveNav('chat');
-                renderChatMessages(); // Re-render in case it was hidden
             }
 
             function showRequestView() {
                 // Show main screen but hide search specific elements
-                mainScreen.style.display = 'flex'; // Use flex for centering
-                mainScreen.style.justifyContent = 'center';
+                mainScreen.style.display = '';
                 if (searchWrapperEl) searchWrapperEl.style.display = 'none';
                 if (mainTitleContainerEl) mainTitleContainerEl.style.display = 'none';
                 if (galleryContainerEl) galleryContainerEl.style.display = 'none';
@@ -4289,7 +4297,6 @@
                 // Hide chat overlay if open
                 chatModalOverlay.classList.remove('visible');
                 chatModalOverlay.classList.add('hidden');
-                chatModal.classList.remove('full-view'); // Remove full-view class
                 setActiveNav('requests');
             }
 
@@ -4308,6 +4315,37 @@
 
             // Initialize with search view
             showSearchView();
+
+            /* ---------------- Helper to update new 3D carousel ---------------- */
+            function update3DCarousel(items = []) {
+                const carouselEl = document.getElementById('album-carousel');
+                if (!carouselEl) return;
+                for (let i = 0; i < 8; i++) {
+                    const card = carouselEl.querySelector('.c' + (i + 1));
+                    const cardBack = carouselEl.querySelector('.cb' + (i + 1));
+                    if (!card || !cardBack) continue;
+                    const imgDiv = card.querySelector('.img');
+                    const titleP = card.querySelector('p');
+                    const item = (items[i]) ? items[i] : null;
+
+                    if (item) {
+                        if (imgDiv && item.imageUrl) {
+                            imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
+                        }
+                        if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
+                        card.onclick = () => showAlbumDetails(item);
+                    } else {
+                        if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
+                        if (titleP) titleP.textContent = `Image ${8 - i}`;
+                        card.onclick = null;
+                    }
+
+                    /* Positioning (ensure CSS fallback) */
+                    const angle = (360 / 8) * (i + 1);
+                    card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
+                    cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
+                }
+            }
         });
 
         document.addEventListener('touchmove', function() {

@@ -2666,7 +2666,7 @@
             });
 
             // --- SMOOTH SCROLL CAROUSEL ---
-            const galleryContent = document.querySelector('.gallery-content');
+            const galleryContent = document.querySelector('.gallery-content') || document.createElement('div');
             let albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
             let current = 2; // Start with Album 5 (Index 4)
             let albumItems = []; // Store album items from database

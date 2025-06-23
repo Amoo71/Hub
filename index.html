@@ -2069,6 +2069,155 @@
         /* Cursor styles for dragging */
         .slider-wrap.active { cursor: grabbing; }
         .slider-wrap { cursor: grab; }
+        /* Stacked Card Slider */
+        .slider-wrap {
+            position: relative;
+            height: 300px;
+            width: 90%;
+            max-width: 800px;
+            margin: 40px auto;
+            display: flex;
+            justify-content: center;
+            cursor: grab;
+        }
+        .slider-wrap.active { 
+            cursor: grabbing; 
+        }
+        .slider {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+        }
+        .slider-item {
+            display: flex;
+            flex-direction: column;
+            height: 280px;
+            width: 200px;
+            background-color: rgba(23, 20, 29, 0.8);
+            border-radius: 10px;
+            box-shadow: -1rem 0 3rem rgba(0, 0, 0, 0.5);
+            transition: 0.4s ease-out;
+            position: relative;
+            left: 0px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+        }
+        .slider-item:not(:first-child) {
+            margin-left: -50px;
+        }
+        .slider-item:hover {
+            transform: translateY(-20px);
+            transition: 0.4s ease-out;
+        }
+        .slider-item:hover ~ .slider-item {
+            position: relative;
+            left: 50px;
+            transition: 0.4s ease-out;
+        }
+        .animation-card_image {
+            position: absolute;
+            top: 60px;
+            left: calc(50% - 60px);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            transition: 0.4s ease-out;
+            box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        .slider-item:hover .animation-card_image {
+            box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2);
+        }
+        .animation-card_image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .animation-card_content_title {
+            color: white;
+            font-weight: 300;
+            position: absolute;
+            left: 20px;
+            top: 15px;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .bar {
+            position: absolute;
+            top: 200px;
+            left: 20px;
+            height: 5px;
+            width: 150px;
+        }
+        .emptybar {
+            background-color: #2e3033;
+            width: 100%;
+            height: 100%;
+        }
+        .filledbar {
+            position: absolute;
+            top: 0px;
+            z-index: 3;
+            width: 0px;
+            height: 100%;
+            background: rgb(0,154,217);
+            background: linear-gradient(90deg, rgba(0,154,217,1) 0%, rgba(217,147,0,1) 65%, rgba(255,186,0,1) 100%);
+            transition: 0.6s ease-out;
+        }
+        .slider-item:hover .filledbar {
+            width: 120px;
+            transition: 0.4s ease-out;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .slider-wrap {
+                height: 260px;
+            }
+            .slider-item {
+                height: 240px;
+                width: 170px;
+            }
+            .slider-item:not(:first-child) {
+                margin-left: -40px;
+            }
+            .animation-card_image {
+                width: 100px;
+                height: 100px;
+                left: calc(50% - 50px);
+            }
+            .bar {
+                width: 130px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .slider-wrap {
+                height: 230px;
+            }
+            .slider-item {
+                height: 210px;
+                width: 150px;
+            }
+            .slider-item:not(:first-child) {
+                margin-left: -35px;
+            }
+            .animation-card_image {
+                width: 80px;
+                height: 80px;
+                left: calc(50% - 40px);
+                top: 50px;
+            }
+            .bar {
+                width: 110px;
+                top: 170px;
+            }
+            .animation-card_content_title {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -4855,7 +5004,7 @@
                 // If no items or empty array, create placeholder items
                 if (items.length === 0) {
                     console.log("Slider: No items found, creating placeholders");
-                    for (let i = 1; i <= 5; i++) {
+                    for (let i = 1; i <= 10; i++) {
                         items.push({
                             name: `Game ${i}`,
                             imageUrl: `https://picsum.photos/300/300?random=${i}`
@@ -4867,16 +5016,18 @@
                 items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 console.log("Slider: Sorted items:", items);
                 slider.innerHTML = '';
-                items.forEach((item, index) => {
+                items.slice(0, 10).forEach((item, index) => {
                     console.log("Slider: Processing item:", item);
                     const slide = document.createElement('div');
                     slide.className = 'slider-item';
                     slide.innerHTML = `
+                        <h3 class="animation-card_content_title">${item.name || `Game ${index + 1}`}</h3>
+                        <div class="bar">
+                            <div class="emptybar"></div>
+                            <div class="filledbar"></div>
+                        </div>
                         <div class="animation-card_image">
                             <img src="${item.imageUrl || `https://picsum.photos/300/300?random=${Math.random()}`}" alt="${item.name || ''}" />
-                        </div>
-                        <div class="animation-card_content">
-                            <h4 class="animation-card_content_title">${item.name || ''}</h4>
                         </div>
                     `;
                     

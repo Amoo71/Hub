@@ -605,13 +605,13 @@
         }
         
         #chat-modal {
-            width: 90%;
-            max-width: 800px;
-            height: 80%;
-            max-height: 600px;
+            width: calc(100vw - 40px);
+            height: calc(100vh - 40px);
+            max-width: none;
+            max-height: none;
+            padding: 25px;
             display: flex;
             flex-direction: column;
-            padding: 20px;
             border-radius: 12px;
             animation: scaleInSmooth 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             overflow: hidden;
@@ -1766,12 +1766,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, rgba(50,50,60,0.25), rgba(70,0,80,0.25));
-            background-size: 300% 300%;
-            animation: nav-gradient 12s ease-in-out infinite;
-            border-bottom: 1px solid var(--glass-border);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(45, 45, 45, 0.25);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            /* subtle border tint */
+            border-bottom: 1px solid rgba(255,255,255,0.06);
             z-index: 4000; /* below modal overlay */
         }
         #top-nav ul {
@@ -1790,7 +1789,7 @@
             user-select: none;
         }
         #top-nav li:hover {
-            color: #b58dff;
+            color: var(--glow-green);
         }
         #top-nav li.active {
             color: var(--glow-green);
@@ -1855,6 +1854,15 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+        /* Hard-coded transforms for carousel visibility */
+        .carousel .c1 {transform-origin:center center;transform:rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb1{transform:rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
+        .carousel .c2 {transform-origin:center center;transform:rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb2{transform:rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
+        .carousel .c3 {transform-origin:center center;transform:rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb3{transform:rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
+        .carousel .c4 {transform-origin:center center;transform:rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb4{transform:rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
+        .carousel .c5 {transform-origin:center center;transform:rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb5{transform:rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
+        .carousel .c6 {transform-origin:center center;transform:rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb6{transform:rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
+        .carousel .c7 {transform-origin:center center;transform:rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb7{transform:rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
+        .carousel .c8 {transform-origin:center center;transform:rotateZ(0deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);}  .carousel .cb8{transform:rotateZ(0deg)  rotateX(90deg) translateY(120px) translateZ(279px);} 
     </style>
 </head>
 <body>

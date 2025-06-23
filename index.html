@@ -2240,7 +2240,10 @@
         #album-carousel:hover {
             animation: simple_rotate 25s linear infinite;
         }
-        /* FRESH CAROUSEL STYLES BASED ON TEMPLATE */
+
+        /* COMPLETELY FRESH CAROUSEL IMPLEMENTATION BASED ON THE TEMPLATE */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
+
         #album-carousel {
             transform: perspective(1000px) rotateX(70deg);
             transform-style: preserve-3d;
@@ -2249,17 +2252,16 @@
             animation: carousel-rotate 15s linear infinite;
             transition: all 1s;
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
+            width: 250px;
+            height: 250px;
             position: relative;
-            width: 300px;
-            height: 300px;
             margin: 40px auto;
-            z-index: 10;
         }
-        
+
         #album-carousel:hover {
             animation-play-state: paused;
         }
-        
+
         #album-carousel .cardb {
             display: grid;
             place-items: center;
@@ -2269,7 +2271,7 @@
             position: absolute;
             border-radius: 5px;
         }
-        
+
         #album-carousel .card {
             display: grid;
             place-items: center;
@@ -2281,30 +2283,30 @@
             border-radius: 5px;
             -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
         }
-        
+
         #album-carousel .card .img {
             width: 180px;
             height: 100px;
             border-radius: 3px;
             margin-bottom: -10px;
             filter: brightness(.7);
-            background-size: cover;
+            background-size: 190px 190px;
         }
-        
+
         #album-carousel .card p {
             font-size: 16px;
             margin-bottom: -5px;
             color: white;
         }
-        
+
         #album-carousel .card span {
             font-size: 12px;
             text-align: center;
             padding: 8px;
-            display: none; /* Hide description */
+            color: white;
         }
-        
-        /* Card positioning */
+
+        /* Card positions */
         #album-carousel .c1 {
             padding: 0;
             transform-origin: center center;
@@ -2315,7 +2317,7 @@
             transform-origin: center center;
             transform: rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         #album-carousel .c2 {
             padding: 0;
             transform-origin: center center;
@@ -2326,7 +2328,7 @@
             transform-origin: center center;
             transform: rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         #album-carousel .c3 {
             padding: 0;
             transform-origin: center center;
@@ -2337,7 +2339,7 @@
             transform-origin: center center;
             transform: rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         #album-carousel .c4 {
             padding: 0;
             transform-origin: center center;
@@ -2348,7 +2350,7 @@
             transform-origin: center center;
             transform: rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         #album-carousel .c5 {
             padding: 0;
             transform-origin: center center;
@@ -2359,7 +2361,7 @@
             transform-origin: center center;
             transform: rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         #album-carousel .c6 {
             padding: 0;
             transform-origin: center center;
@@ -2370,7 +2372,7 @@
             transform-origin: center center;
             transform: rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         #album-carousel .c7 {
             padding: 0;
             transform-origin: center center;
@@ -2381,7 +2383,7 @@
             transform-origin: center center;
             transform: rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         #album-carousel .c8 {
             padding: 0;
             transform-origin: center center;
@@ -2392,16 +2394,16 @@
             transform-origin: center center;
             transform: rotateZ(360deg) rotateX(90deg) translateY(120px) translateZ(279px);
         }
-        
+
         @keyframes carousel-rotate {
             to {
                 transform: perspective(1000px) rotateX(70deg) rotateZ(360deg);
             }
         }
-        
+
         @media screen and (max-width: 992px) {
             #album-carousel {
-                transform: scale(.7);
+                scale: .7;
             }
         }
     </style>
@@ -2599,7 +2601,7 @@
     </div>
 
     <!-- 3D Album Carousel (Vision-OS like) -->
-    <div id="album-carousel">
+    <div id="album-carousel" style="animation: carousel-rotate 15s linear infinite;">
         <!-- Eight faces: front cards & their backs for reflection -->
         <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
         <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
@@ -5055,7 +5057,7 @@
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation with fresh animation
-                carousel.style.animation = 'simple_rotate 25s linear infinite';
+                carousel.style.animation = 'carousel-rotate 15s linear infinite';
                 carousel.style.animationPlayState = 'running';
             });
 
@@ -5082,7 +5084,7 @@
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation with fresh animation
-                carousel.style.animation = 'simple_rotate 25s linear infinite';
+                carousel.style.animation = 'carousel-rotate 15s linear infinite';
                 carousel.style.animationPlayState = 'running';
             });
         });

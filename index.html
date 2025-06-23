@@ -1843,186 +1843,114 @@
             color: var(--glow-green);
         }
         /* ------------------------------------------------------------------
-         * NEW 3D CAROUSEL STYLES
+         * NEW 3D CAROUSEL STYLES (EXAMPLE-BASED)
          * ------------------------------------------------------------------ */
-        .container {
-            margin: 0 auto;
-            width: 350px;
-            height: 300px;
+        .carousel-container {
+            width: 100%;
+            height: 350px;
             position: relative;
-            perspective: 1000px;
-            margin-top: 20px;
-            margin-bottom: 50px;
-            z-index: 10;
+            perspective: 1100px;
+            margin: 40px auto;
         }
- 
-        /* Smooth pause on hover */
-        .carousel:hover {
-            animation-play-state: paused;
-            cursor: grab;
-        }
-        
-        /* Dragging state */
-        .carousel.dragging {
-            cursor: grabbing;
-            animation: none;
-            transition: transform 0.1s linear;
-        }
-        
-        .item {
-            display: block;
-            position: absolute;
-            background: #000;
-            width: 300px;
-            height: 250px;
-            line-height: 200px;
-            font-size: 5em;
-            text-align: center;
-            color: #FFF;
-            opacity: 0.95;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .item img.img {
+
+        #album-carousel {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-        
-        .item p {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px;
-            margin: 0;
-            font-size: 14px;
-            line-height: normal;
+            transform-style: preserve-3d;
+            animation: autoRotate 35s linear infinite;
+            transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
         }
-        
-        .a {
-            transform: rotateY(0deg) translateZ(300px);
-            background: #ed1c24;
+
+        #album-carousel:hover {
+            animation-play-state: paused;
         }
-        .b {
-            transform: rotateY(60deg) translateZ(300px);
-            background: #0072bc;
+
+        #album-carousel.dragging {
+            cursor: grabbing;
+            animation: none;
+            transition: none; /* For instant feedback while dragging */
         }
-        .c {
-            transform: rotateY(120deg) translateZ(300px);
-            background: #39b54a;
-        }
-        .d {
-            transform: rotateY(180deg) translateZ(300px);
-            background: #f26522;
-        }
-        .e {
-            transform: rotateY(240deg) translateZ(300px);
-            background: #630460;
-        } 
-        .f {
-            transform: rotateY(300deg) translateZ(300px);
-            background: #8c6239;
-        }
- 
+
         @keyframes autoRotate {
-            to {
-                transform: rotateY(360deg);
-            }
-        }
- 
-        @media screen and (max-width: 992px) {
-            .container {
-                width: 300px;
-                height: 250px;
-            }
-            
-            .item {
-                width: 250px;
-                height: 200px;
-                line-height: 160px;
-            }
-            
-            .a { transform: rotateY(0deg) translateZ(250px); }
-            .b { transform: rotateY(60deg) translateZ(250px); }
-            .c { transform: rotateY(120deg) translateZ(250px); }
-            .d { transform: rotateY(180deg) translateZ(250px); }
-            .e { transform: rotateY(240deg) translateZ(250px); }
-            .f { transform: rotateY(300deg) translateZ(250px); }
-        }
-        
-        /* Make sure carousel is properly centered and visible */
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            margin: 50px auto;
-            max-width: 100%;
-        }
-        
-        /* Make sure carousel is hidden in chat and request views */
-        body[data-view="requests"] .container,
-        body[data-view="chat"] .container {
-            display: none !important;
-        }
-        @keyframes nav-gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        /* Hard-coded transforms for carousel visibility */
-        .carousel .c1 {transform-origin:center center;transform:rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb1{transform:rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
-        .carousel .c2 {transform-origin:center center;transform:rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb2{transform:rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
-        .carousel .c3 {transform-origin:center center;transform:rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb3{transform:rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
-        .carousel .c4 {transform-origin:center center;transform:rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb4{transform:rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
-        .carousel .c5 {transform-origin:center center;transform:rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb5{transform:rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
-        .carousel .c6 {transform-origin:center center;transform:rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb6{transform:rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
-        .carousel .c7 {transform-origin:center center;transform:rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb7{transform:rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
-        .carousel .c8 {transform-origin:center center;transform:rotateZ(0deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);}  .carousel .cb8{transform:rotateZ(0deg)  rotateX(90deg) translateY(120px) translateZ(279px);} 
-        /* Purple gradient animation for nav text */
-        @keyframes nav-text-gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        #top-nav li.active, #top-nav li:hover {
-            background: linear-gradient(135deg, #6c004a, #2665b1, #7e39de, #77008f);
-            background-size: 300% 300%;
-            animation: nav-text-gradient 6s ease infinite;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-        }
-        
-        /* Override previous hover style */
-        #top-nav li:hover {
-            color: transparent;
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
         }
 
-        /* Override bubble transparency after tweaks */
-        #top-nav ul::before {
-            background: rgba(255, 255, 255, 0.04) !important;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
-            top: 9px !important; /* slightly higher so text zentriert */
+        #album-carousel .card {
+            display: flex !important;
+            flex-direction: column !important;
+            position: absolute !important;
+            left: calc(50% - 100px); /* (width/2) */
+            top: calc(50% - 140px); /* (height/2) */
+            width: 200px !important;
+            height: 280px !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 10px !important;
+            overflow: hidden !important;
+            backface-visibility: hidden !important;
+            -webkit-backface-visibility: hidden !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2) !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            padding: 0 !important;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
         }
 
-        /* Make album pictures clearly visible */
-        .carousel .card .img {
+        #album-carousel .card:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 127, 0.3) !important;
+            border-color: var(--glow-green) !important;
+        }
+
+        #album-carousel .card .img {
+            width: 100% !important;
+            height: 85% !important;
+            border-radius: 0 !important;
             background-size: cover !important;
+            background-position: center !important;
             filter: none !important;
         }
 
-        /* Make sure carousel is REALLY gone in request view */
+        #album-carousel .card p {
+            position: static !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            width: 100% !important;
+            height: 15% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 0.9rem !important;
+            padding: 0 8px !important;
+            text-align: center !important;
+            color: white !important;
+            text-shadow: none !important;
+            transform: none !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            word-break: break-word;
+            pointer-events: none !important;
+        }
+
+        /* Remove reflection backs */
+        .carousel .cardb {
+            display: none !important;
+        }
+
+        /* Remove old hard-coded transforms and other obsolete styles */
+        .carousel .c1, .carousel .c2, .carousel .c3, .carousel .c4, .carousel .c5, .carousel .c6, .carousel .c7, .carousel .c8,
+        .carousel .cb1, .carousel .cb2, .carousel .cb3, .carousel .cb4, .carousel .cb5, .carousel .cb6, .carousel .cb7, .carousel .cb8 {
+            transform: none !important;
+            transform-origin: initial !important;
+        }
+
         body[data-view="requests"] #album-carousel,
-        body[data-view="chat"] #album-carousel {
+        body[data-view="chat"] #album-carousel,
+        body[data-view="requests"] .carousel-container,
+        body[data-view="chat"] .carousel-container {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
@@ -2226,14 +2154,9 @@
     </div>
 
     <!-- 3D Album Carousel (Vision-OS like) -->
-    <div class="container">
+    <div class="carousel-container">
         <div id="album-carousel" class="carousel">
-            <div class="item a"><img class="img" /><p></p></div>
-            <div class="item b"><img class="img" /><p></p></div>
-            <div class="item c"><img class="img" /><p></p></div>
-            <div class="item d"><img class="img" /><p></p></div>
-            <div class="item e"><img class="img" /><p></p></div>
-            <div class="item f"><img class="img" /><p></p></div>
+            <!-- Cards will be generated by JS -->
         </div>
     </div>
 
@@ -4516,12 +4439,18 @@
             navItems.forEach(li => {
                 li.addEventListener('click', () => {
                     const target = li.dataset.target;
+                    // Hinzugefügt: Karussell-Container ebenfalls verstecken/anzeigen
+                    const carouselContainer = document.querySelector('.carousel-container');
+
                     if (target === 'search') {
                         showSearchView();
+                        if (carouselContainer) carouselContainer.style.display = 'block';
                     } else if (target === 'chat') {
                         showChatView();
+                        if (carouselContainer) carouselContainer.style.display = 'none';
                     } else if (target === 'requests') {
                         showRequestView();
+                        if (carouselContainer) carouselContainer.style.display = 'none';
                     }
                 });
             });
@@ -4530,33 +4459,42 @@
             showSearchView();
 
             /* ---------------- Helper to update new 3D carousel ---------------- */
+            let currentCarouselRotation = 0;
             function update3DCarousel(items = []) {
                 const carouselEl = document.getElementById('album-carousel');
                 if (!carouselEl) return;
-                for (let i = 0; i < 8; i++) {
-                    const card = carouselEl.querySelector('.c' + (i + 1));
-                    const cardBack = carouselEl.querySelector('.cb' + (i + 1));
-                    if (!card || !cardBack) continue;
-                    const imgDiv = card.querySelector('.img');
-                    const titleP = card.querySelector('p');
-                    const item = (items[i]) ? items[i] : null;
+                carouselEl.innerHTML = ''; // Clear old cards
 
-                    if (item) {
-                        if (imgDiv && item.imageUrl) {
-                            imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
-                        }
-                        if (titleP) titleP.textContent = item.name || `Image ${8 - i}`;
-                        card.onclick = () => showAlbumDetails(item);
+                const numCards = items.length > 0 ? items.length : 8;
+                const angle = 360 / numCards;
+                const radius = (numCards / (2 * Math.PI)) * 180; // Calculate radius based on number of items
+
+                for (let i = 0; i < numCards; i++) {
+                    const item = items[i] || { name: 'Loading...', imageUrl: '' };
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const imgDiv = document.createElement('div');
+                    imgDiv.className = 'img';
+                    if (item.imageUrl) {
+                        imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
                     } else {
-                        if (imgDiv) imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i + 1})`;
-                        if (titleP) titleP.textContent = `Image ${8 - i}`;
-                        card.onclick = null;
+                         imgDiv.style.backgroundImage = `url(https://picsum.photos/400/560.webp?random=${i + 1})`;
                     }
 
-                    /* Positioning (ensure CSS fallback) */
-                    const angle = (360 / 8) * (i + 1);
-                    card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
-                    cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
+                    const titleP = document.createElement('p');
+                    titleP.textContent = item.name;
+
+                    card.appendChild(imgDiv);
+                    card.appendChild(titleP);
+                    
+                    card.style.transform = `rotateY(${angle * i}deg) translateZ(${radius}px)`;
+
+                    card.onclick = () => {
+                        if (item.id) showAlbumDetails(item);
+                    };
+
+                    carouselEl.appendChild(card);
                 }
             }
 
@@ -4571,38 +4509,7 @@
                 }
                 
                 // Immediate update without delay
-                update3DCarousel([
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=1'},
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=2'},
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=3'},
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=4'},
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=5'},
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=6'},
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=7'},
-                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=8'}
-                ]);
-                
-                // And again after a short delay to ensure it's visible
-                setTimeout(() => {
-                    update3DCarousel([
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=1'},
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=2'},
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=3'},
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=4'},
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=5'},
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=6'},
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=7'},
-                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=8'}
-                    ]);
-                    
-                    // Force all carousel cards to be visible
-                    const cards = document.querySelectorAll('.carousel .card, .carousel .cardb');
-                    cards.forEach(card => {
-                        card.style.display = 'grid';
-                        card.style.visibility = 'visible';
-                        card.style.opacity = '1';
-                    });
-                }, 500);
+                update3DCarousel([]);
             });
 
             /* ------------------------------------------------------------------
@@ -4657,58 +4564,51 @@
             let carouselStartX;
             let carouselStartRotation = 0;
             const carousel = document.getElementById('album-carousel');
+            const carouselContainer = document.querySelector('.carousel-container');
 
-            carousel.addEventListener('mousedown', (e) => {
+            const startDrag = (clientX) => {
                 carouselIsDragging = true;
                 carousel.classList.add('dragging');
-                carouselStartX = e.clientX;
-                // Extract current rotation
+                carouselStartX = clientX;
+                
                 const transform = window.getComputedStyle(carousel).transform;
-                const matrix = new DOMMatrix(transform);
-                carouselStartRotation = Math.atan2(matrix.m12, matrix.m11) * (180/Math.PI);
-            });
+                if (transform !== 'none') {
+                    const matrix = new DOMMatrixReadOnly(transform);
+                    carouselStartRotation = Math.atan2(matrix.m13, matrix.m11) * (180/Math.PI);
+                } else {
+                    carouselStartRotation = currentCarouselRotation;
+                }
+            };
 
-            document.addEventListener('mousemove', (e) => {
+            const drag = (clientX) => {
                 if (!carouselIsDragging) return;
-                const deltaX = e.clientX - carouselStartX;
-                const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
-                carousel.style.transform = `perspective(2000px) rotateX(15deg) rotateZ(${newRotation}deg)`;
-            });
+                const deltaX = clientX - carouselStartX;
+                const newRotation = carouselStartRotation - (deltaX * 0.5); // Sensitivity
+                currentCarouselRotation = newRotation;
+                carousel.style.transform = `rotateY(${newRotation}deg)`;
+            };
 
-            document.addEventListener('mouseup', () => {
-                carouselIsDragging = false;
-                carousel.classList.remove('dragging');
-            });
-
-            // Touch support
-            carousel.addEventListener('touchstart', (e) => {
-                carouselIsDragging = true;
-                carousel.classList.add('dragging');
-                carouselStartX = e.touches[0].clientX;
-                const transform = window.getComputedStyle(carousel).transform;
-                const matrix = new DOMMatrix(transform);
-                carouselStartRotation = Math.atan2(matrix.m12, matrix.m11) * (180/Math.PI);
-            }, { passive: true });
-
-            document.addEventListener('touchmove', (e) => {
+            const endDrag = () => {
                 if (!carouselIsDragging) return;
-                const deltaX = e.touches[0].clientX - carouselStartX;
-                const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
-                carousel.style.transform = `perspective(2000px) rotateX(15deg) rotateZ(${newRotation}deg)`;
-            }, { passive: true });
-
-            document.addEventListener('mouseup', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
-                // Resume auto-rotation after drag
-                carousel.style.animation = 'autoRotate 25s linear infinite';
-            });
+                carousel.style.animation = `autoRotate 35s linear infinite`;
+                // Set animation to start from current dragged position
+                carousel.style.animationPlayState = 'running';
+            };
 
-            document.addEventListener('touchend', () => {
-                carouselIsDragging = false;
-                carousel.classList.remove('dragging');
-                // Resume auto-rotation after drag
-                carousel.style.animation = 'autoRotate 25s linear infinite';
+            carouselContainer.addEventListener('mousedown', (e) => startDrag(e.clientX));
+            document.addEventListener('mousemove', (e) => drag(e.clientX));
+            document.addEventListener('mouseup', endDrag);
+
+            carouselContainer.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX), { passive: true });
+            document.addEventListener('touchmove', (e) => drag(e.touches[0].clientX), { passive: true });
+            document.addEventListener('touchend', endDrag);
+
+            // Keep track of rotation for smooth animation restart
+            carousel.addEventListener('animationiteration', () => {
+                currentCarouselRotation = 0;
+                carousel.style.transform = `rotateY(0deg)`;
             });
         });
 
@@ -4752,142 +4652,6 @@
         if (typeof update3DCarousel === 'function') {
             update3DCarousel(displayItems.slice(0, 8));
         }
-
-        // Carousel Rotation with Grab & Drag
-        const carousel = document.querySelector('.carousel');
-        let carouselIsDragging = false;
-        let carouselStartX = 0;
-        let carouselStartY = 0;
-        let carouselStartRotation = 0;
-        
-        // Extract current rotation from transform
-        function getCurrentRotation(el) {
-            const st = window.getComputedStyle(el, null);
-            const tr = st.getPropertyValue('transform');
-            
-            if (tr === 'none') return 0;
-            
-            const values = tr.split('(')[1].split(')')[0].split(',');
-            const a = values[0];
-            const b = values[1];
-            const angle = Math.round(Math.atan2(b, a) * (180/Math.PI));
-            return (angle < 0) ? angle + 360 : angle;
-        }
-        
-        // Start dragging
-        carousel.addEventListener('mousedown', (e) => {
-            carouselIsDragging = true;
-            carouselStartX = e.clientX;
-            carousel.classList.add('dragging');
-            const currentRotation = getCurrentRotation(carousel);
-            carouselStartRotation = currentRotation;
-            carousel.style.animation = 'none';
-        });
-        
-        carousel.addEventListener('touchstart', (e) => {
-            carouselIsDragging = true;
-            carouselStartX = e.touches[0].clientX;
-            carousel.classList.add('dragging');
-            const currentRotation = getCurrentRotation(carousel);
-            carouselStartRotation = currentRotation;
-            carousel.style.animation = 'none';
-        }, { passive: true });
-        
-        // Dragging
-        document.addEventListener('mousemove', (e) => {
-            if (!carouselIsDragging) return;
-            const deltaX = e.clientX - carouselStartX;
-            const newRotation = carouselStartRotation + (deltaX * 0.5);
-            carousel.style.transform = `rotateY(${newRotation}deg)`;
-        });
-        
-        document.addEventListener('touchmove', (e) => {
-            if (!carouselIsDragging) return;
-            const deltaX = e.touches[0].clientX - carouselStartX;
-            const newRotation = carouselStartRotation + (deltaX * 0.5);
-            carousel.style.transform = `rotateY(${newRotation}deg)`;
-        }, { passive: true });
-        
-        // End dragging
-        document.addEventListener('mouseup', () => {
-            if (!carouselIsDragging) return;
-            carouselIsDragging = false;
-            carousel.classList.remove('dragging');
-            // Resume animation from current position
-            const currentRotation = getCurrentRotation(carousel);
-            carousel.style.transition = 'none';
-            carousel.style.transform = `rotateY(${currentRotation}deg)`;
-            
-            // Force reflow
-            void carousel.offsetWidth;
-            
-            // Resume animation
-            carousel.style.transition = 'transform 1s';
-            carousel.style.animation = 'autoRotate 25s linear infinite';
-            carousel.style.animationDelay = `${-currentRotation/360*25}s`;
-        });
-        
-        document.addEventListener('touchend', () => {
-            if (!carouselIsDragging) return;
-            carouselIsDragging = false;
-            carousel.classList.remove('dragging');
-            // Resume animation from current position
-            const currentRotation = getCurrentRotation(carousel);
-            carousel.style.transition = 'none';
-            carousel.style.transform = `rotateY(${currentRotation}deg)`;
-            
-            // Force reflow
-            void carousel.offsetWidth;
-            
-            // Resume animation
-            carousel.style.transition = 'transform 1s';
-            carousel.style.animation = 'autoRotate 25s linear infinite';
-            carousel.style.animationDelay = `${-currentRotation/360*25}s`;
-        });
-        
-        // Make sure carousel is hidden in chat and request views
-        const navItems = document.querySelectorAll('#top-nav li');
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const view = item.getAttribute('data-target');
-                const container = document.querySelector('.container');
-                
-                if (view === 'search') {
-                    container.style.display = 'block';
-                } else {
-                    container.style.display = 'none';
-                }
-            });
-        });
-        
-        // Initialize carousel with images from database
-        async function initializeCarousel() {
-            try {
-                const albums = await getAlbumItems();
-                if (!albums || albums.length === 0) return;
-                
-                const items = document.querySelectorAll('.carousel .item');
-                items.forEach((item, index) => {
-                    if (index < albums.length) {
-                        const img = item.querySelector('img');
-                        const p = item.querySelector('p');
-                        
-                        if (albums[index].imageUrl) {
-                            img.src = albums[index].imageUrl;
-                        }
-                        
-                        if (albums[index].name) {
-                            p.textContent = albums[index].name;
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Failed to initialize carousel:', error);
-            }
-        }
-        
-        // Call initialization when DOM is loaded
-        initializeCarousel();
     </script>
 </body>
 </html>

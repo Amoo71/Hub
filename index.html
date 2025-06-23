@@ -11,7 +11,7 @@
          */
         :root {
             /* Grundfarben */
-            --background-color: #111111;
+            --background-color: #070707;
             --text-color: #f0f0f0;
             --subtle-text-color: #a0a0a0;
             
@@ -4623,6 +4623,13 @@
                 element.addEventListener('touchstart', trackUserActivity, { passive: true });
             }
         });
+
+        initializeAlbumEventListeners();
+
+        // Refresh the 3-D carousel with newest items (max 8)
+        if (typeof update3DCarousel === 'function') {
+            update3DCarousel(displayItems.slice(0, 8));
+        }
     </script>
 </body>
 </html>

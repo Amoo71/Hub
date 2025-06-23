@@ -1998,69 +1998,57 @@
             z-index: -999 !important;
             transform: translateY(-9999px) !important;
         }
-        /* New standard rotateY carousel CSS */
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
-
-        .carousel {
-            transform: perspective(1000px) rotateX(70deg);
-            transform-style: preserve-3d;
-            display: grid;
-            place-items: center;
-            animation: rotate 15s linear infinite;
-            transition: all 1s;
-            background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
+        /* Override old carousel with standard rotateY carousel */
+        #album-carousel {
+            position: relative !important;
+            width: 300px !important;
+            height: 300px !important;
+            margin: 40px auto !important;
+            transform-style: preserve-3d !important;
+            transform: perspective(1000px) rotateY(0deg) !important;
+            animation: rotateYanim 25s linear infinite !important;
+            cursor: grab !important;
         }
-        .carousel:hover {
-            animation-play-state: paused;
+        #album-carousel:hover {
+            animation-play-state: paused !important;
+            cursor: grab !important;
         }
-        .carousel .cardb {
-            display: grid;
-            place-items: center;
-            width: 190px;
-            height: 225px;
-            background-color: #1f1f1f;
-            position: absolute;
-            border-radius: 5px;
+        #album-carousel.dragging {
+            animation: none !important;
+            cursor: grabbing !important;
         }
-        .carousel .card {
-            display: grid;
-            place-items: center;
-            width: 190px;
-            height: 225px;
-            background-color: #333;
-            position: absolute;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
-            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,0.125));
+        #album-carousel .card {
+            display: block !important;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0;
+            left: 0;
         }
-        .carousel .card .img {
-            width: 180px;
-            height: 100px;
-            border-radius: 3px;
-            margin-bottom: -10px;
-            filter: brightness(0.7);
+        /* Disable card hover transform to avoid centering slide */
+        #album-carousel .card:hover {
+            transform: none !important;
         }
-        .carousel .card p {
-            font-size: 16px;
-            margin-bottom: -5px;
+        @keyframes rotateYanim {
+            to { transform: perspective(1000px) rotateY(-360deg) !important; }
         }
-        .carousel .card span {
-            font-size: 12px;
-            text-align: center;
-            padding: 8px;
-        }
-        /* Position each card around the ring */
-        .carousel .c1 { transform: rotateY(0deg) translateZ(280px); }
-        .carousel .c2 { transform: rotateY(45deg) translateZ(280px); }
-        .carousel .c3 { transform: rotateY(90deg) translateZ(280px); }
-        .carousel .c4 { transform: rotateY(135deg) translateZ(280px); }
-        .carousel .c5 { transform: rotateY(180deg) translateZ(280px); }
-        .carousel .c6 { transform: rotateY(225deg) translateZ(280px); }
-        .carousel .c7 { transform: rotateY(270deg) translateZ(280px); }
-        .carousel .c8 { transform: rotateY(315deg) translateZ(280px); }
-        @keyframes rotate {
-            to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
-        }
+    </style>
+    <!-- Owl Carousel dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" integrity="sha512-utbXQ1uwZm+1NL5mWl1YxzoLtS7i8rLg2bRW8itPqcd7S4vysCneBpX/P7k4ymCdW1xG8sIq3p+Ek9O/B0TzYw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" integrity="sha512-mRxtTQ0radym/Jaqb+U1qRCluVNPZrzK6wjnS1xvBRNcnRrQJGhA/gw2msJH69+pD4SUOaPHYfCwDNDVN6FZpg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+YhkiQev87TRa8tQPpqlIYVgRMjMX2PrXTs=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" integrity="sha512-gqLGO2DmUqW8QqliNFeUp+6BfB+JuBkZ9rNYXXNxq+QJYKpmrElh0R1TTV2X7iVmtHVxV8qtT0qrP0Wox8KPtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+    /* Youplay Carousel Title */
+    .youplay-carousel .img-title {
+        margin-top: 10px;
+        color: var(--text-color);
+        text-align: center;
+        pointer-events: none;
+        font-size: 0.9rem;
+    }
+    /* Hide old 3D carousel */
+    #album-carousel { display: none !important; }
     </style>
 </head>
 <body>
@@ -2257,56 +2245,18 @@
 
     <!-- 3D Album Carousel (Vision-OS like) -->
     <div id="album-carousel" class="carousel">
-        <!-- New standard rotateY carousel -->
-        <div class="card c1">
-            <div class="img"></div>
-            <p>Image 8</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb1"></div>
-        <div class="card c2">
-            <div class="img"></div>
-            <p>Image 7</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb2"></div>
-        <div class="card c3">
-            <div class="img"></div>
-            <p>Image 6</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb3"></div>
-        <div class="card c4">
-            <div class="img"></div>
-            <p>Image 5</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb4"></div>
-        <div class="card c5">
-            <div class="img"></div>
-            <p>Image 4</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb5"></div>
-        <div class="card c6">
-            <div class="img"></div>
-            <p>Image 3</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb6"></div>
-        <div class="card c7">
-            <div class="img"></div>
-            <p>Image 2</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb7"></div>
-        <div class="card c8">
-            <div class="img"></div>
-            <p>Image 1</p>
-            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
-        </div>
-        <div class="cardb cb8"></div>
+        <!-- Eight faces: front cards & their backs for reflection -->
+        <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
+        <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
+        <div class="card c3"><div class="img"></div><p></p></div><div class="cardb cb3"></div>
+        <div class="card c4"><div class="img"></div><p></p></div><div class="cardb cb4"></div>
+        <div class="card c5"><div class="img"></div><p></p></div><div class="cardb cb5"></div>
+        <div class="card c6"><div class="img"></div><p></p></div><div class="cardb cb6"></div>
+        <div class="card c7"><div class="img"></div><p></p></div><div class="cardb cb7"></div>
+        <div class="card c8"><div class="img"></div><p></p></div><div class="cardb cb8"></div>
     </div>
+
+    <div class="youplay-carousel owl-carousel"></div>
 
     <script type="module">
         import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback, checkInactivity, getChatMessages, addChatMessage, deleteChatMessage, setChatMessageUpdateCallback } from './db.js';
@@ -3098,7 +3048,7 @@
                     current = 2; // Always start with Album 5 (index 4) as active
                     console.log('Update');
                     updateCarousel();
-                    resetCarouselTimer();
+            resetCarouselTimer();
 
                     // Update 3D carousel with actual database items
                     if (typeof update3DCarousel === 'function' && displayItems && displayItems.length) {

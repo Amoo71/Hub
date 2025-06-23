@@ -1312,13 +1312,13 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.8); /* Darker background */
+            backdrop-filter: blur(15px); /* More blur */
+            -webkit-backdrop-filter: blur(15px);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 99999; /* Super high z-index */
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -1801,16 +1801,16 @@
         .carousel {
             position: relative;
             width: 100%;
-            height: 500px;
+            height: 400px !important; /* Reduce height to fit better */
             display: grid;
             place-items: center;
-            transform: perspective(1000px) rotateX(70deg);
+            transform: perspective(1000px) rotateX(60deg) !important; /* Make less steep angle */
             transform-style: preserve-3d;
             animation: rotate 15s linear infinite;
             transition: all 1s;
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
             z-index: 10;
-            margin-top: -50px;
+            margin-top: 20px;
             margin-bottom: 50px;
         }
         .carousel:hover { animation-play-state: paused; }
@@ -3276,8 +3276,9 @@
             
             // Function to show album details when clicking a search result
             function showAlbumDetails(album) {
-                // Use existing album detail display logic
                 modalAlbumName.textContent = album.name;
+                currentAlbumId = album.id;
+                currentAlbumName = album.name;
                 
                 // Set ACC button
                 if (album.acc && album.acc !== 'Empty') {
@@ -3640,7 +3641,14 @@
                             
                             // Add click event to show details
                             gridItem.addEventListener('click', () => {
-                                showAlbumDetails(album);
+                                // Close view-all modal first
+                                viewAllModalOverlay.classList.remove('visible');
+                                // Short delay to ensure proper modal stacking
+                                setTimeout(() => {
+                                    showAlbumDetails(album);
+                                    // Force modal to top
+                                    albumDetailModalOverlay.style.zIndex = '99999';
+                                }, 100);
                             });
                         } else {
                             // Empty slot
@@ -3736,6 +3744,9 @@
                 // Close grid view and show detail modal
                 viewAllModalOverlay.classList.remove('visible');
                 albumDetailModalOverlay.classList.add('visible');
+                
+                // Ensure modal is on top
+                albumDetailModalOverlay.style.zIndex = '99999';
             }
 
             // --- Album Detail Modal Logic ---
@@ -4384,6 +4395,22 @@
                     cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
                 }
             }
+
+            // Immediately update carousel with placeholder images
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(() => {
+                    update3DCarousel([
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=1'},
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=2'},
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=3'},
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=4'},
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=5'},
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=6'},
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=7'},
+                        {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=8'}
+                    ]);
+                }, 500);
+            });
         });
 
         document.addEventListener('touchmove', function() {

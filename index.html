@@ -606,7 +606,7 @@
         
         #chat-modal {
             width: calc(100vw - 40px);
-            height: calc(100vh - 40px);
+            height: calc(100vh - 100px); /* Account for nav bar */
             max-width: none;
             max-height: none;
             padding: 25px;
@@ -615,6 +615,7 @@
             border-radius: 12px;
             animation: scaleInSmooth 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             overflow: hidden;
+            margin-top: 30px; /* Push down from top */
         }
         
         .chat-messages {
@@ -1808,6 +1809,9 @@
             animation: rotate 15s linear infinite;
             transition: all 1s;
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
+            z-index: 10;
+            margin-top: -50px;
+            margin-bottom: 50px;
         }
         .carousel:hover { animation-play-state: paused; }
         .carousel .card, .carousel .cardb {
@@ -1863,6 +1867,27 @@
         .carousel .c6 {transform-origin:center center;transform:rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb6{transform:rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
         .carousel .c7 {transform-origin:center center;transform:rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);} .carousel .cb7{transform:rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(279px);} 
         .carousel .c8 {transform-origin:center center;transform:rotateZ(0deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);}  .carousel .cb8{transform:rotateZ(0deg)  rotateX(90deg) translateY(120px) translateZ(279px);} 
+        /* Purple gradient animation for nav text */
+        @keyframes nav-text-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        #top-nav li.active, #top-nav li:hover {
+            background: linear-gradient(135deg, #6c004a, #2665b1, #7e39de, #77008f);
+            background-size: 300% 300%;
+            animation: nav-text-gradient 6s ease infinite;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+        
+        /* Override previous hover style */
+        #top-nav li:hover {
+            color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -4291,6 +4316,8 @@
                 // Show chat modal overlay
                 chatModalOverlay.classList.add('visible');
                 chatModalOverlay.classList.remove('hidden');
+                // Position chat modal properly
+                chatModalOverlay.style.paddingTop = '60px';
                 setActiveNav('chat');
             }
 
@@ -4305,6 +4332,9 @@
                 // Hide chat overlay if open
                 chatModalOverlay.classList.remove('visible');
                 chatModalOverlay.classList.add('hidden');
+                // Hide chat pill in request view
+                const chatPill = document.querySelector('.chat-pill');
+                if (chatPill) chatPill.style.display = 'none';
                 setActiveNav('requests');
             }
 

@@ -1851,17 +1851,16 @@
             height: 400px !important;
             display: grid !important;
             place-items: center !important;
-            transform: perspective(1200px) rotateX(45deg) !important; /* flacher für bessere Sicht */
+            transform: perspective(1800px) rotateX(25deg) !important; /* Viel flacher, mehr frontal */
             transform-style: preserve-3d !important;
-            animation: rotate 20s linear infinite !important;
-            transition: all 1s !important;
+            animation: autoRotate 25s linear infinite !important;
+            transition: all 0.3s ease-out !important;
             background: transparent !important;
             z-index: 10 !important;
             margin-top: 20px !important;
             margin-bottom: 50px !important;
             visibility: visible !important;
             opacity: 1 !important;
-            pointer-events: all !important;
             cursor: grab !important;
         }
 
@@ -1874,7 +1873,8 @@
         /* Dragging state */
         .carousel.dragging {
             cursor: grabbing !important;
-            transition: transform 0.1s !important;
+            animation: none !important; /* Stop rotation while dragging */
+            transition: none !important; /* Instant response while dragging */
         }
 
         .carousel .card {
@@ -1925,15 +1925,15 @@
             transform: scale(1.05) translateZ(10px) !important;
         }
 
-        @keyframes rotate {
+        @keyframes autoRotate {
             to {
-                transform: perspective(1200px) rotateX(45deg) rotateZ(360deg);
+                transform: perspective(1800px) rotateX(25deg) rotateZ(360deg);
             }
         }
 
         @media screen and (max-width: 992px) {
             .carousel {
-                transform: perspective(1200px) rotateX(45deg) scale(.7);
+                transform: perspective(1800px) rotateX(25deg) scale(.7);
             }
         }
         @keyframes nav-gradient {
@@ -1983,6 +1983,17 @@
         .carousel .card .img {
             background-size: cover !important;
             filter: none !important;
+        }
+
+        /* Make sure carousel is REALLY gone in request view */
+        body[data-view="requests"] #album-carousel {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            position: absolute !important;
+            z-index: -999 !important;
+            transform: translateY(-9999px) !important;
         }
     </style>
 </head>
@@ -4425,6 +4436,7 @@
             function showSearchView() {
                 // Show search related elements
                 mainScreen.style.display = '';
+                document.body.setAttribute('data-view', 'search');
                 if (searchWrapperEl) searchWrapperEl.style.display = '';
                 if (mainTitleContainerEl) mainTitleContainerEl.style.display = '';
                 if (galleryContainerEl) galleryContainerEl.style.display = '';
@@ -4434,36 +4446,24 @@
                 chatModalOverlay.classList.remove('visible');
                 chatModalOverlay.classList.add('hidden');
                 setActiveNav('search');
-                /* Show and position carousel in search view */
-                if (albumCarouselEl) {
-                    albumCarouselEl.style.display = 'grid';
-                    albumCarouselEl.style.visibility = 'visible';
-                    albumCarouselEl.style.opacity = '1';
-                    // Force all carousel cards to be visible
-                    const cards = albumCarouselEl.querySelectorAll('.card, .cardb');
-                    cards.forEach(card => {
-                        card.style.display = 'grid';
-                        card.style.visibility = 'visible';
-                        card.style.opacity = '1';
-                    });
-                }
             }
 
             function showChatView() {
                 // Hide main screen completely for full chat space
                 mainScreen.style.display = 'none';
+                document.body.setAttribute('data-view', 'chat');
                 // Show chat modal overlay
                 chatModalOverlay.classList.add('visible');
                 chatModalOverlay.classList.remove('hidden');
                 // Position chat modal properly
                 chatModalOverlay.style.paddingTop = '60px';
                 setActiveNav('chat');
-                if (albumCarouselEl) albumCarouselEl.style.display = 'none';
             }
 
             function showRequestView() {
                 // Show main screen but hide search specific elements
                 mainScreen.style.display = '';
+                document.body.setAttribute('data-view', 'requests');
                 if (searchWrapperEl) searchWrapperEl.style.display = 'none';
                 if (mainTitleContainerEl) mainTitleContainerEl.style.display = 'none';
                 if (galleryContainerEl) galleryContainerEl.style.display = 'none';
@@ -4476,7 +4476,6 @@
                 const chatPill = document.querySelector('.chat-pill');
                 if (chatPill) chatPill.style.display = 'none';
                 setActiveNav('requests');
-                if (albumCarouselEl) albumCarouselEl.style.display = 'none';
             }
 
             navItems.forEach(li => {
@@ -4646,6 +4645,36 @@
                 carousel.classList.remove('dragging');
             });
 
+            // Touch support
+            carousel.addEventListener('touchstart', (e) => {
+                carouselIsDragging = true;
+                carousel.classList.add('dragging');
+                carouselStartX = e.touches[0].clientX;
+                const transform = window.getComputedStyle(carousel).transform;
+                const matrix = new DOMMatrix(transform);
+                carouselStartRotation = Math.atan2(matrix.m12, matrix.m11) * (180/Math.PI);
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!carouselIsDragging) return;
+                const deltaX = e.touches[0].clientX - carouselStartX;
+                const newRotation = carouselStartRotation + (deltaX * 0.5);
+                carousel.style.transform = `perspective(1800px) rotateX(25deg) rotateZ(${newRotation}deg)`;
+            }, { passive: true });
+
+            document.addEventListener('mouseup', () => {
+                carouselIsDragging = false;
+                carousel.classList.remove('dragging');
+                // Resume auto-rotation after drag
+                carousel.style.animation = 'autoRotate 25s linear infinite';
+            });
+
+            document.addEventListener('touchend', () => {
+                carouselIsDragging = false;
+                carousel.classList.remove('dragging');
+                // Resume auto-rotation after drag
+                carousel.style.animation = 'autoRotate 25s linear infinite';
+            });
         });
 
         document.addEventListener('touchmove', function() {

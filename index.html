@@ -1977,8 +1977,8 @@
         /* Override bubble transparency after tweaks */
         #top-nav ul::before {
             background: rgba(255, 255, 255, 0.04) !important;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
-            top: 15px !important; /* slightly higher so text zentriert */
+            box-shadow: 0 6px 25px rgba(73, 73, 73, 0), 0 1px 2px rgba(255, 255, 255, 0.185) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
+            top: 17px !important; /* slightly higher so text zentriert */
         }
 
         /* Make album pictures clearly visible */
@@ -2039,6 +2039,7 @@
             visibility: visible !important;
             opacity: 1 !important;
             pointer-events: auto !important;
+            will-change: transform !important;
         }
         #album-carousel:hover,
         #album-carousel.dragging {
@@ -2222,6 +2223,27 @@
             -moz-transition: none !important;
             -o-transition: none !important;
             transition: none !important;
+        }
+        
+        /* FRESH CAROUSEL ANIMATION STYLES - REMOVE ALL CONFLICTS */
+        @keyframes fresh_rotate {
+-           from { transform: perspective(1000px) rotateX(70deg) rotateZ(0deg); }
+-           to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
++           0% { transform: perspective(1000px) rotateX(70deg) rotateZ(0deg); }
++           100% { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
+        }
+        
+        /* Override with fresh styles */
+        #album-carousel {
+-           animation: fresh_rotate 25s linear infinite !important;
+-           animation-delay: 0s !important;
+-           animation-play-state: running !important;
+-           animation-fill-mode: forwards !important;
++           -webkit-animation: fresh_rotate 25s linear infinite;
++           -moz-animation: fresh_rotate 25s linear infinite;
++           -o-animation: fresh_rotate 25s linear infinite;
++           animation: fresh_rotate 25s linear infinite;
++           transform: perspective(1000px) rotateX(70deg) rotateZ(0deg);
         }
     </style>
 </head>
@@ -4855,7 +4877,8 @@
                 carouselIsDragging = true;
                 carousel.classList.add('dragging');
                 carouselStartX = e.clientX;
-                carousel.style.animationPlayState = 'paused'; // Pause auto-rotation
+                // Pause auto-rotation
+                carousel.style.animation = 'none';
                 // Extract current rotationZ
                 const transform = window.getComputedStyle(carousel).transform;
                 const matrix = new DOMMatrix(transform);
@@ -4869,10 +4892,12 @@
                 carousel.style.transform = `perspective(1000px) rotateX(70deg) rotateZ(${newRotation}deg)`;
             });
 
-            document.addEventListener('mouseup', () => {
+            carousel.addEventListener('mouseup', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
-                carousel.style.animationPlayState = 'running'; // Resume auto-rotation
+                // Resume auto-rotation with fresh animation
+                carousel.style.animation = 'fresh_rotate 25s linear infinite';
+                carousel.style.animationPlayState = 'running';
             });
 
             // Touch support
@@ -4880,7 +4905,8 @@
                 carouselIsDragging = true;
                 carousel.classList.add('dragging');
                 carouselStartX = e.touches[0].clientX;
-                carousel.style.animationPlayState = 'paused';
+                // Pause auto-rotation
+                carousel.style.animation = 'none';
                 const transform = window.getComputedStyle(carousel).transform;
                 const matrix = new DOMMatrix(transform);
                 carouselStartRotation = Math.atan2(matrix.m21, matrix.m11) * (180/Math.PI);
@@ -4896,6 +4922,8 @@
             document.addEventListener('touchend', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
+                // Resume auto-rotation with fresh animation
+                carousel.style.animation = 'fresh_rotate 25s linear infinite';
                 carousel.style.animationPlayState = 'running';
             });
         });

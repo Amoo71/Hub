@@ -2034,10 +2034,10 @@
         }
     </style>
     <!-- Owl Carousel dependencies -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" integrity="sha512-utbXQ1uwZm+1NL5mWl1YxzoLtS7i8rLg2bRW8itPqcd7S4vysCneBpX/P7k4ymCdW1xG8sIq3p+Ek9O/B0TzYw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" integrity="sha512-mRxtTQ0radym/Jaqb+U1qRCluVNPZrzK6wjnS1xvBRNcnRrQJGhA/gw2msJH69+pD4SUOaPHYfCwDNDVN6FZpg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+YhkiQev87TRa8tQPpqlIYVgRMjMX2PrXTs=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" integrity="sha512-gqLGO2DmUqW8QqliNFeUp+6BfB+JuBkZ9rNYXXNxq+QJYKpmrElh0R1TTV2X7iVmtHVxV8qtT0qrP0Wox8KPtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" crossorigin="anonymous" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" crossorigin="anonymous"></script>
     <style>
     /* Youplay Carousel Title */
     .youplay-carousel .img-title {
@@ -3053,6 +3053,45 @@
                     // Update 3D carousel with actual database items
                     if (typeof update3DCarousel === 'function' && displayItems && displayItems.length) {
                         update3DCarousel(displayItems.slice(0, 8));
+                    }
+
+                    // Dynamic Youplay Carousel Generation
+                    const yp = document.querySelector('.youplay-carousel');
+                    if (yp) {
+                        // destroy previous instance if exists
+                        if ($(yp).hasClass('owl-loaded')) {
+                            $(yp).trigger('destroy.owl.carousel').empty();
+                        }
+                        // populate items
+                        displayItems.forEach(item => {
+                            const a = document.createElement('a');
+                            a.className = 'angled-img';
+                            a.href = '#';
+                            const divImg = document.createElement('div');
+                            divImg.className = 'img';
+                            const imgEl = document.createElement('img');
+                            imgEl.src = item.imageUrl || '';
+                            divImg.appendChild(imgEl);
+                            a.appendChild(divImg);
+                            const title = document.createElement('p');
+                            title.className = 'img-title';
+                            title.textContent = item.name || '';
+                            a.appendChild(title);
+                            yp.appendChild(a);
+                        });
+                        // init carousel
+                        $(yp).owlCarousel({
+                            loop:true,
+                            stagePadding:70,
+                            nav:false,
+                            dots:false,
+                            responsive:{
+                                0:{items:1},
+                                500:{items:2},
+                                992:{items:3},
+                                1200:{items:4}
+                            }
+                        });
                     }
 
                     console.log('Success');
@@ -4741,10 +4780,10 @@
 
         // Add explicit event listeners for important interactive elements
         const interactiveElements = [
-            requestInput, 
-            usernameInput, 
-            sendButton, 
-            searchBar,
+            document.getElementById('request-input'),
+            document.getElementById('username-input'),
+            document.getElementById('send-button'),
+            document.querySelector('.search-bar'),
             document.querySelector('.gallery-container'),
             document.querySelector('.view-all-button'),
             document.querySelector('.requests-list')

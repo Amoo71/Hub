@@ -1963,6 +1963,16 @@
         #top-nav ul::before {
             background: rgba(255, 255, 255, 0.04) !important;
             box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
+            top: 9px !important; /* slightly higher so text zentriert */
+        }
+
+        /* Hide carousel unless Search-View aktiv */
+        #album-carousel { display: none !important; }
+
+        /* Make album pictures clearly visible */
+        .carousel .card .img {
+            background-size: cover !important;
+            filter: none !important;
         }
     </style>
 </head>

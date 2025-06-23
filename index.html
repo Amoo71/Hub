@@ -1793,15 +1793,20 @@
             color: var(--text-color);
             transition: color 0.2s ease;
             user-select: none;
+            /* Center text vertically & horizontally for a true pill look */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         /* Glassy bubble that slides */
         #top-nav ul::before {
             content: '';
             position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset;
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1);
             z-index: 1;
@@ -1952,6 +1957,12 @@
         /* Override previous hover style */
         #top-nav li:hover {
             color: transparent;
+        }
+
+        /* Override bubble transparency after tweaks */
+        #top-nav ul::before {
+            background: rgba(255, 255, 255, 0.04) !important;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
         }
     </style>
 </head>
@@ -2145,6 +2156,19 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 3D Album Carousel (Vision-OS like) -->
+    <div id="album-carousel" class="carousel">
+        <!-- Eight faces: front cards & their backs for reflection -->
+        <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
+        <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
+        <div class="card c3"><div class="img"></div><p></p></div><div class="cardb cb3"></div>
+        <div class="card c4"><div class="img"></div><p></p></div><div class="cardb cb4"></div>
+        <div class="card c5"><div class="img"></div><p></p></div><div class="cardb cb5"></div>
+        <div class="card c6"><div class="img"></div><p></p></div><div class="cardb cb6"></div>
+        <div class="card c7"><div class="img"></div><p></p></div><div class="cardb cb7"></div>
+        <div class="card c8"><div class="img"></div><p></p></div><div class="cardb cb8"></div>
     </div>
 
     <script type="module">

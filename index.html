@@ -1767,7 +1767,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(25, 25, 30, 0.15); /* Much more transparent */
+            background: rgba(24, 24, 24, 0.034); /* Much more transparent */
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             /* subtle border tint */
@@ -1803,7 +1803,7 @@
             content: '';
             position: absolute;
             background: rgba(255, 255, 255, 0.021);
-            border: 1px solid rgba(255, 255, 255, 0.411);
+            border: 1px solid rgba(255, 255, 255, 0.158);
             backdrop-filter: blur(12px) saturate(180%);
             -webkit-backdrop-filter: blur(12px) saturate(180%);
             box-shadow: 0 6px 25px rgba(80, 80, 80, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset;
@@ -1977,8 +1977,8 @@
         /* Override bubble transparency after tweaks */
         #top-nav ul::before {
             background: rgba(255, 255, 255, 0.04) !important;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
-            top: 9px !important; /* slightly higher so text zentriert */
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.048), 0 1px 2px rgba(255, 255, 255, 0.089) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
+            top: 20px !important; /* slightly higher so text zentriert */
         }
 
         /* Make album pictures clearly visible */
@@ -4810,6 +4810,56 @@
             });
         }
         // Immediately update carousel with placeholder images
+
+        // --- Recently Added Slider Logic ---
+        (async () => {
+            const sliderWrap = document.querySelector('.slider-wrap');
+            const slider = document.getElementById('card-slider');
+            if (!sliderWrap || !slider) return;
+
+            async function loadSlider() {
+                let items = await getAlbumItems();
+                if (!Array.isArray(items)) items = [];
+                // Sort by newest
+                items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                slider.innerHTML = '';
+                items.forEach(item => {
+                    const slide = document.createElement('div');
+                    slide.className = 'slider-item';
+                    slide.innerHTML = `
+                        <div class="animation-card_image">
+                            <img src="${item.imageUrl || 'https://picsum.photos/300/300'}" alt="${item.name || ''}" />
+                        </div>
+                        <div class="animation-card_content">
+                            <h4 class="animation-card_content_title">${item.name || ''}</h4>
+                        </div>
+                    `;
+                    slider.appendChild(slide);
+                });
+            }
+
+            // Re-render on updates
+            setAlbumItemUpdateCallback(loadSlider);
+            await loadSlider();
+
+            // Drag-to-scroll
+            let isDown = false, startX, scrollLeft;
+            sliderWrap.addEventListener('mousedown', e => {
+                isDown = true;
+                sliderWrap.classList.add('active');
+                startX = e.pageX - sliderWrap.offsetLeft;
+                scrollLeft = sliderWrap.scrollLeft;
+            });
+            sliderWrap.addEventListener('mouseleave', () => { isDown = false; sliderWrap.classList.remove('active'); });
+            sliderWrap.addEventListener('mouseup', () => { isDown = false; sliderWrap.classList.remove('active'); });
+            sliderWrap.addEventListener('mousemove', e => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - sliderWrap.offsetLeft;
+                const walk = (x - startX) * 1.5; // scroll-fast
+                sliderWrap.scrollLeft = scrollLeft - walk;
+            });
+        })();
     </script>
 </body>
 </html>

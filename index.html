@@ -2050,9 +2050,10 @@
         }
         #album-carousel:hover,
         #album-carousel.dragging {
-            animation-play-state: paused !important;
+            /* No animation pausing on hover */
         }
         #album-carousel.dragging {
+            animation-play-state: paused !important;
             cursor: grabbing !important;
         }
         #album-carousel .cardb {
@@ -2107,6 +2108,19 @@
             #album-carousel {
                 transform: scale(0.7) !important;
             }
+        }
+        #album-carousel .card:hover {
+            transform: none !important; /* No hover transform */
+            animation: none !important; /* No animation on hover */
+            transition: none !important; /* No transition on hover */
+        }
+        
+        /* Disable any hover effects on carousel cards */
+        #album-carousel .card:hover .img,
+        #album-carousel .card:hover p {
+            transform: none !important;
+            animation: none !important;
+            transition: none !important;
         }
     </style>
 </head>

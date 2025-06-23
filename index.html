@@ -2001,7 +2001,7 @@
         /* Override old carousel with standard rotateY carousel */
         #album-carousel {
             position: relative !important;
-            width: 300px !important;
+            width: 700px !important;
             height: 300px !important;
             margin: 40px auto !important;
             transform-style: preserve-3d !important;
@@ -2020,10 +2020,11 @@
         #album-carousel .card {
             display: block !important;
             position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0;
-            left: 0;
+            width: 150px !important;
+            height: 280px !important;
+            top: 10px !important;
+            left: calc(50% - 75px) !important;
+            transform-origin: center center !important;
         }
         /* Disable card hover transform to avoid centering slide */
         #album-carousel .card:hover {
@@ -4761,7 +4762,7 @@
             if (!carousel) return;
             const cards = carousel.querySelectorAll('.card');
             const total = cards.length;
-            const tz = 250; // distance from center
+            const tz = 350; // größerer Radius
             const theta = 360 / total;
             cards.forEach((card, i) => {
                 const imgDiv = card.querySelector('.img');

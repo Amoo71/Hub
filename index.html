@@ -1768,8 +1768,8 @@
             justify-content: center;
             align-items: center;
             background: rgba(24, 24, 24, 0.034); /* Much more transparent */
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            backdrop-filter: blur(80px);
+            -webkit-backdrop-filter: blur(10px);
             /* subtle border tint */
             border-bottom: 1px solid rgba(255,255,255,0.06);
             z-index: 4000; /* below modal overlay */
@@ -2065,49 +2065,9 @@
             <button class="view-all-button">View All</button>
         <h2 class="main-title">Recently Added</h2>
         </div>
-        <div class="gallery-container">
-           <div class="gallery-content">
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 1</div></div>
-                    <div class="album-name">G Name 1</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 2</div></div>
-                    <div class="album-name">G Name 2</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 3</div></div>
-                    <div class="album-name">G Name 3</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 4</div></div>
-                    <div class="album-name">G Name 4</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 5</div></div>
-                    <div class="album-name">G Name 5</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 6</div></div>
-                    <div class="album-name">G Name 6</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 7</div></div>
-                    <div class="album-name">G Name 7</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 8</div></div>
-                    <div class="album-name">G Name 8</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 9</div></div>
-                    <div class="album-name">G Name 9</div>
-                </div>
-                <div class="album-item-wrapper">
-                    <div class="placeholder-image"><div class="placeholder-text">G 10</div></div>
-                    <div class="album-name">G Name 10</div>
-                </div>
-            </div>
+        <!-- Recently Added Slider -->
+        <div class="slider-wrap">
+            <div id="card-slider" class="slider"></div>
         </div>
         <div class="request-section">
             <button class="chat-pill">Chat</button>
@@ -2229,43 +2189,6 @@
                 <h3>All Games</h3>
                 <div id="albums-grid" class="albums-grid">
                     <!-- Albums will be generated here dynamically -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Slider Carousel Replacement -->
-    <div class="slider-wrap">
-        <div id="card-slider" class="slider">
-            <!-- Slider Items -->
-            <div class="slider-item">
-                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=1" alt="Image 1"></div>
-                <div class="animation-card_content">
-                    <h4 class="animation-card_content_title">Game 1</h4>
-                </div>
-            </div>
-            <div class="slider-item">
-                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=2" alt="Image 2"></div>
-                <div class="animation-card_content">
-                    <h4 class="animation-card_content_title">Game 2</h4>
-                </div>
-            </div>
-            <div class="slider-item">
-                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=3" alt="Image 3"></div>
-                <div class="animation-card_content">
-                    <h4 class="animation-card_content_title">Game 3</h4>
-                </div>
-            </div>
-            <div class="slider-item">
-                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=4" alt="Image 4"></div>
-                <div class="animation-card_content">
-                    <h4 class="animation-card_content_title">Game 4</h4>
-                </div>
-            </div>
-            <div class="slider-item">
-                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=5" alt="Image 5"></div>
-                <div class="animation-card_content">
-                    <h4 class="animation-card_content_title">Game 5</h4>
                 </div>
             </div>
         </div>

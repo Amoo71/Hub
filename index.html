@@ -2666,7 +2666,7 @@
             });
 
             // --- SMOOTH SCROLL CAROUSEL ---
-            const galleryContent = document.querySelector('.gallery-content') || document.createElement('div');
+            const galleryContent = document.querySelector('.gallery-content');
             let albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
             let current = 2; // Start with Album 5 (Index 4)
             let albumItems = []; // Store album items from database
@@ -4680,7 +4680,7 @@
             document.getElementById('request-input'),
             document.getElementById('username-input'),
             document.getElementById('send-button'),
-            searchBar,
+            document.querySelector('.search-bar'),
             document.querySelector('.slider-wrap'),
             document.querySelector('.view-all-button'),
             document.querySelector('.requests-list')
@@ -4703,7 +4703,10 @@
             }
         });
 
-        // Old gallery functions are obsolete with new slider, skip initializeAlbumEventListeners
+        // --- Recently Added Slider Logic ---
+        (async () => {
+            // ... existing code ...
+        });
     </script>
 </body>
 </html>

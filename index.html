@@ -1830,19 +1830,20 @@
         #top-nav ul::before {
             content: '';
             position: absolute;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.06); /* more transparent */
             border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px); /* stronger blur for 3D raindrop look */
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 24px; /* rounder */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 15px rgba(255,255,255,0.1) inset;
             z-index: 1;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
             top: 10px; /* Position vertically */
-            height: 35px; /* Fixed height */
+            height: 36px; /* Fixed height */
             width: 0; /* Will be set by JS */
             left: 0; /* Will be set by JS */
             opacity: 0; /* Start hidden, JS will show it */
+            transform: scale(0.95);
         }
         /* Adjust bubble position based on active item */
         #top-nav li.active ~ li.active {
@@ -2025,12 +2026,8 @@
         }
         
         .carousel-item-image {
-            width: 80%;
-            height: 70%;
-            background-size: cover;
-            background-position: center;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            width: 100%;
+            height: calc(100% - 60px); /* leave room for title */
         }
         
         .carousel-item-title {
@@ -2088,6 +2085,27 @@
         .carousel-dot.active {
             background: var(--glow-green);
             transform: scale(1.3);
+        }
+
+        @keyframes bubbleBounce {
+            0% { transform: scale(0.9); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        #top-nav ul.bubble-bounce::before {
+            animation: bubbleBounce 0.4s ease;
+        }
+
+        /* Send button black style */
+        .send-button, .send-button.visible {
+            background: #111 !important;
+            color: var(--text-color) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .send-button:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
         }
     </style>
 </head>

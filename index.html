@@ -1900,19 +1900,21 @@
             -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
         }
         .carousel .card .img {
-            width: 180px;
-            height: 180px;
+            width: 100%;
+            height: 100%;
             border-radius: 3px;
-            margin-bottom: -10px;
-            filter: brightness(.7);
-            background-size: 190px 190px;
+            margin: 0;
+            filter: none;
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
         }
         .carousel .card p {
             font-size: 16px;
-            margin-bottom: -5px;
+            margin: 10px 0;
             text-align: center;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
         .carousel .card span {
             font-size: 12px;
@@ -2968,7 +2970,12 @@
                     current = 2; // Always start with Album 5 (index 4) as active
                     console.log('Update');
                     updateCarousel();
-            resetCarouselTimer();
+                    resetCarouselTimer();
+
+                    // Update 3D carousel with actual database items
+                    if (typeof update3DCarousel === 'function' && displayItems && displayItems.length) {
+                        update3DCarousel(displayItems.slice(0, 8));
+                    }
 
                     console.log('Success');
                 } catch (error) {
@@ -4416,8 +4423,19 @@
                 chatModalOverlay.classList.remove('visible');
                 chatModalOverlay.classList.add('hidden');
                 setActiveNav('search');
-                /* show carousel in search view */
-                if (albumCarouselEl) albumCarouselEl.style.display = 'grid';
+                /* Show and position carousel in search view */
+                if (albumCarouselEl) {
+                    albumCarouselEl.style.display = 'grid';
+                    albumCarouselEl.style.visibility = 'visible';
+                    albumCarouselEl.style.opacity = '1';
+                    // Force all carousel cards to be visible
+                    const cards = albumCarouselEl.querySelectorAll('.card, .cardb');
+                    cards.forEach(card => {
+                        card.style.display = 'grid';
+                        card.style.visibility = 'visible';
+                        card.style.opacity = '1';
+                    });
+                }
             }
 
             function showChatView() {

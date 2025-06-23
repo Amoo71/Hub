@@ -2245,21 +2245,31 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
 
         #album-carousel {
-            transform: perspective(1000px) rotateX(70deg);
+            /* Initial transform state */
+            transform: perspective(1000px) rotateX(70deg) rotateZ(0deg);
             transform-style: preserve-3d;
             display: grid;
             place-items: center;
-            animation: carousel-rotate 15s linear infinite;
+            /* Animation */
+            animation-name: carousel-rotate;
+            animation-duration: 15s;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
             transition: all 1s;
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
             width: 250px;
             height: 250px;
             position: relative;
             margin: 40px auto;
+            z-index: 100;
         }
 
         #album-carousel:hover {
             animation-play-state: paused;
+        }
+        
+        #album-carousel.dragging {
+            animation: none;
         }
 
         #album-carousel .cardb {
@@ -2270,6 +2280,8 @@
             background-color: #1f1f1f;
             position: absolute;
             border-radius: 5px;
+            visibility: visible;
+            opacity: 1;
         }
 
         #album-carousel .card {
@@ -2282,6 +2294,8 @@
             box-shadow: 0 0 20px rgba(0,0,0,.5);
             border-radius: 5px;
             -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
+            visibility: visible;
+            opacity: 1;
         }
 
         #album-carousel .card .img {
@@ -2290,13 +2304,18 @@
             border-radius: 3px;
             margin-bottom: -10px;
             filter: brightness(.7);
-            background-size: 190px 190px;
+            background-size: cover;
+            background-position: center;
+            visibility: visible;
+            opacity: 1;
         }
 
         #album-carousel .card p {
             font-size: 16px;
             margin-bottom: -5px;
             color: white;
+            visibility: visible;
+            opacity: 1;
         }
 
         #album-carousel .card span {
@@ -2304,6 +2323,8 @@
             text-align: center;
             padding: 8px;
             color: white;
+            visibility: visible;
+            opacity: 1;
         }
 
         /* Card positions */
@@ -5057,6 +5078,8 @@
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation with fresh animation
+                carousel.style.animation = '';
+                void carousel.offsetHeight; // Force reflow
                 carousel.style.animation = 'carousel-rotate 15s linear infinite';
                 carousel.style.animationPlayState = 'running';
             });
@@ -5084,6 +5107,8 @@
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation with fresh animation
+                carousel.style.animation = '';
+                void carousel.offsetHeight; // Force reflow
                 carousel.style.animation = 'carousel-rotate 15s linear infinite';
                 carousel.style.animationPlayState = 'running';
             });
@@ -5196,6 +5221,20 @@
             }
         }
         // Immediately update carousel with placeholder images
+    </script>
+    <script>
+        // Force carousel animation to start immediately after page load
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var carousel = document.getElementById('album-carousel');
+                if (carousel) {
+                    // Reset animation to ensure it runs
+                    carousel.style.animation = 'none';
+                    carousel.offsetHeight; // Force reflow
+                    carousel.style.animation = 'carousel-rotate 15s linear infinite';
+                }
+            }, 500);
+        });
     </script>
 </body>
 </html>

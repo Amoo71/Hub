@@ -2005,7 +2005,7 @@
             height: 300px !important;
             margin: 40px auto !important;
             transform-style: preserve-3d !important;
-            transform: perspective(1000px) rotateY(0deg) !important;
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg) !important;
             animation: rotateYanim 25s linear infinite !important;
             cursor: grab !important;
         }
@@ -2031,7 +2031,8 @@
             transform: none !important;
         }
         @keyframes rotateYanim {
-            to { transform: perspective(1000px) rotateY(-360deg) !important; }
+            from { transform: perspective(1000px) rotateX(0deg) rotateY(0deg) !important; }
+            to   { transform: perspective(1000px) rotateX(0deg) rotateY(-360deg) !important; }
         }
     </style>
 </head>

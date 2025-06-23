@@ -2199,7 +2199,13 @@
         </div>
         <div class="main-title-container">
             <button class="view-all-button">View All</button>
-        <h2 class="main-title">Recently Added</h2>
+            <h2 class="main-title">Recently Added</h2>
+        </div>
+        <!-- Multi-level Carousel -->
+        <div id="carousel" class="noselect">
+            <div class="arrow arrow-left">◀</div>
+            <div class="arrow arrow-right">▶</div>
+            <!-- Items will be dynamically loaded here -->
         </div>
         <div class="gallery-container">
            <div class="gallery-content">
@@ -2369,9 +2375,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Multi-level Carousel Container (will be created dynamically) -->
-    <div id="carousel-container"></div>
 
     <script type="module">
         import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback, checkInactivity, getChatMessages, addChatMessage, deleteChatMessage, setChatMessageUpdateCallback } from './db.js';
@@ -4994,14 +4997,15 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const carousel = document.getElementById('carousel');
             if (!carousel) {
-                console.error("Carousel: Carousel element not found!");
+                console.error("Carousel: Could not find carousel element!");
                 return;
             }
+
             const arrowLeft = carousel.querySelector('.arrow-left');
             const arrowRight = carousel.querySelector('.arrow-right');
             
             if (!arrowLeft || !arrowRight) {
-                console.error("Carousel: Arrow elements not found!");
+                console.error("Carousel: Could not find arrow elements!");
                 return;
             }
             
@@ -5049,6 +5053,8 @@
             
             // Render the carousel items
             function renderCarousel() {
+                if (!carousel) return;
+
                 // Clear existing items except arrows
                 Array.from(carousel.querySelectorAll('.item')).forEach(item => item.remove());
                 
@@ -5065,7 +5071,8 @@
                     
                     // Set background image if available
                     if (item.imageUrl) {
-                        itemElement.style.background = `url(${item.imageUrl})`;
+                        itemElement.style.backgroundImage = `url(${item.imageUrl})`;
+                        console.log("Carousel: Setting image for item", itemIndex, item.imageUrl);
                     }
                     
                     // Add title
@@ -5108,166 +5115,12 @@
             setAlbumItemUpdateCallback(loadCarouselItems);
             
             // Initial load
-            await loadCarouselItems();
-        });
-
-        // Create and initialize the multi-level carousel
-        (async function initializeCarousel() {
             try {
-                console.log("Initializing new carousel");
-                
-                // Get the container
-                const container = document.getElementById('carousel-container');
-                if (!container) {
-                    console.error("Carousel container not found");
-                    return;
-                }
-                
-                // Create carousel structure
-                const carousel = document.createElement('div');
-                carousel.id = 'carousel';
-                carousel.className = 'noselect';
-                
-                const arrowLeft = document.createElement('div');
-                arrowLeft.className = 'arrow arrow-left';
-                arrowLeft.innerHTML = '◀';
-                
-                const arrowRight = document.createElement('div');
-                arrowRight.className = 'arrow arrow-right';
-                arrowRight.innerHTML = '▶';
-                
-                // Append elements to container
-                carousel.appendChild(arrowLeft);
-                carousel.appendChild(arrowRight);
-                container.appendChild(carousel);
-                
-                // Define the positions for each level
-                const positions = [
-                    { level: 'level-2', left: 650, marginTop: 25, height: 150, width: 110, zIndex: 1 },
-                    { level: 'level-1', left: 500, marginTop: 10, height: 180, width: 130, zIndex: 2 },
-                    { level: 'level0', left: 330, marginTop: 0, height: 200, width: 150, zIndex: 3 },
-                    { level: 'level1', left: 180, marginTop: 10, height: 180, width: 130, zIndex: 2 },
-                    { level: 'level2', left: 50, marginTop: 25, height: 150, width: 110, zIndex: 1 }
-                ];
-                
-                // Items array to store all carousel items
-                let items = [];
-                let currentPosition = 0;
-                
-                // Load items from database
-                async function loadCarouselItems() {
-                    console.log("Carousel: Starting load");
-                    let dbItems = await getAlbumItems();
-                    console.log("Carousel: Got items from DB:", dbItems);
-                    
-                    if (!Array.isArray(dbItems) || dbItems.length === 0) {
-                        console.log("Carousel: No items found, creating placeholders");
-                        dbItems = [];
-                        for (let i = 1; i <= 10; i++) {
-                            dbItems.push({
-                                id: `placeholder-${i}`,
-                                name: `Game ${i}`,
-                                imageUrl: `https://picsum.photos/300/300?random=${i}`
-                            });
-                        }
-                    }
-                    
-                    // Sort by newest first
-                    dbItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                    
-                    // Take only the first 10 items
-                    items = dbItems.slice(0, 10);
-                    console.log("Carousel: Processed items:", items);
-                    
-                    // Render the carousel
-                    renderCarousel();
-                }
-                
-                // Render the carousel items
-                function renderCarousel() {
-                    console.log("Rendering carousel with items:", items);
-                    
-                    // Clear existing items except arrows
-                    Array.from(carousel.querySelectorAll('.item')).forEach(item => item.remove());
-                    
-                    // Calculate which items to show based on current position
-                    for (let i = 0; i < positions.length; i++) {
-                        const itemIndex = (currentPosition + i) % items.length;
-                        const item = items[itemIndex];
-                        const position = positions[i];
-                        
-                        if (!item) {
-                            console.error(`No item at index ${itemIndex}`);
-                            continue;
-                        }
-                        
-                        // Create item element
-                        const itemElement = document.createElement('div');
-                        itemElement.className = `item ${position.level}`;
-                        itemElement.dataset.index = itemIndex;
-                        
-                        // Set explicit positioning from positions array
-                        itemElement.style.left = `${position.left}px`;
-                        itemElement.style.marginTop = `${position.marginTop}px`;
-                        itemElement.style.height = `${position.height}px`;
-                        itemElement.style.width = `${position.width}px`;
-                        itemElement.style.zIndex = position.zIndex;
-                        
-                        // Set background image if available
-                        if (item.imageUrl) {
-                            itemElement.style.backgroundImage = `url(${item.imageUrl})`;
-                            itemElement.style.backgroundSize = 'cover';
-                            itemElement.style.backgroundPosition = 'center';
-                        }
-                        
-                        // Add title
-                        const titleElement = document.createElement('div');
-                        titleElement.className = 'item-title';
-                        titleElement.textContent = item.name || `Game ${itemIndex + 1}`;
-                        itemElement.appendChild(titleElement);
-                        
-                        // Add click event for center item
-                        if (position.level === 'level0') {
-                            itemElement.addEventListener('click', () => {
-                                console.log("Carousel: Center item clicked:", item);
-                                if (typeof showAlbumDetails === 'function') {
-                                    showAlbumDetails(item);
-                                }
-                            });
-                        }
-                        
-                        carousel.appendChild(itemElement);
-                    }
-                }
-                
-                // Move carousel left
-                function moveLeft() {
-                    currentPosition = (currentPosition - 1 + items.length) % items.length;
-                    renderCarousel();
-                }
-                
-                // Move carousel right
-                function moveRight() {
-                    currentPosition = (currentPosition + 1) % items.length;
-                    renderCarousel();
-                }
-                
-                // Add event listeners to arrows
-                arrowLeft.addEventListener('click', moveLeft);
-                arrowRight.addEventListener('click', moveRight);
-                
-                // Register callback for database updates
-                setAlbumItemUpdateCallback(loadCarouselItems);
-                
-                // Initial load
                 await loadCarouselItems();
-                
-                console.log("Carousel initialization complete");
-                
             } catch (error) {
-                console.error("Error initializing carousel:", error);
+                console.error("Carousel: Failed to load items:", error);
             }
-        })();
+        });
     </script>
 </body>
 </html>

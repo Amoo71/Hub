@@ -1810,7 +1810,7 @@
             border-radius: 20px;
             z-index: 1;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            top: 80% !important; /* Pill etwas tiefer */
+            top: 55% !important; /* Pill etwas tiefer */
             transform: translateY(-55%) !important;
             height: 35px;
             width: 0;
@@ -1977,8 +1977,8 @@
         /* Override bubble transparency after tweaks */
         #top-nav ul::before {
             background: rgba(255, 255, 255, 0.04) !important;
-            box-shadow: 0 6px 25px rgba(73, 73, 73, 0), 0 1px 2px rgba(255, 255, 255, 0.185) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
-            top: 19px !important; /* slightly higher so text zentriert */
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
+            top: 20px !important; /* slightly higher so text zentriert */
         }
 
         /* Make album pictures clearly visible */
@@ -1998,281 +1998,22 @@
             z-index: -999 !important;
             transform: translateY(-9999px) !important;
         }
-        /* Override old carousel with standard rotateY carousel */
-        #album-carousel {
-            display: none !important; /* Hide completely */
-        }
-        #album-carousel:hover {
-            display: none !important; /* Hide completely */
-        }
-        #album-carousel.dragging {
-            display: none !important; /* Hide completely */
-        }
-        #album-carousel .card {
-            display: none !important; /* Hide completely */
-        }
-        /* Disable card hover transform to avoid centering slide */
-        #album-carousel .card:hover {
-            display: none !important; /* Hide completely */
-        }
-        @keyframes rotateYanim {
-            to { transform: none !important; }
-        }
-        @media screen and (max-width: 992px) {
-            .carousel {
-                transform: scale(.7);
-            }
-        }
-        /* Final carousel override as per provided example */
-        #album-carousel {
-            transform: perspective(1000px) rotateX(70deg) rotateZ(0deg) !important;
-            transform-style: preserve-3d !important;
-            display: grid !important;
-            place-items: center !important;
-            animation: rotate 25s linear infinite !important;
-            background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%) !important;
-            width: 250px !important;
-            height: 250px !important;
-            position: relative !important;
-            margin: 40px auto !important;
-            z-index: 10 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            will-change: transform !important;
-        }
-        #album-carousel:hover,
-        #album-carousel.dragging {
-            /* No animation pausing on hover */
-            animation-play-state: running !important;
-        }
-        #album-carousel.dragging {
-            animation-play-state: paused !important;
-            cursor: grabbing !important;
-        }
-        #album-carousel .cardb {
-            display: grid !important;
-            place-items: center !important;
-            width: 190px !important;
-            height: 225px !important;
-            background-color: #1f1f1f !important;
-            position: absolute !important;
-            border-radius: 5px !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        #album-carousel .card {
-            display: grid !important;
-            place-items: center !important;
-            width: 190px !important;
-            height: 225px !important;
-            background-color: #333 !important;
-            position: absolute !important;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5) !important;
-            border-radius: 5px !important;
-            transform-origin: center center !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            grid-template-rows: 1fr auto !important;
-            overflow: visible !important;
-        }
-        #album-carousel .card .img {
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 3px !important;
-            margin-bottom: 0 !important;
-            filter: brightness(1) !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
-            grid-row: 1 !important;
-        }
-        #album-carousel .card p {
-            font-size: 16px !important;
-            margin: 0 !important;
-            color: white !important;
-            grid-row: 2 !important;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
-            position: relative !important;
-            z-index: 2 !important;
-            background: transparent !important;
-            width: 100% !important;
-            padding: 3px !important;
-            text-align: center !important;
-            position: absolute !important;
-            bottom: -25px !important;
-            left: 0 !important;
-            pointer-events: none !important;
-        }
-        #album-carousel .card span {
-            font-size: 12px !important;
-            display: block !important;
-            margin-top: 8px !important;
-            text-align: center !important;
-            display: none !important; /* Hide span text */
-        }
-        @keyframes rotate {
-            to {
-                transform: perspective(1000px) rotateX(70deg) rotateZ(360deg) !important;
-            }
-        }
-        @media screen and (max-width: 992px) {
-            #album-carousel {
-                transform: scale(0.7) !important;
-            }
-        }
-        #album-carousel .card:hover {
-            /* Explicitly inherit all properties to prevent hover changes */
-            transform: inherit !important;
-            animation: inherit !important;
-            transition: inherit !important;
-            filter: inherit !important;
-            background-color: inherit !important;
-            box-shadow: inherit !important;
-            border: inherit !important;
-            width: inherit !important;
-            height: inherit !important;
-            margin: inherit !important;
-            padding: inherit !important;
-            opacity: inherit !important;
-            color: inherit !important;
-            font-size: inherit !important;
-            text-shadow: inherit !important;
-            z-index: inherit !important;
-        }
-        
-        /* Disable any hover effects on carousel cards */
-        #album-carousel .card:hover .img,
-        #album-carousel .card:hover p {
-            transform: none !important;
-            animation: none !important;
-            transition: none !important;
-        }
-        
-        /* Keep only the final implementation */
-        #album-carousel .card:hover .img,
-        #album-carousel .card:hover p {
-            transform: none !important;
-            animation: none !important;
-            transition: none !important;
-        }
-        
-        /* Hide all old carousel styles */
-        .carousel:not(#album-carousel) {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            position: absolute !important;
-            z-index: -9999 !important;
-            transform: translateY(-9999px) !important;
-        }
-        #album-carousel:hover,
-        #album-carousel.dragging {
-            /* No animation pausing on hover */
-        }
-        /* Remove ALL hover effects */
-        #album-carousel:hover {
-            transform: perspective(1000px) rotateX(70deg) rotateZ(0deg) !important; /* Keep same transform */
-            animation: rotate 25s linear infinite !important; /* Keep animation running */
-            animation-play-state: running !important;
-        }
-        #album-carousel.dragging {
-            animation-play-state: paused !important;
-            cursor: grabbing !important;
-        }
-        /* Disable any hover effects on any carousel elements */
-        #album-carousel *:hover {
-            transform: none !important;
-            animation: inherit !important;
-            transition: none !important;
-            filter: none !important;
-            box-shadow: inherit !important;
-            border: inherit !important;
-            background: inherit !important;
-        }
-
-        /* Fix hover flicker by completely disabling hover styles */
-        #album-carousel, 
-        #album-carousel .card,
-        #album-carousel .card .img,
-        #album-carousel .card p,
-        #album-carousel .cardb {
-            transition: none !important;
-        }
-        
-        /* Completely disable all hover effects */
-        #album-carousel:hover,
-        #album-carousel .card:hover,
-        #album-carousel .card:hover .img,
-        #album-carousel .card:hover p,
-        #album-carousel .cardb:hover {
-            /* No style changes on hover */
-            animation: inherit !important;
-            transform: inherit !important;
-            filter: inherit !important;
-            background: inherit !important;
-            color: inherit !important;
-            border: inherit !important;
-            box-shadow: inherit !important;
-        }
-        
-        /* Override any remaining hover styles */
-        #album-carousel * {
-            -webkit-transition: none !important;
-            -moz-transition: none !important;
-            -o-transition: none !important;
-            transition: none !important;
-        }
-        
-        /* Simple clean animation */
-        @keyframes simple_rotate {
-            from { transform: perspective(1000px) rotateX(70deg) rotateZ(0deg); }
-            to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
-        }
-        
-        /* Apply animation directly */
-        #album-carousel {
-            animation: simple_rotate 25s linear infinite;
-        }
-        
-        /* Ensure animation continues on hover */
-        #album-carousel:hover {
-            animation: simple_rotate 25s linear infinite;
-        }
-
-        /* COMPLETELY FRESH CAROUSEL IMPLEMENTATION BASED ON THE TEMPLATE */
+        /* New standard rotateY carousel CSS */
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
 
-        #album-carousel {
-            /* Initial transform state */
-            transform: perspective(1000px) rotateX(70deg) rotateZ(0deg);
+        .carousel {
+            transform: perspective(1000px) rotateX(70deg);
             transform-style: preserve-3d;
             display: grid;
             place-items: center;
-            /* Animation */
-            animation-name: carousel-rotate;
-            animation-duration: 15s;
-            animation-timing-function: linear;
-            animation-iteration-count: infinite;
+            animation: rotate 15s linear infinite;
             transition: all 1s;
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
-            width: 250px;
-            height: 250px;
-            position: relative;
-            margin: 40px auto;
-            z-index: 100;
         }
-
-        #album-carousel:hover {
+        .carousel:hover {
             animation-play-state: paused;
         }
-        
-        #album-carousel.dragging {
-            animation: none;
-        }
-
-        #album-carousel .cardb {
+        .carousel .cardb {
             display: grid;
             place-items: center;
             width: 190px;
@@ -2280,152 +2021,45 @@
             background-color: #1f1f1f;
             position: absolute;
             border-radius: 5px;
-            visibility: visible;
-            opacity: 1;
         }
-
-        #album-carousel .card {
+        .carousel .card {
             display: grid;
             place-items: center;
             width: 190px;
             height: 225px;
             background-color: #333;
             position: absolute;
-            box-shadow: 0 0 20px rgba(0,0,0,.5);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             border-radius: 5px;
-            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
-            visibility: visible;
-            opacity: 1;
+            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,0.125));
         }
-
-        #album-carousel .card .img {
+        .carousel .card .img {
             width: 180px;
             height: 100px;
             border-radius: 3px;
             margin-bottom: -10px;
-            filter: brightness(.7);
-            background-size: cover;
-            background-position: center;
-            visibility: visible;
-            opacity: 1;
+            filter: brightness(0.7);
         }
-
-        #album-carousel .card p {
+        .carousel .card p {
             font-size: 16px;
             margin-bottom: -5px;
-            color: white;
-            visibility: visible;
-            opacity: 1;
         }
-
-        #album-carousel .card span {
+        .carousel .card span {
             font-size: 12px;
             text-align: center;
             padding: 8px;
-            color: white;
-            visibility: visible;
-            opacity: 1;
         }
-
-        /* Card positions */
-        #album-carousel .c1 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb1 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        #album-carousel .c2 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb2 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        #album-carousel .c3 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb3 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        #album-carousel .c4 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb4 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        #album-carousel .c5 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb5 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        #album-carousel .c6 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb6 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        #album-carousel .c7 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb7 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        #album-carousel .c8 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(360deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
-        }
-        #album-carousel .cb8 {
-            padding: 0;
-            transform-origin: center center;
-            transform: rotateZ(360deg) rotateX(90deg) translateY(120px) translateZ(279px);
-        }
-
-        @keyframes carousel-rotate {
-            to {
-                transform: perspective(1000px) rotateX(70deg) rotateZ(360deg);
-            }
-        }
-
-        @media screen and (max-width: 992px) {
-            #album-carousel {
-                scale: .7;
-            }
+        /* Position each card around the ring */
+        .carousel .c1 { transform: rotateY(0deg) translateZ(280px); }
+        .carousel .c2 { transform: rotateY(45deg) translateZ(280px); }
+        .carousel .c3 { transform: rotateY(90deg) translateZ(280px); }
+        .carousel .c4 { transform: rotateY(135deg) translateZ(280px); }
+        .carousel .c5 { transform: rotateY(180deg) translateZ(280px); }
+        .carousel .c6 { transform: rotateY(225deg) translateZ(280px); }
+        .carousel .c7 { transform: rotateY(270deg) translateZ(280px); }
+        .carousel .c8 { transform: rotateY(315deg) translateZ(280px); }
+        @keyframes rotate {
+            to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
         }
     </style>
 </head>
@@ -2622,16 +2256,56 @@
     </div>
 
     <!-- 3D Album Carousel (Vision-OS like) -->
-    <div id="album-carousel" style="animation: carousel-rotate 15s linear infinite;">
-        <!-- Eight faces: front cards & their backs for reflection -->
-        <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
-        <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
-        <div class="card c3"><div class="img"></div><p></p></div><div class="cardb cb3"></div>
-        <div class="card c4"><div class="img"></div><p></p></div><div class="cardb cb4"></div>
-        <div class="card c5"><div class="img"></div><p></p></div><div class="cardb cb5"></div>
-        <div class="card c6"><div class="img"></div><p></p></div><div class="cardb cb6"></div>
-        <div class="card c7"><div class="img"></div><p></p></div><div class="cardb cb7"></div>
-        <div class="card c8"><div class="img"></div><p></p></div><div class="cardb cb8"></div>
+    <div id="album-carousel" class="carousel">
+        <!-- New standard rotateY carousel -->
+        <div class="card c1">
+            <div class="img"></div>
+            <p>Image 8</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb1"></div>
+        <div class="card c2">
+            <div class="img"></div>
+            <p>Image 7</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb2"></div>
+        <div class="card c3">
+            <div class="img"></div>
+            <p>Image 6</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb3"></div>
+        <div class="card c4">
+            <div class="img"></div>
+            <p>Image 5</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb4"></div>
+        <div class="card c5">
+            <div class="img"></div>
+            <p>Image 4</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb5"></div>
+        <div class="card c6">
+            <div class="img"></div>
+            <p>Image 3</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb6"></div>
+        <div class="card c7">
+            <div class="img"></div>
+            <p>Image 2</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb7"></div>
+        <div class="card c8">
+            <div class="img"></div>
+            <p>Image 1</p>
+            <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac sapien leo. Proin rutrum magna eu aliquam vulputate. Nullam suscipit.</span>
+        </div>
+        <div class="cardb cb8"></div>
     </div>
 
     <script type="module">
@@ -5059,29 +4733,22 @@
                 carouselIsDragging = true;
                 carousel.classList.add('dragging');
                 carouselStartX = e.clientX;
-                // Pause auto-rotation
-                carousel.style.animation = 'none';
-                // Extract current rotationZ
+                // Extract current rotation
                 const transform = window.getComputedStyle(carousel).transform;
                 const matrix = new DOMMatrix(transform);
-                carouselStartRotation = Math.atan2(matrix.m21, matrix.m11) * (180/Math.PI);
+                carouselStartRotation = Math.atan2(matrix.m12, matrix.m11) * (180/Math.PI);
             });
 
             document.addEventListener('mousemove', (e) => {
                 if (!carouselIsDragging) return;
                 const deltaX = e.clientX - carouselStartX;
-                const newRotation = carouselStartRotation + (deltaX * 0.8);
-                carousel.style.transform = `perspective(1000px) rotateX(70deg) rotateZ(${newRotation}deg)`;
+                const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
+                carousel.style.transform = `perspective(1000px) rotateY(${newRotation}deg)`;
             });
 
-            carousel.addEventListener('mouseup', () => {
+            document.addEventListener('mouseup', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
-                // Resume auto-rotation with fresh animation
-                carousel.style.animation = '';
-                void carousel.offsetHeight; // Force reflow
-                carousel.style.animation = 'carousel-rotate 15s linear infinite';
-                carousel.style.animationPlayState = 'running';
             });
 
             // Touch support
@@ -5089,28 +4756,30 @@
                 carouselIsDragging = true;
                 carousel.classList.add('dragging');
                 carouselStartX = e.touches[0].clientX;
-                // Pause auto-rotation
-                carousel.style.animation = 'none';
                 const transform = window.getComputedStyle(carousel).transform;
                 const matrix = new DOMMatrix(transform);
-                carouselStartRotation = Math.atan2(matrix.m21, matrix.m11) * (180/Math.PI);
+                carouselStartRotation = Math.atan2(matrix.m12, matrix.m11) * (180/Math.PI);
             }, { passive: true });
 
             document.addEventListener('touchmove', (e) => {
                 if (!carouselIsDragging) return;
                 const deltaX = e.touches[0].clientX - carouselStartX;
-                const newRotation = carouselStartRotation + (deltaX * 0.8);
-                carousel.style.transform = `perspective(1000px) rotateX(70deg) rotateZ(${newRotation}deg)`;
+                const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
+                carousel.style.transform = `perspective(1000px) rotateY(${newRotation}deg)`;
             }, { passive: true });
+
+            document.addEventListener('mouseup', () => {
+                carouselIsDragging = false;
+                carousel.classList.remove('dragging');
+                // Resume auto-rotation after drag
+                carousel.style.animation = 'rotateYanim 25s linear infinite';
+            });
 
             document.addEventListener('touchend', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
-                // Resume auto-rotation with fresh animation
-                carousel.style.animation = '';
-                void carousel.offsetHeight; // Force reflow
-                carousel.style.animation = 'carousel-rotate 15s linear infinite';
-                carousel.style.animationPlayState = 'running';
+                // Resume auto-rotation after drag
+                carousel.style.animation = 'rotateYanim 25s linear infinite';
             });
         });
 
@@ -5159,82 +4828,25 @@
         function update3DCarousel(items = []) {
             const carousel = document.getElementById('album-carousel');
             if (!carousel) return;
-            
-            console.log("Updating carousel with items:", items);
-            
-            // Get existing cards and card backs
-            const cards = Array.from(carousel.querySelectorAll('.card'));
-            const cardBacks = Array.from(carousel.querySelectorAll('.cardb'));
-            const total = 8; // We have 8 cards
-            
-            // Update each card with item data
-            for (let i = 0; i < total; i++) {
-                const card = carousel.querySelector(`.c${i+1}`);
-                const cardBack = carousel.querySelector(`.cb${i+1}`);
-                if (!card || !cardBack) continue;
-                
-                console.log(`Updating card ${i+1}`);
-                
-                // Update card content
+            const cards = carousel.querySelectorAll('.card');
+            const total = cards.length;
+            const tz = 250; // distance from center
+            const theta = 360 / total;
+            cards.forEach((card, i) => {
                 const imgDiv = card.querySelector('.img');
                 const titleP = card.querySelector('p');
                 const item = items[i] || {};
-                
-                // Update image
-                if (imgDiv) {
-                    const imageUrl = item.imageUrl || `https://picsum.photos/300/300.webp?random=${i+1}`;
-                    console.log(`Setting image for card ${i+1} to ${imageUrl}`);
-                    imgDiv.style.backgroundImage = `url(${imageUrl})`;
-                    imgDiv.style.display = 'block';
-                    imgDiv.style.visibility = 'visible';
-                    imgDiv.style.opacity = '1';
+                if (imgDiv && item.imageUrl) {
+                    imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
                 }
-                
-                // Update title
                 if (titleP) {
-                    titleP.textContent = item.name || `Image ${i+1}`;
-                    titleP.style.display = 'block';
-                    titleP.style.visibility = 'visible';
-                    titleP.style.opacity = '1';
+                    titleP.textContent = item.name || '';
                 }
-                
-                // Add click handler
-                if (item.id) {
-                    card.onclick = () => showAlbumDetails(item);
-                } else {
-                    card.onclick = null;
-                }
-                
-                // Position cards in a circle
-                const angle = (360 / total) * i;
-                console.log(`Setting transform for card ${i+1} to angle ${angle}`);
-                card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
-                cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
-                
-                // Ensure card is visible
-                card.style.display = 'grid';
-                card.style.visibility = 'visible';
-                card.style.opacity = '1';
-                cardBack.style.display = 'grid';
-                cardBack.style.visibility = 'visible';
-                cardBack.style.opacity = '1';
-            }
+                const angle = theta * i;
+                card.style.transform = `rotateY(${angle}deg) translateZ(${tz}px)`;
+            });
         }
         // Immediately update carousel with placeholder images
-    </script>
-    <script>
-        // Force carousel animation to start immediately after page load
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                var carousel = document.getElementById('album-carousel');
-                if (carousel) {
-                    // Reset animation to ensure it runs
-                    carousel.style.animation = 'none';
-                    carousel.offsetHeight; // Force reflow
-                    carousel.style.animation = 'carousel-rotate 15s linear infinite';
-                }
-            }, 500);
-        });
     </script>
 </body>
 </html>

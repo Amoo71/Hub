@@ -2033,56 +2033,42 @@
             to { transform: perspective(1000px) rotateY(-360deg) !important; }
         }
         /* Slider Styles */
-        .slider-wrap {
-            overflow-x: scroll;
-            width: 100%;
-            max-width: 90vw;
-            margin: 20px auto 40px;
-            cursor: grab;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
+        .slider-wrap { 
+            overflow-x: auto; 
+            overflow-y: hidden;
+            width: 100%; 
+            max-width: 100%; 
+            margin: 40px auto;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scrollbar-width: none; /* Hide scrollbar in Firefox */
         }
-        .slider-wrap::-webkit-scrollbar { display: none; }
-        .slider-wrap.active { cursor: grabbing; }
-        .slider {
+        .slider-wrap::-webkit-scrollbar { display: none; } /* Hide scrollbar in Chrome/Safari */
+        .slider { 
             display: flex;
             flex-wrap: nowrap;
+            padding: 10px 0;
         }
-        .slider-item {
-            display: flex;
+        .slider-item { 
+            display: flex; 
             flex-direction: column;
-            align-items: center;
-            flex: 0 0 auto;
-            box-sizing: border-box;
-            padding: 10px 15px;
-            width: 180px;
+            align-items: center; 
+            flex: 0 0 300px; 
+            box-sizing: border-box; 
+            padding: 20px; 
+            margin-right: 15px;
+            background: rgba(24, 24, 24, 0.034);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 15px;
         }
-        .animation-card_image {
-            width: 150px;
-            height: 210px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            margin-bottom: 10px;
-        }
-        .animation-card_image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .animation-card_content {
-            padding: 0;
-        }
-        .animation-card_content_title {
-            margin: 0;
-            font-size: 1rem;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
-        }
+        .animation-card_image { width: 100%; margin-bottom: 15px; }
+        .animation-card_image img { width: 100%; height: 300px; object-fit: cover; border-radius: 12px; display: block; }
+        .animation-card_content { width: 100%; text-align: center; }
+        .animation-card_content_title { margin: 0; font-size: 1.5rem; }
+        /* Cursor styles for dragging */
+        .slider-wrap.active { cursor: grabbing; }
+        .slider-wrap { cursor: grab; }
     </style>
 </head>
 <body>
@@ -3800,11 +3786,11 @@
             // Set the callback for album updates from db.js
             setAlbumItemUpdateCallback(() => {
                 console.log('Live update: Albums changed');
-                // renderAlbums(); // Commented out for new slider
+                renderAlbums(); // Automatically re-render albums when updates occur
             });
 
             renderRequests(); // Initial render of requests on page load
-            // renderAlbums(); // Commented out for new slider
+            renderAlbums(); // Initial render of albums on page load
             clearSearchResults(); // Initialize search results
 
             // --- View All Albums Button & Modal Logic ---
@@ -4529,7 +4515,7 @@
             
             // Set the callback for album updates from db.js
             setAlbumItemUpdateCallback(() => {
-                // renderAlbums(); // Commented out for new slider
+                renderAlbums(); // Automatically re-render albums when updates occur
             });
 
             /* ------------------------------------------------------------------
@@ -4861,24 +4847,51 @@
             if (!sliderWrap || !slider) return;
 
             async function loadSlider() {
+                console.log("Slider: Starting load");
                 let items = await getAlbumItems();
+                console.log("Slider: Got items from DB:", items);
                 if (!Array.isArray(items)) items = [];
+                
+                // If no items or empty array, create placeholder items
+                if (items.length === 0) {
+                    console.log("Slider: No items found, creating placeholders");
+                    for (let i = 1; i <= 5; i++) {
+                        items.push({
+                            name: `Game ${i}`,
+                            imageUrl: `https://picsum.photos/300/300?random=${i}`
+                        });
+                    }
+                }
+                
                 // Sort by newest
                 items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                console.log("Slider: Sorted items:", items);
                 slider.innerHTML = '';
-                items.forEach(item => {
+                items.forEach((item, index) => {
+                    console.log("Slider: Processing item:", item);
                     const slide = document.createElement('div');
                     slide.className = 'slider-item';
                     slide.innerHTML = `
                         <div class="animation-card_image">
-                            <img src="${item.imageUrl || 'https://picsum.photos/300/300'}" alt="${item.name || ''}" />
+                            <img src="${item.imageUrl || `https://picsum.photos/300/300?random=${Math.random()}`}" alt="${item.name || ''}" />
                         </div>
                         <div class="animation-card_content">
                             <h4 class="animation-card_content_title">${item.name || ''}</h4>
                         </div>
                     `;
+                    
+                    // Add click event to show album details
+                    slide.addEventListener('click', () => {
+                        console.log("Slider: Item clicked:", item);
+                        if (typeof showAlbumDetails === 'function') {
+                            showAlbumDetails(item);
+                        }
+                    });
+                    
+                    console.log("Slider: Created slide HTML:", slide.outerHTML);
                     slider.appendChild(slide);
                 });
+                console.log("Slider: Finished loading all slides");
             }
 
             // Re-render on updates

@@ -2005,7 +2005,7 @@
             height: 300px !important;
             margin: 40px auto !important;
             transform-style: preserve-3d !important;
-            transform: rotateX(15deg) rotateY(0deg) !important;
+            transform: perspective(1000px) rotateY(0deg) !important;
             animation: rotateYanim 25s linear infinite !important;
             cursor: grab !important;
         }
@@ -2025,8 +2025,12 @@
             top: 0;
             left: 0;
         }
+        /* Disable card hover transform to avoid centering slide */
+        #album-carousel .card:hover {
+            transform: none !important;
+        }
         @keyframes rotateYanim {
-            to { transform: rotateX(15deg) rotateY(-360deg) !important; }
+            to { transform: perspective(1000px) rotateY(-360deg) !important; }
         }
     </style>
 </head>
@@ -4670,7 +4674,7 @@
                 if (!carouselIsDragging) return;
                 const deltaX = e.clientX - carouselStartX;
                 const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
-                carousel.style.transform = `perspective(2000px) rotateX(15deg) rotateZ(${newRotation}deg)`;
+                carousel.style.transform = `perspective(1000px) rotateY(${newRotation}deg)`;
             });
 
             document.addEventListener('mouseup', () => {
@@ -4692,21 +4696,21 @@
                 if (!carouselIsDragging) return;
                 const deltaX = e.touches[0].clientX - carouselStartX;
                 const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
-                carousel.style.transform = `perspective(2000px) rotateX(15deg) rotateZ(${newRotation}deg)`;
+                carousel.style.transform = `perspective(1000px) rotateY(${newRotation}deg)`;
             }, { passive: true });
 
             document.addEventListener('mouseup', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation after drag
-                carousel.style.animation = 'autoRotate 25s linear infinite';
+                carousel.style.animation = 'rotateYanim 25s linear infinite';
             });
 
             document.addEventListener('touchend', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation after drag
-                carousel.style.animation = 'autoRotate 25s linear infinite';
+                carousel.style.animation = 'rotateYanim 25s linear infinite';
             });
         });
 

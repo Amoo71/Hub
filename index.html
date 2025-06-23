@@ -2225,25 +2225,20 @@
             transition: none !important;
         }
         
-        /* FRESH CAROUSEL ANIMATION STYLES - REMOVE ALL CONFLICTS */
-        @keyframes fresh_rotate {
--           from { transform: perspective(1000px) rotateX(70deg) rotateZ(0deg); }
--           to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
-+           0% { transform: perspective(1000px) rotateX(70deg) rotateZ(0deg); }
-+           100% { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
+        /* Simple clean animation */
+        @keyframes simple_rotate {
+            from { transform: perspective(1000px) rotateX(70deg) rotateZ(0deg); }
+            to { transform: perspective(1000px) rotateX(70deg) rotateZ(360deg); }
         }
         
-        /* Override with fresh styles */
+        /* Apply animation directly */
         #album-carousel {
--           animation: fresh_rotate 25s linear infinite !important;
--           animation-delay: 0s !important;
--           animation-play-state: running !important;
--           animation-fill-mode: forwards !important;
-+           -webkit-animation: fresh_rotate 25s linear infinite;
-+           -moz-animation: fresh_rotate 25s linear infinite;
-+           -o-animation: fresh_rotate 25s linear infinite;
-+           animation: fresh_rotate 25s linear infinite;
-+           transform: perspective(1000px) rotateX(70deg) rotateZ(0deg);
+            animation: simple_rotate 25s linear infinite;
+        }
+        
+        /* Ensure animation continues on hover */
+        #album-carousel:hover {
+            animation: simple_rotate 25s linear infinite;
         }
     </style>
 </head>
@@ -2440,7 +2435,7 @@
     </div>
 
     <!-- 3D Album Carousel (Vision-OS like) -->
-    <div id="album-carousel">
+    <div id="album-carousel" style="animation: simple_rotate 25s linear infinite;">
         <!-- Eight faces: front cards & their backs for reflection -->
         <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
         <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
@@ -4896,7 +4891,7 @@
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation with fresh animation
-                carousel.style.animation = 'fresh_rotate 25s linear infinite';
+                carousel.style.animation = 'simple_rotate 25s linear infinite';
                 carousel.style.animationPlayState = 'running';
             });
 
@@ -4923,7 +4918,7 @@
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
                 // Resume auto-rotation with fresh animation
-                carousel.style.animation = 'fresh_rotate 25s linear infinite';
+                carousel.style.animation = 'simple_rotate 25s linear infinite';
                 carousel.style.animationPlayState = 'running';
             });
         });

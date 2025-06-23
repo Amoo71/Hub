@@ -4677,9 +4677,11 @@
 
         // Add explicit event listeners for important interactive elements
         const interactiveElements = [
-            usernameInput, 
-            sendButton, 
+            document.getElementById('request-input'),
+            document.getElementById('username-input'),
+            document.getElementById('send-button'),
             searchBar,
+            document.querySelector('.slider-wrap'),
             document.querySelector('.view-all-button'),
             document.querySelector('.requests-list')
         ];
@@ -4701,86 +4703,7 @@
             }
         });
 
-        initializeAlbumEventListeners();
-
-        // Refresh the 3-D carousel with newest items (max 8)
-        if (typeof update3DCarousel === 'function') {
-            update3DCarousel(displayItems.slice(0, 8));
-        }
-
-        // Override update3DCarousel to use standard rotateY carousel
-        function update3DCarousel(items = []) {
-            const carousel = document.getElementById('album-carousel');
-            if (!carousel) return;
-            const cards = carousel.querySelectorAll('.card');
-            const total = cards.length;
-            const tz = 250; // distance from center
-            const theta = 360 / total;
-            cards.forEach((card, i) => {
-                const imgDiv = card.querySelector('.img');
-                const titleP = card.querySelector('p');
-                const item = items[i] || {};
-                if (imgDiv && item.imageUrl) {
-                    imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
-                }
-                if (titleP) {
-                    titleP.textContent = item.name || '';
-                }
-                const angle = theta * i;
-                card.style.transform = `rotateY(${angle}deg) translateZ(${tz}px)`;
-            });
-        }
-        // Immediately update carousel with placeholder images
-
-        // --- Recently Added Slider Logic ---
-        (async () => {
-            const sliderWrap = document.querySelector('.slider-wrap');
-            const slider = document.getElementById('card-slider');
-            if (!sliderWrap || !slider) return;
-
-            async function loadSlider() {
-                let items = await getAlbumItems();
-                if (!Array.isArray(items)) items = [];
-                // Sort by newest
-                items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                slider.innerHTML = '';
-                items.forEach(item => {
-                    const slide = document.createElement('div');
-                    slide.className = 'slider-item';
-                    slide.innerHTML = `
-                        <div class="animation-card_image">
-                            <img src="${item.imageUrl || 'https://picsum.photos/300/300'}" alt="${item.name || ''}" />
-                        </div>
-                        <div class="animation-card_content">
-                            <h4 class="animation-card_content_title">${item.name || ''}</h4>
-                        </div>
-                    `;
-                    slider.appendChild(slide);
-                });
-            }
-
-            // Re-render on updates
-            setAlbumItemUpdateCallback(loadSlider);
-            await loadSlider();
-
-            // Drag-to-scroll
-            let isDown = false, startX, scrollLeft;
-            sliderWrap.addEventListener('mousedown', e => {
-                isDown = true;
-                sliderWrap.classList.add('active');
-                startX = e.pageX - sliderWrap.offsetLeft;
-                scrollLeft = sliderWrap.scrollLeft;
-            });
-            sliderWrap.addEventListener('mouseleave', () => { isDown = false; sliderWrap.classList.remove('active'); });
-            sliderWrap.addEventListener('mouseup', () => { isDown = false; sliderWrap.classList.remove('active'); });
-            sliderWrap.addEventListener('mousemove', e => {
-                if (!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - sliderWrap.offsetLeft;
-                const walk = (x - startX) * 1.5; // scroll-fast
-                sliderWrap.scrollLeft = scrollLeft - walk;
-            });
-        })();
+        // Old gallery functions are obsolete with new slider, skip initializeAlbumEventListeners
     </script>
 </body>
 </html>

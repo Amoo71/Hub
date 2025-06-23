@@ -1978,7 +1978,7 @@
         #top-nav ul::before {
             background: rgba(255, 255, 255, 0.04) !important;
             box-shadow: 0 6px 25px rgba(73, 73, 73, 0), 0 1px 2px rgba(255, 255, 255, 0.185) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
-            top: 17px !important; /* slightly higher so text zentriert */
+            top: 19px !important; /* slightly higher so text zentriert */
         }
 
         /* Make album pictures clearly visible */
@@ -2240,6 +2240,170 @@
         #album-carousel:hover {
             animation: simple_rotate 25s linear infinite;
         }
+        /* FRESH CAROUSEL STYLES BASED ON TEMPLATE */
+        #album-carousel {
+            transform: perspective(1000px) rotateX(70deg);
+            transform-style: preserve-3d;
+            display: grid;
+            place-items: center;
+            animation: carousel-rotate 15s linear infinite;
+            transition: all 1s;
+            background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%);
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 40px auto;
+            z-index: 10;
+        }
+        
+        #album-carousel:hover {
+            animation-play-state: paused;
+        }
+        
+        #album-carousel .cardb {
+            display: grid;
+            place-items: center;
+            width: 190px;
+            height: 225px;
+            background-color: #1f1f1f;
+            position: absolute;
+            border-radius: 5px;
+        }
+        
+        #album-carousel .card {
+            display: grid;
+            place-items: center;
+            width: 190px;
+            height: 225px;
+            background-color: #333;
+            position: absolute;
+            box-shadow: 0 0 20px rgba(0,0,0,.5);
+            border-radius: 5px;
+            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,.125));
+        }
+        
+        #album-carousel .card .img {
+            width: 180px;
+            height: 100px;
+            border-radius: 3px;
+            margin-bottom: -10px;
+            filter: brightness(.7);
+            background-size: cover;
+        }
+        
+        #album-carousel .card p {
+            font-size: 16px;
+            margin-bottom: -5px;
+            color: white;
+        }
+        
+        #album-carousel .card span {
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+            display: none; /* Hide description */
+        }
+        
+        /* Card positioning */
+        #album-carousel .c1 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb1 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(45deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        #album-carousel .c2 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb2 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(90deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        #album-carousel .c3 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb3 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(135deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        #album-carousel .c4 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb4 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(180deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        #album-carousel .c5 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb5 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(225deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        #album-carousel .c6 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb6 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(270deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        #album-carousel .c7 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb7 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(315deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        #album-carousel .c8 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(360deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg);
+        }
+        #album-carousel .cb8 {
+            padding: 0;
+            transform-origin: center center;
+            transform: rotateZ(360deg) rotateX(90deg) translateY(120px) translateZ(279px);
+        }
+        
+        @keyframes carousel-rotate {
+            to {
+                transform: perspective(1000px) rotateX(70deg) rotateZ(360deg);
+            }
+        }
+        
+        @media screen and (max-width: 992px) {
+            #album-carousel {
+                transform: scale(.7);
+            }
+        }
     </style>
 </head>
 <body>
@@ -2435,7 +2599,7 @@
     </div>
 
     <!-- 3D Album Carousel (Vision-OS like) -->
-    <div id="album-carousel" style="animation: simple_rotate 25s linear infinite;">
+    <div id="album-carousel">
         <!-- Eight faces: front cards & their backs for reflection -->
         <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
         <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>

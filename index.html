@@ -2087,6 +2087,7 @@
             background-size: cover !important;
             background-position: center !important;
             overflow: hidden;
+            cursor: pointer;
         }
         
         .item-title {
@@ -2104,7 +2105,6 @@
         .level-2 {
             height: 150px;
             width: 110px;
-            background-color: rgba(34, 130, 145, 0.8);
             left: 650px;
             margin-top: 25px;
             z-index: 1;
@@ -2113,7 +2113,6 @@
         .level-1 {
             height: 180px;
             width: 130px;
-            background-color: rgba(103, 150, 229, 0.8);
             left: 500px;
             margin-top: 10px;
             z-index: 2;
@@ -2122,7 +2121,6 @@
         .level0 {
             height: 200px;
             width: 150px;
-            background-color: rgba(78, 201, 225, 0.8);
             left: 330px;
             z-index: 3;
         }
@@ -2130,7 +2128,6 @@
         .level1 {
             height: 180px;
             width: 130px;
-            background-color: rgba(103, 150, 229, 0.8);
             margin-top: 10px;
             left: 180px;
             z-index: 2;
@@ -2139,7 +2136,6 @@
         .level2 {
             height: 150px;
             width: 110px;
-            background-color: rgba(34, 130, 145, 0.8);
             margin-top: 25px;
             left: 50px;
             z-index: 1;
@@ -2432,14 +2428,12 @@
                         titleElement.textContent = item.name || `Game ${itemIndex + 1}`;
                         itemElement.appendChild(titleElement);
                         
-                        // Add click event for center item
-                        if (position.level === 'level0') {
-                            itemElement.addEventListener('click', () => {
-                                if (typeof showAlbumDetails === 'function') {
-                                    showAlbumDetails(item);
-                                }
-                            });
-                        }
+                        // Add click event for all visible items
+                        itemElement.addEventListener('click', () => {
+                            if (typeof showAlbumDetails === 'function') {
+                                showAlbumDetails(item);
+                            }
+                        });
                         
                         mainCarousel.appendChild(itemElement);
                     }

@@ -2080,8 +2080,11 @@
             height: 100px !important;
             border-radius: 3px !important;
             margin-bottom: -10px !important;
-            filter: brightness(0.7) !important;
+            filter: brightness(1) !important;
             background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
         }
         #album-carousel .card p {
             font-size: 16px !important;
@@ -4827,53 +4830,65 @@
         function update3DCarousel(items = []) {
             const carousel = document.getElementById('album-carousel');
             if (!carousel) return;
-            const cards = carousel.querySelectorAll('.card');
-            const cardBacks = carousel.querySelectorAll('.cardb');
-            const total = cards.length;
-            const theta = 360 / total;
             
-            // Clear any existing cards first
-            carousel.innerHTML = '';
+            console.log("Updating carousel with items:", items);
             
-            // Create new cards based on items
+            // Get existing cards and card backs
+            const cards = Array.from(carousel.querySelectorAll('.card'));
+            const cardBacks = Array.from(carousel.querySelectorAll('.cardb'));
+            const total = 8; // We have 8 cards
+            
+            // Update each card with item data
             for (let i = 0; i < total; i++) {
+                const card = carousel.querySelector(`.c${i+1}`);
+                const cardBack = carousel.querySelector(`.cb${i+1}`);
+                if (!card || !cardBack) continue;
+                
+                console.log(`Updating card ${i+1}`);
+                
+                // Update card content
+                const imgDiv = card.querySelector('.img');
+                const titleP = card.querySelector('p');
                 const item = items[i] || {};
                 
-                // Create card back
-                const cardBack = document.createElement('div');
-                cardBack.className = `cardb cb${i+1}`;
-                carousel.appendChild(cardBack);
-                
-                // Create card front
-                const card = document.createElement('div');
-                card.className = `card c${i+1}`;
-                
-                // Create image div
-                const imgDiv = document.createElement('div');
-                imgDiv.className = 'img';
-                if (item.imageUrl) {
-                    imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
-                } else {
-                    imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i+1})`;
+                // Update image
+                if (imgDiv) {
+                    const imageUrl = item.imageUrl || `https://picsum.photos/300/300.webp?random=${i+1}`;
+                    console.log(`Setting image for card ${i+1} to ${imageUrl}`);
+                    imgDiv.style.backgroundImage = `url(${imageUrl})`;
+                    imgDiv.style.display = 'block';
+                    imgDiv.style.visibility = 'visible';
+                    imgDiv.style.opacity = '1';
                 }
-                card.appendChild(imgDiv);
                 
-                // Create title paragraph
-                const titleP = document.createElement('p');
-                titleP.textContent = item.name || `Image ${i+1}`;
-                card.appendChild(titleP);
+                // Update title
+                if (titleP) {
+                    titleP.textContent = item.name || `Image ${i+1}`;
+                    titleP.style.display = 'block';
+                    titleP.style.visibility = 'visible';
+                    titleP.style.opacity = '1';
+                }
                 
-                // Add click handler if item exists
+                // Add click handler
                 if (item.id) {
                     card.onclick = () => showAlbumDetails(item);
+                } else {
+                    card.onclick = null;
                 }
                 
-                carousel.appendChild(card);
-                
-                // Position card and back with proper 3D transforms
+                // Position cards in a circle
                 const angle = (360 / total) * i;
+                console.log(`Setting transform for card ${i+1} to angle ${angle}`);
                 card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
                 cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
+                
+                // Ensure card is visible
+                card.style.display = 'grid';
+                card.style.visibility = 'visible';
+                card.style.opacity = '1';
+                cardBack.style.display = 'grid';
+                cardBack.style.visibility = 'visible';
+                cardBack.style.opacity = '1';
             }
         }
         // Immediately update carousel with placeholder images

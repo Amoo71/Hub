@@ -1998,6 +1998,45 @@
             z-index: -999 !important;
             transform: translateY(-9999px) !important;
         }
+        /* Override old carousel with standard rotateY carousel */
+        #album-carousel {
+            position: relative !important;
+            width: 300px !important;
+            height: 300px !important;
+            margin: 40px auto !important;
+            transform-style: preserve-3d !important;
+            transform: perspective(1000px) rotateY(0deg) !important;
+            animation: rotateYanim 25s linear infinite !important;
+            cursor: grab !important;
+        }
+        #album-carousel:hover {
+            animation-play-state: paused !important;
+            cursor: grab !important;
+        }
+        #album-carousel.dragging {
+            animation: none !important;
+            cursor: grabbing !important;
+        }
+        #album-carousel .card {
+            display: block !important;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0;
+            left: 0;
+        }
+        /* Disable card hover transform to avoid centering slide */
+        #album-carousel .card:hover {
+            transform: none !important;
+        }
+        @keyframes rotateYanim {
+            to { transform: perspective(1000px) rotateY(-360deg) !important; }
+        }
+        @media screen and (max-width: 992px) {
+            .carousel {
+                transform: scale(.7);
+            }
+        }
         /* Final carousel override as per provided example */
         #album-carousel {
             transform: perspective(1000px) rotateX(70deg) rotateZ(0deg) !important;
@@ -2006,6 +2045,8 @@
             place-items: center !important;
             animation: rotate 15s linear infinite !important;
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%) !important;
+            width: 250px !important;
+            height: 250px !important;
         }
         #album-carousel:hover,
         #album-carousel.dragging {
@@ -2032,7 +2073,7 @@
             position: absolute !important;
             box-shadow: 0 0 20px rgba(0,0,0,0.5) !important;
             border-radius: 5px !important;
-            -webkit-box-reflect: below 3px linear-gradient(transparent 75%, rgba(255,255,255,0.125)) !important;
+            transform-origin: center center !important;
         }
         #album-carousel .card .img {
             width: 180px !important;
@@ -2040,16 +2081,19 @@
             border-radius: 3px !important;
             margin-bottom: -10px !important;
             filter: brightness(0.7) !important;
+            background-size: cover !important;
         }
         #album-carousel .card p {
             font-size: 16px !important;
             margin-bottom: 10px !important;
+            color: white !important;
         }
         #album-carousel .card span {
             font-size: 12px !important;
             display: block !important;
             margin-top: 8px !important;
             text-align: center !important;
+            display: none !important; /* Hide span text */
         }
         @keyframes rotate {
             to {
@@ -2257,47 +2301,15 @@
 
     <!-- 3D Album Carousel (Vision-OS like) -->
     <div id="album-carousel" class="carousel">
-        <!-- Eight faces with cleaner structure -->
-        <div class="card c1">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb1"></div>
-        <div class="card c2">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb2"></div>
-        <div class="card c3">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb3"></div>
-        <div class="card c4">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb4"></div>
-        <div class="card c5">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb5"></div>
-        <div class="card c6">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb6"></div>
-        <div class="card c7">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb7"></div>
-        <div class="card c8">
-            <div class="img"></div>
-            <p></p>
-        </div>
-        <div class="cardb cb8"></div>
+        <!-- Eight faces: front cards & their backs for reflection -->
+        <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
+        <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
+        <div class="card c3"><div class="img"></div><p></p></div><div class="cardb cb3"></div>
+        <div class="card c4"><div class="img"></div><p></p></div><div class="cardb cb4"></div>
+        <div class="card c5"><div class="img"></div><p></p></div><div class="cardb cb5"></div>
+        <div class="card c6"><div class="img"></div><p></p></div><div class="cardb cb6"></div>
+        <div class="card c7"><div class="img"></div><p></p></div><div class="cardb cb7"></div>
+        <div class="card c8"><div class="img"></div><p></p></div><div class="cardb cb8"></div>
     </div>
 
     <script type="module">
@@ -4596,8 +4608,6 @@
             function update3DCarousel(items = []) {
                 const carouselEl = document.getElementById('album-carousel');
                 if (!carouselEl) return;
-                const total = 8; // Total number of cards
-                const tz = 250; // Distance from center
                 for (let i = 0; i < 8; i++) {
                     const card = carouselEl.querySelector('.c' + (i + 1));
                     const cardBack = carouselEl.querySelector('.cb' + (i + 1));
@@ -4618,12 +4628,10 @@
                         card.onclick = null;
                     }
 
-                    /* Positioning with rotateY for proper 3D carousel */
-                    const angle = (360 / total) * i;
-                    card.style.transform = `rotateY(${angle}deg) translateZ(${tz}px)`;
-                    if (cardBack) {
-                        cardBack.style.transform = `rotateY(${angle}deg) translateZ(${tz-1}px)`;
-                    }
+                    /* Positioning (ensure CSS fallback) */
+                    const angle = (360 / 8) * (i + 1);
+                    card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
+                    cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
                 }
             }
 
@@ -4746,9 +4754,7 @@
             document.addEventListener('mouseup', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
-                // Resume auto-rotation with correct animation
-                carousel.style.animationPlayState = 'running';
-                carousel.style.animation = 'rotate 15s linear infinite';
+                carousel.style.animationPlayState = 'running'; // Resume auto-rotation
             });
 
             // Touch support
@@ -4772,9 +4778,7 @@
             document.addEventListener('touchend', () => {
                 carouselIsDragging = false;
                 carousel.classList.remove('dragging');
-                // Resume auto-rotation with correct animation
                 carousel.style.animationPlayState = 'running';
-                carousel.style.animation = 'rotate 15s linear infinite';
             });
         });
 
@@ -4824,22 +4828,53 @@
             const carousel = document.getElementById('album-carousel');
             if (!carousel) return;
             const cards = carousel.querySelectorAll('.card');
+            const cardBacks = carousel.querySelectorAll('.cardb');
             const total = cards.length;
-            const tz = 250; // distance from center
             const theta = 360 / total;
-            cards.forEach((card, i) => {
-                const imgDiv = card.querySelector('.img');
-                const titleP = card.querySelector('p');
+            
+            // Clear any existing cards first
+            carousel.innerHTML = '';
+            
+            // Create new cards based on items
+            for (let i = 0; i < total; i++) {
                 const item = items[i] || {};
-                if (imgDiv && item.imageUrl) {
+                
+                // Create card back
+                const cardBack = document.createElement('div');
+                cardBack.className = `cardb cb${i+1}`;
+                carousel.appendChild(cardBack);
+                
+                // Create card front
+                const card = document.createElement('div');
+                card.className = `card c${i+1}`;
+                
+                // Create image div
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'img';
+                if (item.imageUrl) {
                     imgDiv.style.backgroundImage = `url(${item.imageUrl})`;
+                } else {
+                    imgDiv.style.backgroundImage = `url(https://picsum.photos/300/300.webp?random=${i+1})`;
                 }
-                if (titleP) {
-                    titleP.textContent = item.name || '';
+                card.appendChild(imgDiv);
+                
+                // Create title paragraph
+                const titleP = document.createElement('p');
+                titleP.textContent = item.name || `Image ${i+1}`;
+                card.appendChild(titleP);
+                
+                // Add click handler if item exists
+                if (item.id) {
+                    card.onclick = () => showAlbumDetails(item);
                 }
-                const angle = theta * i;
-                card.style.transform = `rotateY(${angle}deg) translateZ(${tz}px)`;
-            });
+                
+                carousel.appendChild(card);
+                
+                // Position card and back with proper 3D transforms
+                const angle = (360 / total) * i;
+                card.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(280px) rotateZ(180deg)`;
+                cardBack.style.transform = `rotateZ(${angle}deg) rotateX(90deg) translateY(120px) translateZ(279px)`;
+            }
         }
         // Immediately update carousel with placeholder images
     </script>

@@ -1978,7 +1978,7 @@
         #top-nav ul::before {
             background: rgba(255, 255, 255, 0.04) !important;
             box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
-            top: 20px !important; /* slightly higher so text zentriert */
+            top: 9px !important; /* slightly higher so text zentriert */
         }
 
         /* Make album pictures clearly visible */
@@ -2032,23 +2032,14 @@
         @keyframes rotateYanim {
             to { transform: perspective(1000px) rotateY(-360deg) !important; }
         }
-    </style>
-    <!-- Owl Carousel dependencies -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" crossorigin="anonymous" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" crossorigin="anonymous"></script>
-    <style>
-    /* Youplay Carousel Title */
-    .youplay-carousel .img-title {
-        margin-top: 10px;
-        color: var(--text-color);
-        text-align: center;
-        pointer-events: none;
-        font-size: 0.9rem;
-    }
-    /* Hide old 3D carousel */
-    #album-carousel { display: none !important; }
+        /* Slider Styles */
+        .slider-wrap { overflow: hidden; width: 100%; max-width: 600px; margin: 40px auto; }
+        .slider { display: flex; transition: transform 0.5s ease; will-change: transform; }
+        .slider-item { display: flex; align-items: center; flex: 0 0 100%; box-sizing: border-box; padding: 20px; }
+        .animation-card_image { flex: 0 0 40%; }
+        .animation-card_image img { width: 100%; border-radius: 12px; display: block; }
+        .animation-card_content { flex: 1; padding-left: 20px; display: flex; align-items: center; justify-content: center; }
+        .animation-card_content_title { margin: 0; font-size: 1.5rem; }
     </style>
 </head>
 <body>
@@ -2243,20 +2234,42 @@
         </div>
     </div>
 
-    <!-- 3D Album Carousel (Vision-OS like) -->
-    <div id="album-carousel" class="carousel">
-        <!-- Eight faces: front cards & their backs for reflection -->
-        <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
-        <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
-        <div class="card c3"><div class="img"></div><p></p></div><div class="cardb cb3"></div>
-        <div class="card c4"><div class="img"></div><p></p></div><div class="cardb cb4"></div>
-        <div class="card c5"><div class="img"></div><p></p></div><div class="cardb cb5"></div>
-        <div class="card c6"><div class="img"></div><p></p></div><div class="cardb cb6"></div>
-        <div class="card c7"><div class="img"></div><p></p></div><div class="cardb cb7"></div>
-        <div class="card c8"><div class="img"></div><p></p></div><div class="cardb cb8"></div>
+    <!-- Slider Carousel Replacement -->
+    <div class="slider-wrap">
+        <div id="card-slider" class="slider">
+            <!-- Slider Items -->
+            <div class="slider-item">
+                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=1" alt="Image 1"></div>
+                <div class="animation-card_content">
+                    <h4 class="animation-card_content_title">Game 1</h4>
+                </div>
+            </div>
+            <div class="slider-item">
+                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=2" alt="Image 2"></div>
+                <div class="animation-card_content">
+                    <h4 class="animation-card_content_title">Game 2</h4>
+                </div>
+            </div>
+            <div class="slider-item">
+                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=3" alt="Image 3"></div>
+                <div class="animation-card_content">
+                    <h4 class="animation-card_content_title">Game 3</h4>
+                </div>
+            </div>
+            <div class="slider-item">
+                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=4" alt="Image 4"></div>
+                <div class="animation-card_content">
+                    <h4 class="animation-card_content_title">Game 4</h4>
+                </div>
+            </div>
+            <div class="slider-item">
+                <div class="animation-card_image"><img src="https://picsum.photos/300/300?random=5" alt="Image 5"></div>
+                <div class="animation-card_content">
+                    <h4 class="animation-card_content_title">Game 5</h4>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="youplay-carousel owl-carousel"></div>
 
     <script type="module">
         import { getLoggedInUser, setLoggedInUser, getRequests, addRequest, deleteRequest, logoutUser, setRequestUpdateCallback, registerSessionWithServer, setAntiTamperNotificationCallback, getAntiTamperLogs, clearAntiTamperLogs, deleteAntiTamperLog, getAlbumItems, addAlbumItem, updateAlbumItem, deleteAlbumItem, setAlbumItemUpdateCallback, checkInactivity, getChatMessages, addChatMessage, deleteChatMessage, setChatMessageUpdateCallback } from './db.js';
@@ -3053,45 +3066,6 @@
                     // Update 3D carousel with actual database items
                     if (typeof update3DCarousel === 'function' && displayItems && displayItems.length) {
                         update3DCarousel(displayItems.slice(0, 8));
-                    }
-
-                    // Dynamic Youplay Carousel Generation
-                    const yp = document.querySelector('.youplay-carousel');
-                    if (yp) {
-                        // destroy previous instance if exists
-                        if ($(yp).hasClass('owl-loaded')) {
-                            $(yp).trigger('destroy.owl.carousel').empty();
-                        }
-                        // populate items
-                        displayItems.forEach(item => {
-                            const a = document.createElement('a');
-                            a.className = 'angled-img';
-                            a.href = '#';
-                            const divImg = document.createElement('div');
-                            divImg.className = 'img';
-                            const imgEl = document.createElement('img');
-                            imgEl.src = item.imageUrl || '';
-                            divImg.appendChild(imgEl);
-                            a.appendChild(divImg);
-                            const title = document.createElement('p');
-                            title.className = 'img-title';
-                            title.textContent = item.name || '';
-                            a.appendChild(title);
-                            yp.appendChild(a);
-                        });
-                        // init carousel
-                        $(yp).owlCarousel({
-                            loop:true,
-                            stagePadding:70,
-                            nav:false,
-                            dots:false,
-                            responsive:{
-                                0:{items:1},
-                                500:{items:2},
-                                992:{items:3},
-                                1200:{items:4}
-                            }
-                        });
                     }
 
                     console.log('Success');
@@ -4780,10 +4754,10 @@
 
         // Add explicit event listeners for important interactive elements
         const interactiveElements = [
-            document.getElementById('request-input'),
-            document.getElementById('username-input'),
-            document.getElementById('send-button'),
-            document.querySelector('.search-bar'),
+            requestInput, 
+            usernameInput, 
+            sendButton, 
+            searchBar,
             document.querySelector('.gallery-container'),
             document.querySelector('.view-all-button'),
             document.querySelector('.requests-list')

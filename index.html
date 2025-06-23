@@ -1802,16 +1802,16 @@
         #top-nav ul::before {
             content: '';
             position: absolute;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(12px) saturate(180%);
             -webkit-backdrop-filter: blur(12px) saturate(180%);
             box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1);
             z-index: 1;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            top: 10px; /* Position vertically */
+            top: 50% !important;
+            transform: translateY(-50%) !important;
             height: 35px; /* Fixed height */
             width: 0; /* Will be set by JS */
             left: 0; /* Will be set by JS */
@@ -1851,7 +1851,8 @@
             height: 400px !important;
             display: grid !important;
             place-items: center !important;
-            transform: perspective(1800px) rotateX(25deg) !important; /* Viel flacher, mehr frontal */
+            /* Sicht von UNTEN nach oben */
+            transform: perspective(2000px) rotateX(-35deg) !important;
             transform-style: preserve-3d !important;
             animation: autoRotate 25s linear infinite !important;
             transition: all 0.3s ease-out !important;
@@ -1927,13 +1928,13 @@
 
         @keyframes autoRotate {
             to {
-                transform: perspective(1800px) rotateX(25deg) rotateZ(360deg);
+                transform: perspective(2000px) rotateX(-35deg) rotateZ(360deg);
             }
         }
 
         @media screen and (max-width: 992px) {
             .carousel {
-                transform: perspective(1800px) rotateX(25deg) scale(.7);
+                transform: perspective(2000px) rotateX(-35deg) scale(.7);
             }
         }
         @keyframes nav-gradient {
@@ -1986,7 +1987,8 @@
         }
 
         /* Make sure carousel is REALLY gone in request view */
-        body[data-view="requests"] #album-carousel {
+        body[data-view="requests"] #album-carousel,
+        body[data-view="chat"] #album-carousel {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
@@ -4659,7 +4661,7 @@
                 if (!carouselIsDragging) return;
                 const deltaX = e.touches[0].clientX - carouselStartX;
                 const newRotation = carouselStartRotation + (deltaX * 0.5);
-                carousel.style.transform = `perspective(1800px) rotateX(25deg) rotateZ(${newRotation}deg)`;
+                carousel.style.transform = `perspective(2000px) rotateX(-35deg) rotateZ(${newRotation}deg)`;
             }, { passive: true });
 
             document.addEventListener('mouseup', () => {

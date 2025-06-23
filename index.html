@@ -1855,7 +1855,7 @@
             transform-style: preserve-3d !important;
             animation: rotate 15s linear infinite !important;
             transition: all 1s !important;
-            background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%) !important;
+            background: transparent !important;
             z-index: 10 !important;
             margin-top: 20px !important;
             margin-bottom: 50px !important;
@@ -1901,7 +1901,7 @@
         }
         .carousel .card .img {
             width: 180px;
-            height: 100px;
+            height: 180px;
             border-radius: 3px;
             margin-bottom: -10px;
             filter: brightness(.7);
@@ -4391,6 +4391,7 @@
             const searchWrapperEl = document.querySelector('.search-wrapper');
             const mainTitleContainerEl = document.querySelector('.main-title-container');
             const galleryContainerEl = document.querySelector('.gallery-container');
+            const albumCarouselEl = document.getElementById('album-carousel');
 
             function setActiveNav(target) {
                 navItems.forEach(li => li.classList.toggle('active', li.dataset.target === target));
@@ -4408,6 +4409,8 @@
                 chatModalOverlay.classList.remove('visible');
                 chatModalOverlay.classList.add('hidden');
                 setActiveNav('search');
+                /* show carousel in search view */
+                if (albumCarouselEl) albumCarouselEl.style.display = 'grid';
             }
 
             function showChatView() {
@@ -4419,6 +4422,7 @@
                 // Position chat modal properly
                 chatModalOverlay.style.paddingTop = '60px';
                 setActiveNav('chat');
+                if (albumCarouselEl) albumCarouselEl.style.display = 'none';
             }
 
             function showRequestView() {
@@ -4436,6 +4440,7 @@
                 const chatPill = document.querySelector('.chat-pill');
                 if (chatPill) chatPill.style.display = 'none';
                 setActiveNav('requests');
+                if (albumCarouselEl) albumCarouselEl.style.display = 'none';
             }
 
             navItems.forEach(li => {

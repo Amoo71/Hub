@@ -1810,7 +1810,7 @@
             border-radius: 20px;
             z-index: 1;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            top: 65% !important; /* Pill etwas tiefer */
+            top: 80% !important; /* Pill etwas tiefer */
             transform: translateY(-55%) !important;
             height: 35px;
             width: 0;
@@ -1978,7 +1978,7 @@
         #top-nav ul::before {
             background: rgba(255, 255, 255, 0.04) !important;
             box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset !important;
-            top: 9px !important; /* slightly higher so text zentriert */
+            top: 4px !important; /* slightly higher so text zentriert */
         }
 
         /* Make album pictures clearly visible */
@@ -2070,22 +2070,33 @@
             transform-origin: center center !important;
             visibility: visible !important;
             opacity: 1 !important;
+            grid-template-rows: 1fr auto !important;
+            overflow: hidden !important;
         }
         #album-carousel .card .img {
-            width: 180px !important;
-            height: 100px !important;
+            width: 100% !important;
+            height: 100% !important;
             border-radius: 3px !important;
-            margin-bottom: -10px !important;
+            margin-bottom: 0 !important;
             filter: brightness(1) !important;
             background-size: cover !important;
             background-position: center !important;
             background-repeat: no-repeat !important;
             border: 1px solid rgba(255,255,255,0.2) !important;
+            grid-row: 1 !important;
         }
         #album-carousel .card p {
             font-size: 16px !important;
-            margin-bottom: 10px !important;
+            margin: 5px 0 0 0 !important;
             color: white !important;
+            grid-row: 2 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+            position: relative !important;
+            z-index: 2 !important;
+            background: rgba(0,0,0,0.5) !important;
+            width: 100% !important;
+            padding: 3px !important;
+            text-align: center !important;
         }
         #album-carousel .card span {
             font-size: 12px !important;
@@ -2105,9 +2116,23 @@
             }
         }
         #album-carousel .card:hover {
-            transform: none !important; /* No hover transform */
-            animation: none !important; /* No animation on hover */
-            transition: none !important; /* No transition on hover */
+            /* Explicitly inherit all properties to prevent hover changes */
+            transform: inherit !important;
+            animation: inherit !important;
+            transition: inherit !important;
+            filter: inherit !important;
+            background-color: inherit !important;
+            box-shadow: inherit !important;
+            border: inherit !important;
+            width: inherit !important;
+            height: inherit !important;
+            margin: inherit !important;
+            padding: inherit !important;
+            opacity: inherit !important;
+            color: inherit !important;
+            font-size: inherit !important;
+            text-shadow: inherit !important;
+            z-index: inherit !important;
         }
         
         /* Disable any hover effects on carousel cards */
@@ -2134,6 +2159,29 @@
             position: absolute !important;
             z-index: -9999 !important;
             transform: translateY(-9999px) !important;
+        }
+        #album-carousel:hover,
+        #album-carousel.dragging {
+            /* No animation pausing on hover */
+        }
+        /* Remove ALL hover effects */
+        #album-carousel:hover {
+            transform: perspective(1000px) rotateX(70deg) rotateZ(0deg) !important; /* Keep same transform */
+            animation: rotate 15s linear infinite !important; /* Keep animation running */
+        }
+        #album-carousel.dragging {
+            animation-play-state: paused !important;
+            cursor: grabbing !important;
+        }
+        /* Disable any hover effects on any carousel elements */
+        #album-carousel *:hover {
+            transform: none !important;
+            animation: inherit !important;
+            transition: none !important;
+            filter: none !important;
+            box-shadow: inherit !important;
+            border: inherit !important;
+            background: inherit !important;
         }
     </style>
 </head>

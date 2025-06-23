@@ -597,6 +597,8 @@
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding-top: 55px; /* Account for nav bar */
+            box-sizing: border-box;
         }
         
         #chat-modal-overlay.visible {
@@ -605,17 +607,17 @@
         }
         
         #chat-modal {
-            width: calc(100vw - 40px);
-            height: calc(100vh - 100px); /* Account for nav bar */
+            width: calc(100vw - 20px);
+            height: calc(100vh - 65px); /* Account for nav bar */
             max-width: none;
             max-height: none;
             padding: 25px;
+            margin-top: 5px; /* Minimal gap from nav */
             display: flex;
             flex-direction: column;
             border-radius: 12px;
             animation: scaleInSmooth 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             overflow: hidden;
-            margin-top: 30px; /* Push down from top */
         }
         
         .chat-messages {
@@ -623,7 +625,7 @@
             overflow-y: auto;
             padding: 15px 5px;
             display: flex;
-            flex-direction: column-reverse; /* Most recent messages at bottom */
+            flex-direction: column; /* Changed: newest at top */
             gap: 10px;
             margin-bottom: 15px;
             scrollbar-width: thin;
@@ -647,12 +649,20 @@
         .chat-input-area {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
+            margin-top: 20px;
         }
         
         .chat-username-row {
             display: flex;
-            margin-bottom: 5px;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .chat-username-row label {
+            font-size: 0.9rem;
+            color: var(--subtle-text-color);
+            margin-left: 5px;
         }
         
         #chat-username {
@@ -662,12 +672,19 @@
             padding: 8px 15px;
             color: var(--text-color);
             font-size: 0.9rem;
-            width: 200px;
+            width: 100%;
         }
         
         .chat-message-row {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .chat-message-row label {
+            font-size: 0.9rem;
+            color: var(--subtle-text-color);
+            margin-left: 5px;
         }
         
         #chat-input {
@@ -678,6 +695,7 @@
             padding: 12px 15px;
             color: var(--text-color);
             font-size: 1rem;
+            width: 100%;
         }
         
         #chat-send-button {
@@ -1713,6 +1731,20 @@
             display: none; /* Chrome, Safari and Opera */
         }
         
+        /* Fixed header for View All modal */
+        #view-all-modal .modal-header {
+            position: sticky;
+            top: 0;
+            background: rgba(45, 45, 45, 0.5);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 10;
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
         #view-all-modal .modal-body {
             width: 100%;
             display: flex;
@@ -1725,7 +1757,7 @@
         #view-all-modal h3 {
             width: 100%;
             text-align: center;
-            margin-top: 0;
+            margin: 0;
             margin-bottom: 20px;
         }
 
@@ -1953,6 +1985,110 @@
         #top-nav li:hover {
             color: transparent;
         }
+
+        /* SIMPLE CAROUSEL STYLES */
+        .simple-carousel {
+            width: 100%;
+            max-width: 800px;
+            margin: 30px auto;
+            position: relative;
+            height: 400px;
+        }
+        
+        .carousel-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            background: rgba(30, 30, 30, 0.5);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .carousel-item {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .carousel-item.active {
+            opacity: 1;
+            z-index: 2;
+        }
+        
+        .carousel-item-image {
+            width: 80%;
+            height: 70%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .carousel-item-title {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .carousel-controls {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .carousel-prev, .carousel-next {
+            background: var(--glass-background);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .carousel-prev:hover, .carousel-next:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .carousel-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--subtle-text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .carousel-dot.active {
+            background: var(--glow-green);
+            transform: scale(1.3);
+        }
     </style>
 </head>
 <body>
@@ -2057,12 +2193,14 @@
             </div>
             <div class="chat-input-area">
                 <div class="chat-username-row">
+                    <label for="chat-username">Username:</label>
                     <input type="text" id="chat-username" placeholder="Your Username...">
                 </div>
                 <div class="chat-message-row">
+                    <label for="chat-input">Message:</label>
                     <input type="text" id="chat-input" placeholder="Type a message...">
-                    <button id="chat-send-button">Send</button>
                 </div>
+                <button id="chat-send-button" style="align-self: flex-end; width: 100px;">Send</button>
             </div>
         </div>
     </div>
@@ -2876,58 +3014,9 @@
                     // Limit to 10 items for the carousel
                     const displayItems = albumItems.slice(0, 10);
                     
-                    // Get all existing album wrappers
-                    const albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
+                    // Update the simple carousel with the display items
+                    updateSimpleCarousel(displayItems);
                     console.log('Loaded');
-                    
-                    // Update existing album elements with data from displayItems
-                    albumWrappers.forEach((wrapper, i) => {
-                        try {
-                            const placeholderImage = wrapper.querySelector('.placeholder-image');
-                            const albumNameDiv = wrapper.querySelector('.album-name');
-                            
-                            if (!placeholderImage || !albumNameDiv) {
-                                console.warn('Missing');
-                                return; // Skip this iteration
-                            }
-                            
-                            if (i < displayItems.length) {
-                                // We have data for this album position
-                                const item = displayItems[i];
-                                
-                                // Update album name
-                                albumNameDiv.textContent = item.name || `Album Name ${i + 1}`;
-                                
-                                // Clear any existing content in the placeholder image
-                                placeholderImage.innerHTML = '';
-                                
-                                // Update the image if available
-                                if (item.imageUrl && item.imageUrl.trim() !== '') {
-                                    placeholderImage.style.backgroundImage = `url(${item.imageUrl})`;
-                                    placeholderImage.style.backgroundSize = 'cover';
-                                    placeholderImage.style.backgroundPosition = 'center';
-                                } else {
-                                    // No image URL, show placeholder text
-                                    const placeholderText = document.createElement('div');
-                                    placeholderText.classList.add('placeholder-text');
-                                    placeholderText.textContent = `G ${i + 1}`;
-                                    placeholderImage.appendChild(placeholderText);
-                                    placeholderImage.style.backgroundImage = '';
-                                }
-                            } else {
-                                // No data for this position, set default
-                                albumNameDiv.textContent = `G Name ${i + 1}`;
-                                placeholderImage.innerHTML = '';
-                                placeholderImage.style.backgroundImage = '';
-                                const placeholderText = document.createElement('div');
-                                placeholderText.classList.add('placeholder-text');
-                                placeholderText.textContent = `G ${i + 1}`;
-                                placeholderImage.appendChild(placeholderText);
-                            }
-                        } catch (itemErr) {
-                            console.error('Error');
-                        }
-                    });
                     
                     // Ensure album event listeners
                     console.log('Init');
@@ -2943,27 +3032,13 @@
                 } catch (error) {
                     console.error('Failed');
                     
-                    // Ensure we have default album visuals even if everything fails
-                    try {
-                        const albumWrappers = Array.from(galleryContent.querySelectorAll('.album-item-wrapper'));
-                        
-                        if (albumWrappers.length > 0) {
-            albumWrappers.forEach((wrapper, i) => {
-                                const placeholderImage = wrapper.querySelector('.placeholder-image');
-                                if (placeholderImage) {
-                                    placeholderImage.innerHTML = '';
-                                    const placeholderText = document.createElement('div');
-                                    placeholderText.classList.add('placeholder-text');
-                                    placeholderText.textContent = `G ${i + 1}`;
-                                    placeholderImage.appendChild(placeholderText);
-                                }
-                            });
-                            current = 2;
-                            updateCarousel();
-                        }
-                    } catch (fallbackError) {
-                        console.error('Fallback');
-                    }
+                    // Show placeholder items in case of error
+                    updateSimpleCarousel([
+                        {name: 'Game 1', imageUrl: 'https://picsum.photos/800/500?random=1'},
+                        {name: 'Game 2', imageUrl: 'https://picsum.photos/800/500?random=2'},
+                        {name: 'Game 3', imageUrl: 'https://picsum.photos/800/500?random=3'},
+                        {name: 'Game 4', imageUrl: 'https://picsum.photos/800/500?random=4'}
+                    ]);
                 }
             }
             
@@ -4285,6 +4360,9 @@
                         return;
                     }
                     
+                    // Sort messages newest first
+                    chatMessages.sort((a, b) => b.timestamp - a.timestamp);
+                    
                     // Create and append message elements
                     chatMessages.forEach(message => {
                         const messageElement = createChatMessageElement(message);
@@ -4587,6 +4665,163 @@
                 element.addEventListener('touchstart', trackUserActivity, { passive: true });
             }
         });
+
+        /* ---------------- Simple Carousel Implementation ---------------- */
+        let currentSlide = 0;
+        let totalSlides = 0;
+        
+        function updateSimpleCarousel(items = []) {
+            const carouselInner = document.querySelector('.carousel-inner');
+            const carouselDots = document.querySelector('.carousel-dots');
+            
+            if (!carouselInner || !carouselDots) return;
+            
+            // Clear existing content
+            carouselInner.innerHTML = '';
+            carouselDots.innerHTML = '';
+            
+            // Limit to 8 items
+            const displayItems = items.slice(0, 8);
+            totalSlides = displayItems.length;
+            
+            // Create carousel items
+            displayItems.forEach((item, index) => {
+                // Create carousel item
+                const carouselItem = document.createElement('div');
+                carouselItem.classList.add('carousel-item');
+                if (index === 0) carouselItem.classList.add('active');
+                
+                // Create image
+                const imageDiv = document.createElement('div');
+                imageDiv.classList.add('carousel-item-image');
+                if (item.imageUrl) {
+                    imageDiv.style.backgroundImage = `url(${item.imageUrl})`;
+                } else {
+                    imageDiv.style.backgroundImage = `url(https://picsum.photos/800/500?random=${index + 1})`;
+                }
+                
+                // Create title
+                const titleDiv = document.createElement('div');
+                titleDiv.classList.add('carousel-item-title');
+                titleDiv.textContent = item.name || `Game ${index + 1}`;
+                
+                // Add click event
+                carouselItem.addEventListener('click', () => {
+                    showAlbumDetails(item);
+                });
+                
+                // Append elements
+                carouselItem.appendChild(imageDiv);
+                carouselItem.appendChild(titleDiv);
+                carouselInner.appendChild(carouselItem);
+                
+                // Create dot
+                const dot = document.createElement('div');
+                dot.classList.add('carousel-dot');
+                if (index === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => {
+                    goToSlide(index);
+                });
+                carouselDots.appendChild(dot);
+            });
+            
+            // If no items, show placeholder
+            if (displayItems.length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.classList.add('carousel-item', 'active');
+                placeholder.innerHTML = '<div class="carousel-item-title">No items available</div>';
+                carouselInner.appendChild(placeholder);
+            }
+            
+            // Set up controls
+            const prevButton = document.querySelector('.carousel-prev');
+            const nextButton = document.querySelector('.carousel-next');
+            
+            if (prevButton) {
+                prevButton.onclick = () => {
+                    goToSlide(currentSlide - 1);
+                };
+            }
+            
+            if (nextButton) {
+                nextButton.onclick = () => {
+                    goToSlide(currentSlide + 1);
+                };
+            }
+        }
+        
+        function goToSlide(index) {
+            if (totalSlides === 0) return;
+            
+            // Handle wrapping
+            if (index < 0) index = totalSlides - 1;
+            if (index >= totalSlides) index = 0;
+            
+            // Update current slide
+            currentSlide = index;
+            
+            // Update carousel items
+            const items = document.querySelectorAll('.carousel-item');
+            items.forEach((item, i) => {
+                item.classList.toggle('active', i === currentSlide);
+            });
+            
+            // Update dots
+            const dots = document.querySelectorAll('.carousel-dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentSlide);
+            });
+        }
+
+        // Immediately update carousel with placeholder images
+        document.addEventListener('DOMContentLoaded', function() {
+            // Force carousel to be visible
+            const carousel = document.getElementById('album-carousel');
+            if (carousel) {
+                carousel.style.display = 'grid';
+                carousel.style.visibility = 'visible';
+                carousel.style.opacity = '1';
+            }
+            
+            // Immediate update without delay
+            updateSimpleCarousel([
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=1'},
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=2'},
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=3'},
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=4'},
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=5'},
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=6'},
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=7'},
+                {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=8'}
+            ]);
+            
+            // And again after a short delay to ensure it's visible
+            setTimeout(() => {
+                updateSimpleCarousel([
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=1'},
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=2'},
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=3'},
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=4'},
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=5'},
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=6'},
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=7'},
+                    {name: 'Loading...', imageUrl: 'https://picsum.photos/300/300.webp?random=8'}
+                ]);
+                
+                // Force all carousel cards to be visible
+                const cards = document.querySelectorAll('.carousel .card, .carousel .cardb');
+                cards.forEach(card => {
+                    card.style.display = 'grid';
+                    card.style.visibility = 'visible';
+                    card.style.opacity = '1';
+                });
+            }, 500);
+        });
+
+        // Update 3D carousel with latest items
+        updateSimpleCarousel(displayItems);
+
+        console.log('Success');
     </script>
 </body>
 </html>

@@ -1802,20 +1802,20 @@
         #top-nav ul::before {
             content: '';
             position: absolute;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.021);
+            border: 1px solid rgba(255, 255, 255, 0.411);
             backdrop-filter: blur(12px) saturate(180%);
             -webkit-backdrop-filter: blur(12px) saturate(180%);
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset;
+            box-shadow: 0 6px 25px rgba(80, 80, 80, 0.18), 0 1px 2px rgba(255, 255, 255, 0.25) inset, 0 8px 32px rgba(255, 255, 255, 0.04) inset;
             border-radius: 20px;
             z-index: 1;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            height: 35px; /* Fixed height */
-            width: 0; /* Will be set by JS */
-            left: 0; /* Will be set by JS */
-            opacity: 0; /* Start hidden, JS will show it */
+            top: 55% !important; /* Pill etwas tiefer */
+            transform: translateY(-55%) !important;
+            height: 35px;
+            width: 0;
+            left: 0;
+            opacity: 0;
         }
         /* Adjust bubble position based on active item */
         #top-nav li.active ~ li.active {
@@ -1851,8 +1851,8 @@
             height: 400px !important;
             display: grid !important;
             place-items: center !important;
-            /* Sicht von UNTEN nach oben */
-            transform: perspective(2000px) rotateX(-35deg) !important;
+            /* Normale Karussell-Sicht, leicht von oben */
+            transform: perspective(2000px) rotateX(15deg) !important;
             transform-style: preserve-3d !important;
             animation: autoRotate 25s linear infinite !important;
             transition: all 0.3s ease-out !important;
@@ -1863,19 +1863,20 @@
             visibility: visible !important;
             opacity: 1 !important;
             cursor: grab !important;
+            will-change: transform !important; /* Smooth rotation */
         }
 
         /* Smooth pause on hover */
         .carousel:hover {
             animation-play-state: paused !important;
-            cursor: grabbing !important;
+            cursor: grab !important;
         }
 
         /* Dragging state */
         .carousel.dragging {
             cursor: grabbing !important;
-            animation: none !important; /* Stop rotation while dragging */
-            transition: none !important; /* Instant response while dragging */
+            animation: none !important;
+            transition: transform 0.1s linear !important; /* Smooth dragging */
         }
 
         .carousel .card {
@@ -1928,13 +1929,13 @@
 
         @keyframes autoRotate {
             to {
-                transform: perspective(2000px) rotateX(-35deg) rotateZ(360deg);
+                transform: perspective(2000px) rotateX(15deg) rotateZ(360deg);
             }
         }
 
         @media screen and (max-width: 992px) {
             .carousel {
-                transform: perspective(2000px) rotateX(-35deg) scale(.7);
+                transform: perspective(2000px) rotateX(15deg) scale(.7);
             }
         }
         @keyframes nav-gradient {
@@ -4638,8 +4639,8 @@
             document.addEventListener('mousemove', (e) => {
                 if (!carouselIsDragging) return;
                 const deltaX = e.clientX - carouselStartX;
-                const newRotation = carouselStartRotation + (deltaX * 0.5); // Adjust sensitivity
-                carousel.style.transform = `perspective(1200px) rotateX(45deg) rotateZ(${newRotation}deg)`;
+                const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
+                carousel.style.transform = `perspective(2000px) rotateX(15deg) rotateZ(${newRotation}deg)`;
             });
 
             document.addEventListener('mouseup', () => {
@@ -4660,8 +4661,8 @@
             document.addEventListener('touchmove', (e) => {
                 if (!carouselIsDragging) return;
                 const deltaX = e.touches[0].clientX - carouselStartX;
-                const newRotation = carouselStartRotation + (deltaX * 0.5);
-                carousel.style.transform = `perspective(2000px) rotateX(-35deg) rotateZ(${newRotation}deg)`;
+                const newRotation = carouselStartRotation + (deltaX * 0.8); // Schnelleres Drehen
+                carousel.style.transform = `perspective(2000px) rotateX(15deg) rotateZ(${newRotation}deg)`;
             }, { passive: true });
 
             document.addEventListener('mouseup', () => {

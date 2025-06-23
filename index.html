@@ -1845,98 +1845,131 @@
         /* ------------------------------------------------------------------
          * NEW 3D CAROUSEL STYLES
          * ------------------------------------------------------------------ */
-        .carousel {
-            position: relative !important;
-            width: 100% !important;
-            height: 400px !important;
-            display: grid !important;
-            place-items: center !important;
-            /* Normale Karussell-Sicht, leicht von oben */
-            transform: perspective(2000px) rotateX(15deg) !important;
-            transform-style: preserve-3d !important;
-            animation: autoRotate 25s linear infinite !important;
-            transition: all 0.3s ease-out !important;
-            background: transparent !important;
-            z-index: 10 !important;
-            margin-top: 20px !important;
-            margin-bottom: 50px !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            cursor: grab !important;
-            will-change: transform !important; /* Smooth rotation */
+        .container {
+            margin: 0 auto;
+            width: 350px;
+            height: 300px;
+            position: relative;
+            perspective: 1000px;
+            margin-top: 20px;
+            margin-bottom: 50px;
+            z-index: 10;
         }
-
+ 
         /* Smooth pause on hover */
         .carousel:hover {
-            animation-play-state: paused !important;
-            cursor: grab !important;
+            animation-play-state: paused;
+            cursor: grab;
         }
-
+        
         /* Dragging state */
         .carousel.dragging {
-            cursor: grabbing !important;
-            animation: none !important;
-            transition: transform 0.1s linear !important; /* Smooth dragging */
+            cursor: grabbing;
+            animation: none;
+            transition: transform 0.1s linear;
         }
-
-        .carousel .card {
-            display: grid !important;
-            place-items: center !important;
-            width: 190px !important;
-            height: 225px !important;
-            position: absolute !important;
-            border-radius: 5px !important;
-            padding: 0 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            transform-style: preserve-3d !important;
-            transition: transform 0.3s ease-out !important;
+        
+        .item {
+            display: block;
+            position: absolute;
+            background: #000;
+            width: 300px;
+            height: 250px;
+            line-height: 200px;
+            font-size: 5em;
+            text-align: center;
+            color: #FFF;
+            opacity: 0.95;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-
-        .carousel .card .img {
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 5px !important;
-            margin: 0 !important;
-            filter: none !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
+        
+        .item img.img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
         }
-
-        .carousel .card p {
-            position: absolute !important;
-            bottom: -30px !important;
-            left: 0 !important;
-            right: 0 !important;
-            font-size: 14px !important;
-            margin: 0 !important;
-            padding: 8px !important;
-            text-align: center !important;
-            color: white !important;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
-            transform: translateZ(20px) !important;
-            pointer-events: none !important;
-            background: linear-gradient(to top, rgba(0,0,0,0.4), transparent) !important;
-            border-radius: 0 0 5px 5px !important;
+        
+        .item p {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            margin: 0;
+            font-size: 14px;
+            line-height: normal;
         }
-
-        /* Hover effect for cards */
-        .carousel .card:hover {
-            transform: scale(1.05) translateZ(10px) !important;
+        
+        .a {
+            transform: rotateY(0deg) translateZ(300px);
+            background: #ed1c24;
         }
-
+        .b {
+            transform: rotateY(60deg) translateZ(300px);
+            background: #0072bc;
+        }
+        .c {
+            transform: rotateY(120deg) translateZ(300px);
+            background: #39b54a;
+        }
+        .d {
+            transform: rotateY(180deg) translateZ(300px);
+            background: #f26522;
+        }
+        .e {
+            transform: rotateY(240deg) translateZ(300px);
+            background: #630460;
+        } 
+        .f {
+            transform: rotateY(300deg) translateZ(300px);
+            background: #8c6239;
+        }
+ 
         @keyframes autoRotate {
             to {
-                transform: perspective(2000px) rotateX(15deg) rotateZ(360deg);
+                transform: rotateY(360deg);
             }
         }
-
+ 
         @media screen and (max-width: 992px) {
-            .carousel {
-                transform: perspective(2000px) rotateX(15deg) scale(.7);
+            .container {
+                width: 300px;
+                height: 250px;
             }
+            
+            .item {
+                width: 250px;
+                height: 200px;
+                line-height: 160px;
+            }
+            
+            .a { transform: rotateY(0deg) translateZ(250px); }
+            .b { transform: rotateY(60deg) translateZ(250px); }
+            .c { transform: rotateY(120deg) translateZ(250px); }
+            .d { transform: rotateY(180deg) translateZ(250px); }
+            .e { transform: rotateY(240deg) translateZ(250px); }
+            .f { transform: rotateY(300deg) translateZ(250px); }
+        }
+        
+        /* Make sure carousel is properly centered and visible */
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 50px auto;
+            max-width: 100%;
+        }
+        
+        /* Make sure carousel is hidden in chat and request views */
+        body[data-view="requests"] .container,
+        body[data-view="chat"] .container {
+            display: none !important;
         }
         @keyframes nav-gradient {
             0% { background-position: 0% 50%; }
@@ -2193,16 +2226,15 @@
     </div>
 
     <!-- 3D Album Carousel (Vision-OS like) -->
-    <div id="album-carousel" class="carousel">
-        <!-- Eight faces: front cards & their backs for reflection -->
-        <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
-        <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>
-        <div class="card c3"><div class="img"></div><p></p></div><div class="cardb cb3"></div>
-        <div class="card c4"><div class="img"></div><p></p></div><div class="cardb cb4"></div>
-        <div class="card c5"><div class="img"></div><p></p></div><div class="cardb cb5"></div>
-        <div class="card c6"><div class="img"></div><p></p></div><div class="cardb cb6"></div>
-        <div class="card c7"><div class="img"></div><p></p></div><div class="cardb cb7"></div>
-        <div class="card c8"><div class="img"></div><p></p></div><div class="cardb cb8"></div>
+    <div class="container">
+        <div id="album-carousel" class="carousel">
+            <div class="item a"><img class="img" /><p></p></div>
+            <div class="item b"><img class="img" /><p></p></div>
+            <div class="item c"><img class="img" /><p></p></div>
+            <div class="item d"><img class="img" /><p></p></div>
+            <div class="item e"><img class="img" /><p></p></div>
+            <div class="item f"><img class="img" /><p></p></div>
+        </div>
     </div>
 
     <script type="module">
@@ -4720,6 +4752,142 @@
         if (typeof update3DCarousel === 'function') {
             update3DCarousel(displayItems.slice(0, 8));
         }
+
+        // Carousel Rotation with Grab & Drag
+        const carousel = document.querySelector('.carousel');
+        let carouselIsDragging = false;
+        let carouselStartX = 0;
+        let carouselStartY = 0;
+        let carouselStartRotation = 0;
+        
+        // Extract current rotation from transform
+        function getCurrentRotation(el) {
+            const st = window.getComputedStyle(el, null);
+            const tr = st.getPropertyValue('transform');
+            
+            if (tr === 'none') return 0;
+            
+            const values = tr.split('(')[1].split(')')[0].split(',');
+            const a = values[0];
+            const b = values[1];
+            const angle = Math.round(Math.atan2(b, a) * (180/Math.PI));
+            return (angle < 0) ? angle + 360 : angle;
+        }
+        
+        // Start dragging
+        carousel.addEventListener('mousedown', (e) => {
+            carouselIsDragging = true;
+            carouselStartX = e.clientX;
+            carousel.classList.add('dragging');
+            const currentRotation = getCurrentRotation(carousel);
+            carouselStartRotation = currentRotation;
+            carousel.style.animation = 'none';
+        });
+        
+        carousel.addEventListener('touchstart', (e) => {
+            carouselIsDragging = true;
+            carouselStartX = e.touches[0].clientX;
+            carousel.classList.add('dragging');
+            const currentRotation = getCurrentRotation(carousel);
+            carouselStartRotation = currentRotation;
+            carousel.style.animation = 'none';
+        }, { passive: true });
+        
+        // Dragging
+        document.addEventListener('mousemove', (e) => {
+            if (!carouselIsDragging) return;
+            const deltaX = e.clientX - carouselStartX;
+            const newRotation = carouselStartRotation + (deltaX * 0.5);
+            carousel.style.transform = `rotateY(${newRotation}deg)`;
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (!carouselIsDragging) return;
+            const deltaX = e.touches[0].clientX - carouselStartX;
+            const newRotation = carouselStartRotation + (deltaX * 0.5);
+            carousel.style.transform = `rotateY(${newRotation}deg)`;
+        }, { passive: true });
+        
+        // End dragging
+        document.addEventListener('mouseup', () => {
+            if (!carouselIsDragging) return;
+            carouselIsDragging = false;
+            carousel.classList.remove('dragging');
+            // Resume animation from current position
+            const currentRotation = getCurrentRotation(carousel);
+            carousel.style.transition = 'none';
+            carousel.style.transform = `rotateY(${currentRotation}deg)`;
+            
+            // Force reflow
+            void carousel.offsetWidth;
+            
+            // Resume animation
+            carousel.style.transition = 'transform 1s';
+            carousel.style.animation = 'autoRotate 25s linear infinite';
+            carousel.style.animationDelay = `${-currentRotation/360*25}s`;
+        });
+        
+        document.addEventListener('touchend', () => {
+            if (!carouselIsDragging) return;
+            carouselIsDragging = false;
+            carousel.classList.remove('dragging');
+            // Resume animation from current position
+            const currentRotation = getCurrentRotation(carousel);
+            carousel.style.transition = 'none';
+            carousel.style.transform = `rotateY(${currentRotation}deg)`;
+            
+            // Force reflow
+            void carousel.offsetWidth;
+            
+            // Resume animation
+            carousel.style.transition = 'transform 1s';
+            carousel.style.animation = 'autoRotate 25s linear infinite';
+            carousel.style.animationDelay = `${-currentRotation/360*25}s`;
+        });
+        
+        // Make sure carousel is hidden in chat and request views
+        const navItems = document.querySelectorAll('#top-nav li');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const view = item.getAttribute('data-target');
+                const container = document.querySelector('.container');
+                
+                if (view === 'search') {
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
+            });
+        });
+        
+        // Initialize carousel with images from database
+        async function initializeCarousel() {
+            try {
+                const albums = await getAlbumItems();
+                if (!albums || albums.length === 0) return;
+                
+                const items = document.querySelectorAll('.carousel .item');
+                items.forEach((item, index) => {
+                    if (index < albums.length) {
+                        const img = item.querySelector('img');
+                        const p = item.querySelector('p');
+                        
+                        if (albums[index].imageUrl) {
+                            img.src = albums[index].imageUrl;
+                        }
+                        
+                        if (albums[index].name) {
+                            p.textContent = albums[index].name;
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to initialize carousel:', error);
+            }
+        }
+        
+        // Call initialization when DOM is loaded
+        initializeCarousel();
     </script>
 </body>
 </html>

@@ -2000,37 +2000,23 @@
         }
         /* Override old carousel with standard rotateY carousel */
         #album-carousel {
-            position: relative !important;
-            width: 300px !important;
-            height: 300px !important;
-            margin: 40px auto !important;
-            transform-style: preserve-3d !important;
-            transform: perspective(1000px) rotateY(0deg) !important;
-            animation: rotateYanim 25s linear infinite !important;
-            cursor: grab !important;
+            display: none !important; /* Hide completely */
         }
         #album-carousel:hover {
-            animation-play-state: paused !important;
-            cursor: grab !important;
+            display: none !important; /* Hide completely */
         }
         #album-carousel.dragging {
-            animation: none !important;
-            cursor: grabbing !important;
+            display: none !important; /* Hide completely */
         }
         #album-carousel .card {
-            display: block !important;
-            position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0;
-            left: 0;
+            display: none !important; /* Hide completely */
         }
         /* Disable card hover transform to avoid centering slide */
         #album-carousel .card:hover {
-            transform: none !important;
+            display: none !important; /* Hide completely */
         }
         @keyframes rotateYanim {
-            to { transform: perspective(1000px) rotateY(-360deg) !important; }
+            to { transform: none !important; }
         }
         @media screen and (max-width: 992px) {
             .carousel {
@@ -2047,6 +2033,11 @@
             background-image: radial-gradient(circle at 50% 50%, #222 30%, transparent 40%) !important;
             width: 250px !important;
             height: 250px !important;
+            position: relative !important;
+            margin: 40px auto !important;
+            z-index: 10 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         #album-carousel:hover,
         #album-carousel.dragging {
@@ -2064,6 +2055,8 @@
             background-color: #1f1f1f !important;
             position: absolute !important;
             border-radius: 5px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         #album-carousel .card {
             display: grid !important;
@@ -2075,6 +2068,8 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.5) !important;
             border-radius: 5px !important;
             transform-origin: center center !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         #album-carousel .card .img {
             width: 180px !important;
@@ -2121,6 +2116,24 @@
             transform: none !important;
             animation: none !important;
             transition: none !important;
+        }
+        
+        /* Keep only the final implementation */
+        #album-carousel .card:hover .img,
+        #album-carousel .card:hover p {
+            transform: none !important;
+            animation: none !important;
+            transition: none !important;
+        }
+        
+        /* Hide all old carousel styles */
+        .carousel:not(#album-carousel) {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            z-index: -9999 !important;
+            transform: translateY(-9999px) !important;
         }
     </style>
 </head>
@@ -2317,7 +2330,7 @@
     </div>
 
     <!-- 3D Album Carousel (Vision-OS like) -->
-    <div id="album-carousel" class="carousel">
+    <div id="album-carousel">
         <!-- Eight faces: front cards & their backs for reflection -->
         <div class="card c1"><div class="img"></div><p></p></div><div class="cardb cb1"></div>
         <div class="card c2"><div class="img"></div><p></p></div><div class="cardb cb2"></div>

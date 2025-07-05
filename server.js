@@ -265,10 +265,21 @@ const userAccounts = {
         designType: 'prem-gold-pulse' 
     },
 
+    '9812': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
+  
+    '9888': {
+      idName: 'Member',
+      designType: 'green-member'
+    },
+  
     'J5343': { 
         idName: 'Moderator', 
         designType: 'prem-gold-pulse' 
     },
+  
     'partners666': {
         idName: 'Partner',
         designType: 'prem-gold-pulse'

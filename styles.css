@@ -1,0 +1,394 @@
+/*
+ * Haupt‑Stylesheet für das geheime Post‑It System.
+ * Dieses Design orientiert sich an modernen macOS/VisionOS‑Dark‑Modes mit
+ * Glassmorphism‑Effekt. Der Artikel von UX Pilot erklärt, dass
+ * Glassmorphism halbtransparente Oberflächen mit Hintergrund‑Blur nutzt,
+ * um eine frosted‑glass Anmutung zu erzeugen und so visuelle Tiefe und
+ * Fokussierung zu schaffen【388600934135852†L26-L29】【388600934135852†L87-L119】.
+ */
+
+/* Basisvariablen */
+:root {
+  --background: #0e0e0f;
+  --surface: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.15);
+  --text: #e8e8ea;
+  --accent: #4fa1f0;
+  --danger: #f05f5f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  background: var(--background);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Overlay für Codeeingabe */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(20, 20, 20, 0.9), rgba(0, 0, 0, 0.95));
+  z-index: 999;
+}
+
+.inputContainer {
+  width: 280px;
+  padding: 20px;
+  text-align: center;
+}
+
+.inputContainer input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+}
+
+.inputContainer input::placeholder {
+  color: rgba(235, 235, 235, 0.5);
+}
+
+.inputContainer input:hover,
+.inputContainer input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Confirmation container shares input container styling */
+.confirmContainer {
+  width: 300px;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Toast message for notifications */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translate(-50%, 20px);
+  padding: 12px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 1000;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.message {
+  margin-top: 10px;
+  height: 1rem;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+/* Versteckte Elemente */
+.hidden {
+  display: none;
+}
+
+/* Glasmorphism Card */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
+}
+
+/* Admin Button */
+.adminButton {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: var(--text);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.adminButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+/* Admin controls panel */
+.adminControls {
+  position: fixed;
+  top: 70px;
+  left: 20px;
+  padding: 16px;
+  width: 260px;
+  z-index: 9;
+}
+
+.controlButton {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.controlButton:hover {
+  background: #3789d1;
+}
+
+.controlButton.cancel {
+  background: var(--danger);
+}
+
+.controlButton.cancel:hover {
+  background: #c94a4a;
+}
+
+.postForm label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.postForm input {
+  width: 100%;
+  padding: 6px 8px;
+  margin-top: 2px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  outline: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.formButtons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Posts */
+.postsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 80px 20px 20px;
+  justify-content: center;
+  overflow-y: auto;
+  height: 100vh;
+  scroll-behavior: smooth;
+}
+
+.postCard {
+  width: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+/* Buttons zum Bearbeiten/Löschen auf der Postkarte (nur sichtbar im Admin‑Modus) */
+.deletePostBtn,
+.editPostBtn {
+  position: absolute;
+  top: 8px;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: var(--text);
+  display: none; /* standardmäßig ausgeblendet */
+}
+
+.deletePostBtn {
+  right: 8px;
+}
+.editPostBtn {
+  right: 32px;
+}
+
+/* Sichtbarkeit der Buttons, wenn das Admin‑Panel aktiv ist */
+body.admin-active .deletePostBtn,
+body.admin-active .editPostBtn {
+  display: inline-block;
+}
+
+.postCard:hover {
+  transform: translateY(-4px);
+}
+
+.postCard img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.postCard .postTitle {
+  padding: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+}
+
+.modalContent {
+  position: relative;
+  padding: 24px;
+  width: 320px;
+  max-width: 90%;
+}
+
+.close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.modalCover {
+  width: 100%;
+  height: 160px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+/* Detail‑Panel (ersetzt Modal): zentriert und überlagert den Hintergrund */
+.detailPanel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 24px;
+  width: 340px;
+  max-width: 90%;
+  z-index: 100;
+}
+
+.detailPanel .close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.credentials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.credentialRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.credLabel {
+  width: 40px;
+  font-weight: 600;
+}
+
+.credValue {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  min-height: 24px;
+  line-height: 1.2rem;
+}
+
+.masked {
+  filter: blur(6px);
+  user-select: none;
+}
+
+.copyButton {
+  padding: 4px 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.copyButton:hover {
+  background: #3789d1;
+}

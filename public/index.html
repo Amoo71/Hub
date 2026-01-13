@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Vault</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Code Gate Screen -->
+    <div id="code-gate" class="gate-container">
+        <div class="gate-content">
+            <div class="code-input-container">
+                <input type="password" id="gate-code-input" placeholder="Code" autocomplete="off" />
+                <div class="error-message" id="gate-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Vault Screen -->
+    <div id="vault-screen" class="vault-container" style="display: none;">
+        <!-- Settings Button -->
+        <button class="settings-btn" id="settings-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m-6-6h6m6 0h6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"></path>
+            </svg>
+        </button>
+
+        <!-- Credentials Grid -->
+        <div class="credentials-grid" id="credentials-grid">
+            <!-- Credentials will be loaded here -->
+        </div>
+
+        <!-- Add Button (Admin Only) -->
+        <button class="add-btn" id="add-btn" style="display: none;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Admin Code Modal -->
+    <div id="admin-modal" class="modal" style="display: none;">
+        <div class="modal-content glass-panel">
+            <h2>Admin Access</h2>
+            <input type="password" id="admin-code-input" placeholder="Admin Code" autocomplete="off" />
+            <div class="error-message" id="admin-error"></div>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" id="admin-cancel">Cancel</button>
+                <button class="btn btn-primary" id="admin-submit">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credential Detail Modal -->
+    <div id="detail-modal" class="modal" style="display: none;">
+        <div class="modal-content glass-panel credential-detail">
+            <button class="modal-close" id="detail-close">&times;</button>
+            <img id="detail-cover" class="detail-cover" src="" alt="Cover" />
+            <div class="detail-info">
+                <div class="detail-row">
+                    <label>ACC:</label>
+                    <div class="detail-value">
+                        <span id="detail-acc"></span>
+                        <button class="copy-btn" data-copy="acc">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <label>PASS:</label>
+                    <div class="detail-value">
+                        <span id="detail-pass">********</span>
+                        <button class="copy-btn" data-copy="pass">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Report Button (All Users) -->
+            <div class="detail-report-section">
+                <button class="btn btn-report" id="detail-report">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    NOT WORKING
+                </button>
+                <span class="report-status" id="report-status"></span>
+            </div>
+            <!-- Admin Actions -->
+            <div class="detail-admin-actions" id="detail-admin-actions" style="display: none;">
+                <button class="btn btn-edit" id="detail-edit">Edit</button>
+                <button class="btn btn-delete" id="detail-delete">Delete</button>
+                <button class="btn btn-clear-report" id="detail-clear-report" style="display: none;">Clear Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit/Add Credential Modal -->
+    <div id="edit-modal" class="modal" style="display: none;">
+        <div class="modal-content glass-panel">
+            <button class="modal-close" id="edit-close">&times;</button>
+            <h2 id="edit-title">Add Credential</h2>
+            <form id="edit-form">
+                <div class="form-group">
+                    <label>Cover URL:</label>
+                    <input type="text" id="edit-cover" placeholder="https://..." required />
+                </div>
+                <div class="form-group">
+                    <label>Account:</label>
+                    <input type="text" id="edit-acc" placeholder="username@example.com" required />
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="text" id="edit-pass" placeholder="password" required />
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-cancel" id="edit-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

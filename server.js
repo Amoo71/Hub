@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const Storage = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,10 +28,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Rate limiting - 6 attempts, 5 minute timeout
+// Rate limiting - 15 attempts, 5 minute timeout
 const authLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 6,
+  max: 15,
   message: { error: 'Too many attempts. Wait 5 minutes.' }
 });
 
@@ -39,25 +40,8 @@ const apiLimiter = rateLimit({
   max: 30
 });
 
-// In-memory storage
-let credentials = [
-  {
-    id: '1',
-    cover: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
-    acc: 'demo@example.com',
-    pass: 'DemoPassword123',
-    reported: false,
-    order: 0
-  },
-  {
-    id: '2',
-    cover: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=400',
-    acc: 'admin@vault.com',
-    pass: 'SecurePass456',
-    reported: false,
-    order: 1
-  }
-];
+// Initialize storage (auto-detects PostgreSQL or JSON)
+const storage = new Storage();
 
 // Hashed codes
 const MAIN_CODE_HASH = bcrypt.hashSync(process.env.MAIN_ACCESS_CODE || 'vault2024', 10);
@@ -133,11 +117,10 @@ app.post('/api/auth/admin', authLimiter, [verifyToken], async (req, res) => {
 });
 
 // Credential endpoints
-app.get('/api/credentials', apiLimiter, verifyToken, (req, res) => {
+app.get('/api/credentials', apiLimiter, verifyToken, async (req, res) => {
   try {
-    // Sort by order
-    const sorted = [...credentials].sort((a, b) => (a.order || 0) - (b.order || 0));
-    const safeCredentials = sorted.map(cred => ({
+    const credentials = await storage.getAll();
+    const safeCredentials = credentials.map(cred => ({
       id: cred.id,
       cover: cred.cover,
       acc: cred.acc,
@@ -146,13 +129,14 @@ app.get('/api/credentials', apiLimiter, verifyToken, (req, res) => {
     }));
     res.json(safeCredentials);
   } catch (err) {
+    console.error('Get credentials error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.get('/api/credentials/:id', apiLimiter, verifyToken, (req, res) => {
+app.get('/api/credentials/:id', apiLimiter, verifyToken, async (req, res) => {
   try {
-    const credential = credentials.find(c => c.id === req.params.id);
+    const credential = await storage.getById(req.params.id);
     
     if (!credential) {
       return res.status(404).json({ error: 'Credential not found' });
@@ -166,43 +150,46 @@ app.get('/api/credentials/:id', apiLimiter, verifyToken, (req, res) => {
       reported: credential.reported || false
     });
   } catch (err) {
+    console.error('Get credential error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 // Report credential as not working
-app.post('/api/credentials/:id/report', apiLimiter, verifyToken, (req, res) => {
+app.post('/api/credentials/:id/report', apiLimiter, verifyToken, async (req, res) => {
   try {
-    const credential = credentials.find(c => c.id === req.params.id);
+    const credential = await storage.getById(req.params.id);
     
     if (!credential) {
       return res.status(404).json({ error: 'Credential not found' });
     }
     
-    credential.reported = true;
+    await storage.update(req.params.id, { reported: true });
     res.json({ message: 'Credential reported as not working' });
   } catch (err) {
+    console.error('Report credential error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 // Admin: Clear report
-app.delete('/api/credentials/:id/report', apiLimiter, verifyToken, verifyAdmin, (req, res) => {
+app.delete('/api/credentials/:id/report', apiLimiter, verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const credential = credentials.find(c => c.id === req.params.id);
+    const credential = await storage.getById(req.params.id);
     
     if (!credential) {
       return res.status(404).json({ error: 'Credential not found' });
     }
     
-    credential.reported = false;
+    await storage.update(req.params.id, { reported: false });
     res.json({ message: 'Report cleared' });
   } catch (err) {
+    console.error('Clear report error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.post('/api/credentials', apiLimiter, verifyToken, verifyAdmin, (req, res) => {
+app.post('/api/credentials', apiLimiter, verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { cover, acc, pass } = req.body;
     
@@ -210,24 +197,26 @@ app.post('/api/credentials', apiLimiter, verifyToken, verifyAdmin, (req, res) =>
       return res.status(400).json({ error: 'All fields required' });
     }
     
+    const allCreds = await storage.getAll();
     const newCredential = {
       id: Date.now().toString(),
       cover,
       acc,
       pass,
       reported: false,
-      order: credentials.length
+      order: allCreds.length
     };
     
-    credentials.push(newCredential);
+    await storage.add(newCredential);
     res.json({ message: 'Credential added', id: newCredential.id });
   } catch (err) {
+    console.error('Add credential error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 // Update order of credentials
-app.put('/api/credentials/order', apiLimiter, verifyToken, verifyAdmin, (req, res) => {
+app.put('/api/credentials/order', apiLimiter, verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { order } = req.body; // array of IDs in new order
     
@@ -235,53 +224,48 @@ app.put('/api/credentials/order', apiLimiter, verifyToken, verifyAdmin, (req, re
       return res.status(400).json({ error: 'Order must be an array' });
     }
     
-    // Update order property for each credential
-    order.forEach((id, index) => {
-      const cred = credentials.find(c => c.id === id);
-      if (cred) {
-        cred.order = index;
-      }
-    });
-    
+    await storage.updateOrder(order);
     res.json({ message: 'Order updated' });
   } catch (err) {
+    console.error('Update order error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.put('/api/credentials/:id', apiLimiter, verifyToken, verifyAdmin, (req, res) => {
+app.put('/api/credentials/:id', apiLimiter, verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { cover, acc, pass } = req.body;
-    const index = credentials.findIndex(c => c.id === req.params.id);
+    const credential = await storage.getById(req.params.id);
     
-    if (index === -1) {
+    if (!credential) {
       return res.status(404).json({ error: 'Credential not found' });
     }
     
-    credentials[index] = {
-      ...credentials[index],
-      cover: cover || credentials[index].cover,
-      acc: acc || credentials[index].acc,
-      pass: pass || credentials[index].pass
-    };
+    const updates = {};
+    if (cover) updates.cover = cover;
+    if (acc) updates.acc = acc;
+    if (pass) updates.pass = pass;
     
+    await storage.update(req.params.id, updates);
     res.json({ message: 'Credential updated' });
   } catch (err) {
+    console.error('Update credential error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.delete('/api/credentials/:id', apiLimiter, verifyToken, verifyAdmin, (req, res) => {
+app.delete('/api/credentials/:id', apiLimiter, verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const index = credentials.findIndex(c => c.id === req.params.id);
+    const credential = await storage.getById(req.params.id);
     
-    if (index === -1) {
+    if (!credential) {
       return res.status(404).json({ error: 'Credential not found' });
     }
     
-    credentials.splice(index, 1);
+    await storage.delete(req.params.id);
     res.json({ message: 'Credential deleted' });
   } catch (err) {
+    console.error('Delete credential error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

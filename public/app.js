@@ -17,17 +17,22 @@ class VaultApp {
     }
 
     setupEventListeners() {
-        // Gate code input - check immediately on each keystroke
+        // Gate code input - check after 1.5 seconds
         const gateInput = document.getElementById('gate-code-input');
+        let gateTimeout;
         
         gateInput.addEventListener('input', () => {
+            clearTimeout(gateTimeout);
             if (gateInput.value.length > 0) {
-                this.handleMainAuth();
+                gateTimeout = setTimeout(() => {
+                    this.handleMainAuth();
+                }, 1500);
             }
         });
         
         gateInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                clearTimeout(gateTimeout);
                 this.handleMainAuth();
             }
         });
@@ -46,17 +51,22 @@ class VaultApp {
             this.handleAdminAuth();
         });
 
-        // Admin code input - check immediately on each keystroke
+        // Admin code input - check after 1.5 seconds
         const adminInput = document.getElementById('admin-code-input');
+        let adminTimeout;
         
         adminInput.addEventListener('input', () => {
+            clearTimeout(adminTimeout);
             if (adminInput.value.length > 0) {
-                this.handleAdminAuth();
+                adminTimeout = setTimeout(() => {
+                    this.handleAdminAuth();
+                }, 1500);
             }
         });
         
         adminInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                clearTimeout(adminTimeout);
                 this.handleAdminAuth();
             }
         });

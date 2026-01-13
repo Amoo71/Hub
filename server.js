@@ -27,11 +27,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Rate limiting
+// Rate limiting - Reduced timeout
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 3 * 60 * 1000, // 3 minutes instead of 15
   max: 5,
-  message: { error: 'Too many authentication attempts, please try again later' }
+  message: { error: 'Too many attempts. Wait 3 minutes.' }
 });
 
 const apiLimiter = rateLimit({

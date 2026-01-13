@@ -17,10 +17,22 @@ class VaultApp {
     }
 
     setupEventListeners() {
-        // Gate code input
+        // Gate code input with auto-check after 1.5 seconds
         const gateInput = document.getElementById('gate-code-input');
+        let gateTimeout;
+        
+        gateInput.addEventListener('input', () => {
+            clearTimeout(gateTimeout);
+            gateTimeout = setTimeout(() => {
+                if (gateInput.value.length > 0) {
+                    this.handleMainAuth();
+                }
+            }, 1500);
+        });
+        
         gateInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                clearTimeout(gateTimeout);
                 this.handleMainAuth();
             }
         });
@@ -39,8 +51,22 @@ class VaultApp {
             this.handleAdminAuth();
         });
 
-        document.getElementById('admin-code-input').addEventListener('keypress', (e) => {
+        // Admin code input with auto-check
+        const adminInput = document.getElementById('admin-code-input');
+        let adminTimeout;
+        
+        adminInput.addEventListener('input', () => {
+            clearTimeout(adminTimeout);
+            adminTimeout = setTimeout(() => {
+                if (adminInput.value.length > 0) {
+                    this.handleAdminAuth();
+                }
+            }, 1500);
+        });
+        
+        adminInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                clearTimeout(adminTimeout);
                 this.handleAdminAuth();
             }
         });
@@ -165,20 +191,85 @@ class VaultApp {
         const grid = document.getElementById('credentials-grid');
         grid.innerHTML = '';
 
-        this.credentials.forEach(cred => {
+        this.credentials.forEach((cred, index) => {
             const card = document.createElement('div');
             card.className = 'credential-card' + (cred.reported ? ' reported' : '');
-            card.onclick = () => this.showDetailModal(cred.id);
+            card.dataset.id = cred.id;
+            card.dataset.index = index;
+            
+            // Make draggable for admin
+            if (this.isAdmin) {
+                card.draggable = true;
+                card.classList.add('draggable');
+                this.setupDragAndDrop(card);
+            }
+            
+            card.onclick = (e) => {
+                // Don't open if dragging
+                if (!card.classList.contains('dragging')) {
+                    this.showDetailModal(cred.id);
+                }
+            };
             
             card.innerHTML = `
                 <img src="${this.escapeHtml(cred.cover)}" alt="Cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 200%22%3E%3Crect fill=%22%23333%22 width=%22400%22 height=%22200%22/%3E%3C/svg%3E'" />
                 <div class="credential-card-overlay">
                     <div class="credential-card-acc">${this.escapeHtml(cred.acc)}</div>
                 </div>
+                ${this.isAdmin ? '<div class="drag-handle">⋮⋮</div>' : ''}
             `;
             
             grid.appendChild(card);
         });
+    }
+
+    setupDragAndDrop(card) {
+        card.addEventListener('dragstart', (e) => {
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', card.innerHTML);
+        });
+
+        card.addEventListener('dragend', (e) => {
+            card.classList.remove('dragging');
+            this.saveOrder();
+        });
+
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const draggingCard = document.querySelector('.dragging');
+            if (draggingCard && draggingCard !== card) {
+                const grid = document.getElementById('credentials-grid');
+                const allCards = [...grid.querySelectorAll('.credential-card:not(.dragging)')];
+                const nextCard = allCards.find(c => {
+                    const box = c.getBoundingClientRect();
+                    const offset = e.clientY - box.top - box.height / 2;
+                    return offset < 0;
+                });
+                
+                if (nextCard) {
+                    grid.insertBefore(draggingCard, nextCard);
+                } else {
+                    grid.appendChild(draggingCard);
+                }
+            }
+        });
+    }
+
+    saveOrder() {
+        const grid = document.getElementById('credentials-grid');
+        const cards = [...grid.querySelectorAll('.credential-card')];
+        const newOrder = cards.map(card => card.dataset.id);
+        
+        // Reorder credentials array
+        const orderedCredentials = [];
+        newOrder.forEach(id => {
+            const cred = this.credentials.find(c => c.id === id);
+            if (cred) orderedCredentials.push(cred);
+        });
+        this.credentials = orderedCredentials;
+        
+        console.log('New order saved:', newOrder);
     }
 
     async showDetailModal(id) {
@@ -324,6 +415,12 @@ class VaultApp {
 
     showEditModal(mode, credential = null) {
         this.editMode = mode;
+        
+        // Store current credential for edit mode
+        if (mode === 'edit' && credential) {
+            this.currentCredential = credential;
+        }
+        
         this.hideDetailModal();
         
         const title = document.getElementById('edit-title');
@@ -351,9 +448,9 @@ class VaultApp {
     }
 
     async handleSaveCredential() {
-        const cover = document.getElementById('edit-cover').value;
-        const acc = document.getElementById('edit-acc').value;
-        const pass = document.getElementById('edit-pass').value;
+        const cover = document.getElementById('edit-cover').value.trim();
+        const acc = document.getElementById('edit-acc').value.trim();
+        const pass = document.getElementById('edit-pass').value.trim();
         
         if (!cover || !acc || !pass) {
             alert('All fields are required');
@@ -362,36 +459,40 @@ class VaultApp {
 
         try {
             let response;
+            let url;
+            let method;
             
             if (this.editMode === 'add') {
-                response = await fetch('/api/credentials', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.token}`
-                    },
-                    body: JSON.stringify({ cover, acc, pass })
-                });
+                url = '/api/credentials';
+                method = 'POST';
+            } else if (this.editMode === 'edit' && this.currentCredential) {
+                url = `/api/credentials/${this.currentCredential.id}`;
+                method = 'PUT';
             } else {
-                response = await fetch(`/api/credentials/${this.currentCredential.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.token}`
-                    },
-                    body: JSON.stringify({ cover, acc, pass })
-                });
+                alert('Error: Invalid edit mode');
+                return;
             }
 
+            response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ cover, acc, pass })
+            });
+
             if (response.ok) {
+                alert('Saved successfully!');
                 this.hideEditModal();
-                this.loadCredentials();
+                await this.loadCredentials();
             } else {
                 const data = await response.json();
                 alert(data.error || 'Failed to save credential');
             }
         } catch (err) {
-            alert('Connection error');
+            console.error('Save error:', err);
+            alert('Connection error: ' + err.message);
         }
     }
 

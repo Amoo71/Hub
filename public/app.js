@@ -17,22 +17,17 @@ class VaultApp {
     }
 
     setupEventListeners() {
-        // Gate code input with auto-check after 1.5 seconds
+        // Gate code input - check immediately on each keystroke
         const gateInput = document.getElementById('gate-code-input');
-        let gateTimeout;
         
         gateInput.addEventListener('input', () => {
-            clearTimeout(gateTimeout);
-            gateTimeout = setTimeout(() => {
-                if (gateInput.value.length > 0) {
-                    this.handleMainAuth();
-                }
-            }, 1500);
+            if (gateInput.value.length > 0) {
+                this.handleMainAuth();
+            }
         });
         
         gateInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                clearTimeout(gateTimeout);
                 this.handleMainAuth();
             }
         });
@@ -51,22 +46,17 @@ class VaultApp {
             this.handleAdminAuth();
         });
 
-        // Admin code input with auto-check
+        // Admin code input - check immediately on each keystroke
         const adminInput = document.getElementById('admin-code-input');
-        let adminTimeout;
         
         adminInput.addEventListener('input', () => {
-            clearTimeout(adminTimeout);
-            adminTimeout = setTimeout(() => {
-                if (adminInput.value.length > 0) {
-                    this.handleAdminAuth();
-                }
-            }, 1500);
+            if (adminInput.value.length > 0) {
+                this.handleAdminAuth();
+            }
         });
         
         adminInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                clearTimeout(adminTimeout);
                 this.handleAdminAuth();
             }
         });
@@ -82,7 +72,10 @@ class VaultApp {
         });
 
         document.getElementById('detail-edit').addEventListener('click', () => {
-            this.showEditModal('edit', this.currentCredential);
+            if (this.currentCredential) {
+                this.editMode = 'edit';
+                this.showEditModal('edit', this.currentCredential);
+            }
         });
 
         document.getElementById('detail-delete').addEventListener('click', () => {
@@ -213,9 +206,6 @@ class VaultApp {
             
             card.innerHTML = `
                 <img src="${this.escapeHtml(cred.cover)}" alt="Cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 200%22%3E%3Crect fill=%22%23333%22 width=%22400%22 height=%22200%22/%3E%3C/svg%3E'" />
-                <div class="credential-card-overlay">
-                    <div class="credential-card-acc">${this.escapeHtml(cred.acc)}</div>
-                </div>
                 ${this.isAdmin ? '<div class="drag-handle">⋮⋮</div>' : ''}
             `;
             
@@ -256,7 +246,7 @@ class VaultApp {
         });
     }
 
-    saveOrder() {
+    async saveOrder() {
         const grid = document.getElementById('credentials-grid');
         const cards = [...grid.querySelectorAll('.credential-card')];
         const newOrder = cards.map(card => card.dataset.id);
@@ -269,7 +259,23 @@ class VaultApp {
         });
         this.credentials = orderedCredentials;
         
-        console.log('New order saved:', newOrder);
+        // Save to server
+        try {
+            const response = await fetch('/api/credentials/order', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ order: newOrder })
+            });
+            
+            if (response.ok) {
+                console.log('Order saved to server');
+            }
+        } catch (err) {
+            console.error('Failed to save order:', err);
+        }
     }
 
     async showDetailModal(id) {
@@ -359,7 +365,8 @@ class VaultApp {
                 this.isAdmin = true;
                 this.hideAdminModal();
                 document.getElementById('add-btn').style.display = 'flex';
-                alert('Admin access granted');
+                // Reload credentials to show drag handles
+                this.loadCredentials();
             } else {
                 errorEl.textContent = data.error || 'Invalid admin code';
                 document.getElementById('admin-code-input').value = '';
@@ -414,11 +421,18 @@ class VaultApp {
     }
 
     showEditModal(mode, credential = null) {
+        // Always set edit mode first
         this.editMode = mode;
         
         // Store current credential for edit mode
-        if (mode === 'edit' && credential) {
-            this.currentCredential = credential;
+        if (mode === 'edit') {
+            if (!credential && this.currentCredential) {
+                credential = this.currentCredential;
+            } else if (credential) {
+                this.currentCredential = credential;
+            }
+        } else if (mode === 'add') {
+            this.currentCredential = null;
         }
         
         this.hideDetailModal();

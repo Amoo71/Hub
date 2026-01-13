@@ -27,11 +27,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Rate limiting - Reduced timeout
+// Rate limiting - 6 attempts, 5 minute timeout
 const authLimiter = rateLimit({
-  windowMs: 3 * 60 * 1000, // 3 minutes instead of 15
-  max: 5,
-  message: { error: 'Too many attempts. Wait 3 minutes.' }
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 6,
+  message: { error: 'Too many attempts. Wait 5 minutes.' }
 });
 
 const apiLimiter = rateLimit({
@@ -46,14 +46,16 @@ let credentials = [
     cover: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400',
     acc: 'demo@example.com',
     pass: 'DemoPassword123',
-    reported: false
+    reported: false,
+    order: 0
   },
   {
     id: '2',
     cover: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=400',
     acc: 'admin@vault.com',
     pass: 'SecurePass456',
-    reported: false
+    reported: false,
+    order: 1
   }
 ];
 
@@ -133,11 +135,14 @@ app.post('/api/auth/admin', authLimiter, [verifyToken], async (req, res) => {
 // Credential endpoints
 app.get('/api/credentials', apiLimiter, verifyToken, (req, res) => {
   try {
-    const safeCredentials = credentials.map(cred => ({
+    // Sort by order
+    const sorted = [...credentials].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const safeCredentials = sorted.map(cred => ({
       id: cred.id,
       cover: cred.cover,
       acc: cred.acc,
-      reported: cred.reported || false
+      reported: cred.reported || false,
+      order: cred.order || 0
     }));
     res.json(safeCredentials);
   } catch (err) {
@@ -210,11 +215,35 @@ app.post('/api/credentials', apiLimiter, verifyToken, verifyAdmin, (req, res) =>
       cover,
       acc,
       pass,
-      reported: false
+      reported: false,
+      order: credentials.length
     };
     
     credentials.push(newCredential);
     res.json({ message: 'Credential added', id: newCredential.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update order of credentials
+app.put('/api/credentials/order', apiLimiter, verifyToken, verifyAdmin, (req, res) => {
+  try {
+    const { order } = req.body; // array of IDs in new order
+    
+    if (!Array.isArray(order)) {
+      return res.status(400).json({ error: 'Order must be an array' });
+    }
+    
+    // Update order property for each credential
+    order.forEach((id, index) => {
+      const cred = credentials.find(c => c.id === id);
+      if (cred) {
+        cred.order = index;
+      }
+    });
+    
+    res.json({ message: 'Order updated' });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

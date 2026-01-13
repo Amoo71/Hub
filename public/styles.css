@@ -198,21 +198,7 @@ body {
     opacity: 0.6;
 }
 
-.credential-card-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 20px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-}
-
-.credential-card-acc {
-    font-size: 14px;
-    font-weight: 500;
-    color: #ffffff;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
+/* Removed overlay - no text on covers */
 
 /* Modal */
 .modal {

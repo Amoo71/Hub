@@ -103,8 +103,10 @@ class VaultApp {
         // Copy buttons
         document.querySelectorAll('.copy-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 const type = e.currentTarget.getAttribute('data-copy');
-                this.copyToClipboard(type);
+                this.copyToClipboard(type, e);
             });
         });
 
@@ -333,7 +335,8 @@ class VaultApp {
 
     hideDetailModal() {
         document.getElementById('detail-modal').style.display = 'none';
-        this.currentCredential = null;
+        // Don't clear currentCredential here - it might be needed for edit
+        // this.currentCredential = null;
     }
 
     showAdminModal() {
@@ -431,20 +434,27 @@ class VaultApp {
     }
 
     showEditModal(mode, credential = null) {
-        // Always set edit mode first
-        this.editMode = mode;
+        console.log('showEditModal called with mode:', mode, 'credential:', credential);
         
-        // Store current credential for edit mode
+        // Don't close detail modal yet - keep currentCredential
+        const currentCred = credential || this.currentCredential;
+        
+        if (!currentCred && mode === 'edit') {
+            alert('Error: No credential selected for editing');
+            return;
+        }
+        
+        // Set edit mode and credential BEFORE hiding detail modal
+        this.editMode = mode;
         if (mode === 'edit') {
-            if (!credential && this.currentCredential) {
-                credential = this.currentCredential;
-            } else if (credential) {
-                this.currentCredential = credential;
-            }
-        } else if (mode === 'add') {
+            this.currentCredential = currentCred;
+        } else {
             this.currentCredential = null;
         }
         
+        console.log('Edit mode set to:', this.editMode, 'currentCredential:', this.currentCredential);
+        
+        // Now close detail modal
         this.hideDetailModal();
         
         const title = document.getElementById('edit-title');
@@ -459,9 +469,9 @@ class VaultApp {
             passInput.value = '';
         } else {
             title.textContent = 'Edit Credential';
-            coverInput.value = credential.cover;
-            accInput.value = credential.acc;
-            passInput.value = credential.pass;
+            coverInput.value = currentCred.cover || '';
+            accInput.value = currentCred.acc || '';
+            passInput.value = currentCred.pass || '';
         }
         
         document.getElementById('edit-modal').style.display = 'flex';
@@ -545,8 +555,11 @@ class VaultApp {
         }
     }
 
-    async copyToClipboard(type) {
-        if (!this.currentCredential) return;
+    async copyToClipboard(type, event) {
+        if (!this.currentCredential) {
+            alert('Error: No credential loaded');
+            return;
+        }
         
         try {
             let textToCopy = '';
@@ -557,17 +570,46 @@ class VaultApp {
                 textToCopy = this.currentCredential.pass;
             }
             
-            await navigator.clipboard.writeText(textToCopy);
+            if (!textToCopy) {
+                alert('Error: Nothing to copy');
+                return;
+            }
+            
+            // Use the Clipboard API with fallback
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(textToCopy);
+            } else {
+                // Fallback for non-HTTPS or older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    textArea.remove();
+                } catch (err) {
+                    textArea.remove();
+                    throw err;
+                }
+            }
             
             // Visual feedback
-            const btn = event.target.closest('.copy-btn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<span style="font-size:12px;">✓</span>';
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-            }, 1000);
+            const btn = event ? event.target.closest('.copy-btn') : null;
+            if (btn) {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<span style="font-size:12px;">✓</span>';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 1000);
+            }
         } catch (err) {
-            alert('Failed to copy to clipboard');
+            console.error('Copy error:', err);
+            alert('Failed to copy to clipboard: ' + err.message);
         }
     }
 

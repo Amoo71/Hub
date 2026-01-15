@@ -198,6 +198,32 @@ body {
     opacity: 0.6;
 }
 
+/*
+ * On small screens the "glass" effect applied to each credential card can
+ * interfere with how image covers render. Mobile browsers (especially on
+ * iOS/Android) have limited support for backdrop‑filters and often
+ * composite the layers incorrectly, leading to GIFs appearing black or
+ * images failing to render at all.  To ensure the covers remain
+ * visible on touch devices we remove the blur and background on the card
+ * itself and restore full opacity to the image. These rules live in a
+ * dedicated media query so that the desktop experience remains
+ * unchanged. See: https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter
+ */
+@media (hover: none) and (pointer: coarse) {
+    .credential-card {
+        /* Remove translucent background and blur on mobile to prevent
+           rendering issues with GIFs and covers */
+        background: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+    }
+    .credential-card img {
+        /* Make sure covers are fully visible on mobile */
+        opacity: 1;
+    }
+}
+
 /* Removed overlay - no text on covers */
 
 /* Modal */
